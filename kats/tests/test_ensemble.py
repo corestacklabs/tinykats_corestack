@@ -20,7 +20,6 @@ from kats.data.utils import load_data
 from kats.models import arima
 from kats.models import holtwinters
 from kats.models import linear_model
-from kats.models import prophet
 from kats.models import quadratic_model
 from kats.models import sarima
 from kats.models import theta
@@ -86,7 +85,6 @@ def get_ensemble_param(ts_param: Dict[str, bool]) -> EnsembleParams:
         )
         if ts_param["sarima"]
         else "",
-        BaseModelParams("prophet", prophet.ProphetParams()) if ts_param["prophet"] else "",
         BaseModelParams("linear", linear_model.LinearModelParams()) if ts_param["linear"] else "",
         BaseModelParams("quadratic", quadratic_model.QuadraticModelParams()) if ts_param["quadratic"] else "",
         BaseModelParams("theta", theta.ThetaParams(m=12)) if ts_param["theta"] else "",
@@ -105,7 +103,6 @@ TEST_PARAM = {
         "arima": True,
         "holtwinters": True,
         "sarima": True,
-        "prophet": True,
         "linear": True,
         "quadratic": True,
         "theta": False,
@@ -114,7 +111,6 @@ TEST_PARAM = {
         "arima": True,
         "holtwinters": True,
         "sarima": False,
-        "prophet": False,
         "linear": False,
         "quadratic": False,
         "theta": False,
@@ -123,7 +119,6 @@ TEST_PARAM = {
         "arima": True,
         "holtwinters": False,
         "sarima": True,
-        "prophet": True,
         "linear": True,
         "quadratic": True,
         "theta": True,

@@ -1056,7 +1056,6 @@ class ModelEnum(Enum):
 
     ARIMA = auto()
     SARIMA = auto()
-    PROPHET = auto()
     HOLTWINTERS = auto()
     LINEAR = auto()
     QUADRATIC = auto()

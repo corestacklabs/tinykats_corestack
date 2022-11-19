@@ -14,7 +14,6 @@ from kats.detectors.cusum_model import CUSUMDetectorModel
 from kats.detectors.meta_learning.hpt_tuning import MetaDetectHptSelect
 from kats.detectors.meta_learning.hpt_tuning import NNParams
 from kats.detectors.meta_learning.hpt_tuning import metadata_detect_reader
-from kats.detectors.threshold_detector import StaticThresholdModel
 
 BASE_MODELS = ["cusum", "static"]
 MODELS_PARAMS: Dict[str, List[str]] = {
@@ -108,30 +107,6 @@ class TestMetaDetectHptSelect(TestCase):
 
         res = mdhs.get_hpt_from_features(np.random.normal(0, 1, [10, 40]))
         self.assertEqual(res.shape, (10, 4))
-
-    def test_metalearn_flow_static(self) -> None:
-        datax = self.meta_data_static["data_x"]
-        datay = self.meta_data_static["data_y"]
-
-        mdhs = MetaDetectHptSelect(data_x=datax, data_y=datay, detector_model=StaticThresholdModel)
-        const_params_dict = mdhs.const_params_dict
-        self.assertEqual(len(const_params_dict), 0)
-
-        self.assertEqual(mdhs._data_y.shape, (500, 2))
-
-        mdhs.train(
-            num_idx=["threshold_low"],
-            cat_idx=["threshold_high"],
-            n_hidden_shared=[20],
-            n_hidden_cat_combo=[[5]],
-            n_hidden_num=[5],
-            nnparams=self.nnparams,
-        )
-
-        mdhs.plot()
-
-        res = mdhs.get_hpt_from_features(np.random.normal(0, 1, [10, 40]))
-        self.assertEqual(res.shape, (10, 2))
 
     def test_module_errors(self) -> None:
         datax = self.meta_data_cusum["data_x"]

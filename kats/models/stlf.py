@@ -36,15 +36,12 @@ import pandas as pd
 from kats.consts import Params
 from kats.consts import TimeSeriesData
 from kats.models import linear_model
-from kats.models import prophet
 from kats.models import quadratic_model
 from kats.models import simple_heuristic_model
 from kats.models import theta
 from kats.models.linear_model import LinearModel
 from kats.models.linear_model import LinearModelParams
 from kats.models.model import Model
-from kats.models.prophet import ProphetModel
-from kats.models.prophet import ProphetParams
 from kats.models.quadratic_model import QuadraticModel
 from kats.models.quadratic_model import QuadraticModelParams
 from kats.models.simple_heuristic_model import SimpleHeuristicModel
@@ -54,18 +51,18 @@ from kats.models.theta import ThetaParams
 from kats.utils.decomposition import TimeSeriesDecomposition
 from kats.utils.parameter_tuning_utils import get_default_stlf_parameter_search_space
 
-MODELS = ["prophet", "linear", "quadratic", "theta", "simple"]
+MODELS = ["linear", "quadratic", "theta", "simple"]
 
 
 class STLFParams(Params):
-    """Parameter class for Prophet model
+    """Parameter class for STLF model
 
     This is the parameter class for STLF model, stands for STL-decomposition based
     forecasting model.
 
     Attributes:
         method: str, the forecasting model to fit on the de-seasonalized component
-            it currently supports prophet, linear, quadratic, and theta method.
+            it currently supports linear, quadratic, and theta method.
         m: int, the length of one seasonal cycle, same as period in statsmodel STL
         method_params: Optional[Params], the parameters for the method
         decomposition: str, `additive` or `multiplicative` decomposition. Default is `multiplicative` because of legacy
@@ -133,9 +130,7 @@ class STLFParams(Params):
             raise ValueError(msg)
 
         if self.method_params is None:
-            if self.method == "prophet":
-                self.method_params = prophet.ProphetParams()
-            elif self.method == "theta":
+            if self.method == "theta":
                 self.method_params = theta.ThetaParams(m=1)
             elif self.method == "linear":
                 self.method_params = linear_model.LinearModelParams()
@@ -165,7 +160,7 @@ class STLFModel(Model[STLFParams]):
     sea_data: Optional[TimeSeriesData] = None
     trend_data: Optional[TimeSeriesData] = None
     desea_data: Optional[TimeSeriesData] = None
-    model: Optional[Union[LinearModel, ProphetModel, QuadraticModel, SimpleHeuristicModel, ThetaModel]] = None
+    model: Optional[Union[LinearModel, QuadraticModel, SimpleHeuristicModel, ThetaModel]] = None
     freq: Optional[str] = None
     alpha: Optional[float] = None
     y_fcst: Optional[Union[np.ndarray, pd.Series, pd.DataFrame]] = None
@@ -267,12 +262,7 @@ class STLFModel(Model[STLFParams]):
         else:
             data = self.desea_data
         assert data is not None
-        if self.params.method == "prophet":
-            model = prophet.ProphetModel(
-                data=data,
-                params=cast(ProphetParams, self.params.method_params),
-            )
-        elif self.params.method == "theta":
+        if self.params.method == "theta":
             model = theta.ThetaModel(data=data, params=cast(ThetaParams, self.params.method_params))
         elif self.params.method == "linear":
             model = linear_model.LinearModel(data=data, params=cast(LinearModelParams, self.params.method_params))

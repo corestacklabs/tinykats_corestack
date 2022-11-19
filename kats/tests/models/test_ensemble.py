@@ -18,7 +18,6 @@ from kats.data.utils import load_data
 from kats.models import arima
 from kats.models import holtwinters
 from kats.models import linear_model
-from kats.models import prophet
 from kats.models import quadratic_model
 from kats.models import sarima
 from kats.models import theta
@@ -92,7 +91,6 @@ class testBaseEnsemble(TestCase):
                         enforce_stationarity=False,
                     ),
                 ),
-                BaseModelParams("prophet", prophet.ProphetParams()),
                 BaseModelParams("linear", linear_model.LinearModelParams()),
                 BaseModelParams(
                     "quadratic",
@@ -143,7 +141,6 @@ class testBaseEnsemble(TestCase):
                         enforce_stationarity=False,
                     ),
                 ),
-                BaseModelParams("prophet", prophet.ProphetParams()),
                 BaseModelParams("linear", linear_model.LinearModelParams()),
                 BaseModelParams("quadratic", quadratic_model.QuadraticModelParams()),
             ]
@@ -209,7 +206,6 @@ class testMedianEnsemble(TestCase):
                         enforce_stationarity=False,
                     ),
                 ),
-                BaseModelParams("prophet", prophet.ProphetParams()),
                 BaseModelParams("linear", linear_model.LinearModelParams()),
                 BaseModelParams(
                     "quadratic",
@@ -294,10 +290,6 @@ class testWeightedAvgEnsemble(TestCase):
                         enforce_stationarity=False,
                     ),
                 ),
-                BaseModelParams(
-                    "prophet",
-                    prophet.ProphetParams(seasonality_mode="multiplicative"),
-                ),
                 BaseModelParams("linear", linear_model.LinearModelParams()),
                 BaseModelParams("quadratic", quadratic_model.QuadraticModelParams()),
             ]
@@ -369,7 +361,6 @@ class testKatsEnsemble(TestCase):
                         enforce_stationarity=False,
                     ),
                 ),
-                BaseModelParams("prophet", prophet.ProphetParams()),
                 BaseModelParams("linear", linear_model.LinearModelParams()),
                 BaseModelParams("quadratic", quadratic_model.QuadraticModelParams()),
                 BaseModelParams("theta", theta.ThetaParams(m=12)),
@@ -429,7 +420,6 @@ class testKatsEnsemble(TestCase):
                         enforce_stationarity=False,
                     ),
                 ),
-                BaseModelParams("prophet", prophet.ProphetParams()),
                 BaseModelParams("linear", linear_model.LinearModelParams()),
                 BaseModelParams("quadratic", quadratic_model.QuadraticModelParams()),
                 BaseModelParams("theta", theta.ThetaParams(m=12)),
@@ -500,7 +490,6 @@ class testKatsEnsemble(TestCase):
                         enforce_stationarity=False,
                     ),
                 ),
-                BaseModelParams("prophet", prophet.ProphetParams()),
                 BaseModelParams("linear", linear_model.LinearModelParams()),
                 BaseModelParams("quadratic", quadratic_model.QuadraticModelParams()),
                 BaseModelParams("theta", theta.ThetaParams(m=12)),

@@ -13,7 +13,6 @@ from parameterized.parameterized import parameterized
 from kats.consts import TimeSeriesData
 from kats.data.utils import load_data
 from kats.models import linear_model
-from kats.models import prophet
 from kats.models import quadratic_model
 from kats.models import simple_heuristic_model
 from kats.models import theta
@@ -28,7 +27,7 @@ def load_data_std_cols(path: str) -> pd.DataFrame:
     return df
 
 
-METHODS = ["theta", "prophet", "linear", "quadratic", "simple"]
+METHODS = ["theta", "linear", "quadratic", "simple"]
 
 
 class testSTLFModel(TestCase):
@@ -115,9 +114,7 @@ class testSTLFModel(TestCase):
     @parameterized.expand([("daily", m) for m in METHODS])
     def test_fit_forecast_no_default_params(self, dataset: str, method: str, steps: int = 5) -> None:
         ts = self.TEST_DATA[dataset]["ts"]
-        if method == "prophet":
-            method_params = prophet.ProphetParams(seasonality_mode="multiplicative")
-        elif method == "theta":
+        if method == "theta":
             method_params = theta.ThetaParams(m=2)
         elif method == "linear":
             method_params = linear_model.LinearModelParams(alpha=0.01)

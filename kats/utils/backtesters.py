@@ -173,15 +173,6 @@ class GenericBacktester(ABC):
         max_core: a integer for the number of cores used by multi-processing. Default is None, which sets `max_core = max((all_available_core-1)//2-1, 1)`.
         error_score: a float for the substitude of error score if it is np.nan. Default is np.nan.
 
-    Sample Usage:
-        >>> # Define the forecaster
-        >>> fcster = partial(kats_units_forecaster, params=ProphetParams(), model_class=ProphetModel())
-        >>> # Define data partition logict
-        >>> dp = SimpleDataPartition(train_frac = 0.9)
-        >>> # Initiate backtester object
-        >>> gbt = GenericBacktester(datapartition = dp, scorer = ['smape','mape'], forecaster = fcster)
-        >>> ts = TimeSeriesData(pd.read_csv("kats/data/air_passengers.csv"))
-        >>> gbt.run_backtester(ts)
     """
 
     def __init__(
@@ -313,15 +304,6 @@ class KatsSimpleBacktester(GenericBacktester):
         multi: a boolean for whether using multi-processing.
         max_core: a integer for the number of cores used by multi-processing. Default is None, which sets `max_core = max((all_available_core-1)//2-1, 1)`.
         error_score: a float for the substitude of error score if it is np.nan. Default is np.nan.
-
-    Sample Usage:
-        >>> # Define data partition logict
-        >>> dp = SimpleDataPartition(train_frac = 0.9)
-        >>> # Initiate backtester object
-        >>> ksbt = KatsSimpleBacktester(datapartition = dp, scorer = ['smape','mape'], model_params = ProphetParams(), model_class = ProphetModel)
-        >>> ts = TimeSeriesData(pd.read_csv("kats/data/air_passengers.csv"))
-        >>> ksbt.run_backtester(ts)
-
     """
 
     def __init__(

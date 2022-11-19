@@ -9,8 +9,6 @@ from unittest import TestCase
 from kats.models.arima import ARIMAModel
 from kats.models.holtwinters import HoltWintersModel
 from kats.models.linear_model import LinearModel
-from kats.models.neuralprophet import NeuralProphetModel
-from kats.models.prophet import ProphetModel
 from kats.models.quadratic_model import QuadraticModel
 from kats.models.sarima import SARIMAModel
 from kats.models.theta import ThetaModel
@@ -21,14 +19,6 @@ from kats.utils.time_series_parameter_tuning import TimeSeriesParameterTuning
 class TestParameterTuningDefaultSearchSpace(TestCase):
     def test_parameter_tuning_default_search_space_arima(self) -> None:
         search_space = ARIMAModel.get_parameter_search_space()
-        TimeSeriesParameterTuning.validate_parameters_format(search_space)
-
-    def test_parameter_tuning_default_search_space_neuralprophet(self) -> None:
-        search_space = NeuralProphetModel.get_parameter_search_space()
-        TimeSeriesParameterTuning.validate_parameters_format(search_space)
-
-    def test_parameter_tuning_default_search_space_prophet(self) -> None:
-        search_space = ProphetModel.get_parameter_search_space()
         TimeSeriesParameterTuning.validate_parameters_format(search_space)
 
     def test_parameter_tuning_default_search_space_linear_model(self) -> None:

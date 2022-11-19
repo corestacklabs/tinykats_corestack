@@ -64,23 +64,6 @@ class ensemble_predict_interval:
         n_block: number of block we want to split the ts into
         ensemble_size: size of ensemble
 
-    >>> # Example
-    >>> val = np.arange(180)/6+np.sin(np.pi*np.arange(180)/6)*20++np.cos(np.arange(180))*20+np.random.randn(180)*10
-    >>> ts = TimeSeriesData(pd.DataFrame({'time': pd.date_range('2021-05-06', periods = 180), 'val':val}))
-    >>> hist_ts, test_ts = ts[:120], ts[120:]
-    >>> epi = ensemble_predict_interval(
-            model=ProphetModel,
-            model_params=ProphetParams(seasonality_mode='additive'),
-            ts=hist_ts,
-            n_block=5,
-            ensemble_size=10,
-        )
-    >>> res = epi.get_projection(step=60)
-    >>> res.head()
-    >>> res_other_conf_level = epi.get_fcst_band_with_level(confidence_level=0.5)
-    >>> res_other_conf_level.head()
-    >>> # visualization
-    >>> epi.pi_comparison_plot(test_ts)
     """
 
     def __init__(
