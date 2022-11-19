@@ -7,7 +7,6 @@ from . import compat  # noqa # usort: skip
 from . import consts  # noqa # usort: skip
 from . import data  # noqa # usort: skip
 from . import detectors  # noqa # usort: skip
-from . import graphics  # noqa # usort: skip
 from . import metrics  # noqa # usort: skip
 from . import models  # noqa # usort: skip
 from . import tsfeatures  # noqa # usort: skip

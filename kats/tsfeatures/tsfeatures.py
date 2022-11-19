@@ -32,7 +32,6 @@ from typing import Union
 import numpy as np
 import pandas as pd
 import statsmodels.api as sm
-from deprecated import deprecated
 from scipy import stats
 from scipy.linalg import toeplitz
 from scipy.signal import periodogram  # @manual
@@ -56,7 +55,6 @@ except ImportError:
 
 from kats.compat.statsmodels import ExponentialSmoothing
 from kats.consts import TimeSeriesData
-from kats.detectors import bocpd
 from kats.detectors import cusum_detection
 from kats.detectors import outlier
 from kats.detectors import robust_stat_detection
@@ -108,7 +106,6 @@ _ALL_TS_FEATURES: List[Tuple[str, Dict[str, str]]] = [
     ("hw_params", {"period": "stl_period"}),
     ("cusum_detector", {}),
     ("robust_stat_detector", {}),
-    ("bocp_detector", {}),
     ("outlier_detector", {"decomp": "decomp", "iqr_mult": "iqr_mult"}),
     ("trend_detector", {"threshold": "threshold"}),
     ("nowcasting", {"window": "window", "n_fast": "n_fast", "n_slow": "n_slow"}),
@@ -184,11 +181,6 @@ _FEATURE_GROUP_MAPPING: Dict[str, List[str]] = {
     "robust_stat_detector": [
         "robust_num",
         "robust_metric_mean",
-    ],
-    "bocp_detector": [
-        "bocp_num",
-        "bocp_conf_max",
-        "bocp_conf_mean",
     ],
     "outlier_detector": [
         "outlier_num",
@@ -284,8 +276,6 @@ class TsFeatures:
             detector in Kats.
         robust_stat_detector: Switch for calculating/outputting features using
             robust stat detector in Kats.
-        bocp_detector: Switch for calculating/outputting stl features features
-            using bocp detector in Kats.
         outlier_detector: Switch for calculating/outputting stl features using
             outlier detector in Kats.
         trend_detector: Switch for calculating/outputting stl features using
@@ -414,7 +404,6 @@ class TsFeatures:
         self.statistics = kwargs.get("statistics", default)
         self.cusum_detector = kwargs.get("cusum_detector", False)
         self.robust_stat_detector = kwargs.get("robust_stat_detector", False)
-        self.bocp_detector = kwargs.get("bocp_detector", False)
         self.outlier_detector = kwargs.get("outlier_detector", False)
         self.trend_detector = kwargs.get("trend_detector", False)
         self.nowcasting = kwargs.get("nowcasting", False)
@@ -759,7 +748,6 @@ class TsFeatures:
 
     @staticmethod
     @jit(forceobj=True)
-    @deprecated(version="0.2.0", reason="Renamed to get_level_shift_features")
     def get_level_shift(
         x: np.ndarray,
         window_size: int = 20,
@@ -1469,52 +1457,6 @@ class TsFeatures:
         except Exception as e:
             logging.warning(f"Robust Stat Detector failed {e}")
         return robust_stat_detector_features
-
-    # BOCP Detection Outputs (3)
-    @staticmethod
-    def get_bocp_detector(
-        ts: TimeSeriesData,
-        extra_args: Optional[Dict[str, bool]] = None,
-        default_status: bool = True,
-    ) -> Dict[str, float]:
-        """
-        Extract features from the output of the Kats BOCP Detector.
-
-        Args:
-            ts: The univariate time series.
-            extra_args: A dictionary containing information for disabling
-                calculation of a certain feature. If None, no feature is disabled.
-            default_status: Default status of the switch for calculate the features.
-
-        Returns:
-            (tuple): tuple containing:
-
-                Number of changepoints detected by BOCP Detector
-                Max value of the confidence of the changepoints detected
-                Mean value of the confidence of the changepoints detected.
-        """
-
-        bocp_detector_features = {
-            "bocp_num": np.nan,
-            "bocp_conf_max": np.nan,
-            "bocp_conf_mean": np.nan,
-        }
-        try:
-            bocp = bocpd.BOCPDetector(ts)
-            bocp_cp = bocp.detector(choose_priors=False)
-            if extra_args is not None and extra_args.get("bocp_num", default_status):
-                bocp_detector_features["bocp_num"] = len(bocp_cp)
-            if extra_args is not None and extra_args.get("bocp_conf_max", default_status):
-                bocp_detector_features["bocp_conf_max"] = (
-                    0 if len(bocp_cp) == 0 else np.max([cp.confidence for cp in bocp_cp])
-                )
-            if extra_args is not None and extra_args.get("bocp_conf_mean", default_status):
-                bocp_detector_features["bocp_conf_mean"] = (
-                    0 if len(bocp_cp) == 0 else np.mean([cp.confidence for cp in bocp_cp])
-                )
-        except Exception as e:
-            logging.warning(f"BOCPDetector failed {e}")
-        return bocp_detector_features
 
     # Outlier Detection Outputs (1)
     @staticmethod

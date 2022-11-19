@@ -12,7 +12,7 @@ from kats.detectors.meta_learning.metalearning_detection_model import (
     MetaDetectModelSelect,
 )
 
-base_models = ["cusum", "statsig", "bocpd"]
+base_models = ["cusum", "statsig"]
 
 
 def generate_meta_data(n: int) -> pd.DataFrame:

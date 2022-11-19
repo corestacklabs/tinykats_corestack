@@ -90,46 +90,6 @@ class testVARModel(TestCase):
         with self.assertRaises(NotImplementedError):
             VARModel.get_parameter_search_space()
 
-    # @pytest.mark.image_compare
-    # pyre-fixme[56]
-    @parameterized.expand([[TEST_DATA["multivariate_2"]["ts"]]])
-    def test_plot(self, ts: TimeSeriesData) -> plt.Figure:
-        # Test the example from the 201 notebook.
-        m = VARModel(ts, VARParams())
-        m.fit()
-        m.predict(steps=90)
-        m.plot()
-        return plt.gcf()
-
-    # @pytest.mark.image_compare
-    # pyre-fixme[56]
-    @parameterized.expand([[TEST_DATA["multivariate_2"]["ts"]]])
-    def test_plot_include_history(self, ts: TimeSeriesData) -> plt.Figure:
-        # This shouldn't error, but currently does.
-        with self.assertRaises(ValueError):
-            m = VARModel(ts, VARParams())
-            m.fit()
-            m.predict(steps=90, include_history=True)
-            m.plot()
-            return plt.gcf()
-
-    # pyre-fixme[56]
-    @parameterized.expand([[TEST_DATA["multivariate"]["ts"]]])
-    def test_plot_ax_not_supported(self, ts: TimeSeriesData) -> None:
-        with self.assertRaises(ValueError):
-            _, ax = plt.subplots()
-            m = VARModel(ts, VARParams())
-            m.fit()
-            m.predict(steps=5)
-            m.plot(ax=ax)
-
-    # pyre-fixme[56]
-    @parameterized.expand([[TEST_DATA["multivariate"]["ts"]]])
-    def test_plot_unpredict(self, ts: TimeSeriesData) -> None:
-        with self.assertRaises(ValueError):
-            m = VARModel(ts, VARParams())
-            m.plot()
-
     # pyre-fixme[56]
     @parameterized.expand([[TEST_DATA["multivariate"]["ts"]]])
     def test_str(self, ts: TimeSeriesData) -> None:

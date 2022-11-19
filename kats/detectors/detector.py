@@ -14,12 +14,6 @@ from typing import Optional
 from typing import Sequence
 from typing import Union
 
-try:
-    import plotly.graph_objs as go
-
-    Figure = go.Figure
-except ImportError:
-    Figure = object
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -81,7 +75,7 @@ class Detector(ABC):
         ts_out = TimeSeriesData(df_final)
         return ts_out
 
-    def plot(self, **kwargs: Any) -> Union[plt.Axes, Sequence[plt.Axes], Figure]:
+    def plot(self, **kwargs: Any) -> Union[plt.Axes, Sequence[plt.Axes]]:
         raise NotImplementedError()
 
 

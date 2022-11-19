@@ -13,42 +13,17 @@ wrapt = {version = ">=1.11,<2", markers = "python_version < \"3.11\""}
 
 [[package]]
 name = "attrs"
-version = "21.2.0"
+version = "22.1.0"
 description = "Classes Without Boilerplate"
-category = "main"
-optional = false
-python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*"
-
-[package.extras]
-dev = ["coverage[toml] (>=5.0.2)", "hypothesis", "pympler", "pytest (>=4.3.0)", "six", "mypy", "pytest-mypy-plugins", "zope.interface", "furo", "sphinx", "sphinx-notfound-page", "pre-commit"]
-docs = ["furo", "sphinx", "zope.interface", "sphinx-notfound-page"]
-tests = ["coverage[toml] (>=5.0.2)", "hypothesis", "pympler", "pytest (>=4.3.0)", "six", "mypy", "pytest-mypy-plugins", "zope.interface"]
-tests_no_zope = ["coverage[toml] (>=5.0.2)", "hypothesis", "pympler", "pytest (>=4.3.0)", "six", "mypy", "pytest-mypy-plugins"]
-
-[[package]]
-name = "ax-platform"
-version = "0.2.9"
-description = "Adaptive Experimentation"
 category = "dev"
 optional = false
-python-versions = ">=3.8"
-
-[package.dependencies]
-botorch = "0.7.2"
-jinja2 = "*"
-pandas = "*"
-plotly = "*"
-scikit-learn = "*"
-scipy = "*"
-typeguard = "*"
+python-versions = ">=3.5"
 
 [package.extras]
-dev = ["beautifulsoup4", "black (==22.3.0)", "flake8", "hypothesis", "jinja2", "pytest (>=4.6)", "pytest-cov", "sphinx", "sphinx-autodoc-typehints", "torchvision (>=0.5.0)", "nbconvert", "jupyter-client (==6.1.12)", "yappi"]
-mysql = ["SQLAlchemy (>=1.1.13)"]
-notebook = ["jupyter"]
-tutorial = ["beautifulsoup4", "black (==22.3.0)", "flake8", "hypothesis", "jinja2", "pytest (>=4.6)", "pytest-cov", "sphinx", "sphinx-autodoc-typehints", "torchvision (>=0.5.0)", "nbconvert", "jupyter-client (==6.1.12)", "yappi", "SQLAlchemy (>=1.1.13)", "jupyter", "tensorboard", "torchvision", "torchx", "protobuf (<4)", "psycopg2", "ray", "tabulate", "tensorboardx", "matplotlib", "pyro-ppl", "pytorch-lightning"]
-unittest = ["beautifulsoup4", "black (==22.3.0)", "flake8", "hypothesis", "jinja2", "pytest (>=4.6)", "pytest-cov", "sphinx", "sphinx-autodoc-typehints", "torchvision (>=0.5.0)", "nbconvert", "jupyter-client (==6.1.12)", "yappi", "SQLAlchemy (>=1.1.13)", "jupyter", "tensorboard", "torchvision", "torchx", "protobuf (<4)"]
-unittest_minimal = ["tensorboard", "torchvision", "torchx", "protobuf (<4)"]
+dev = ["coverage[toml] (>=5.0.2)", "hypothesis", "pympler", "pytest (>=4.3.0)", "mypy (>=0.900,!=0.940)", "pytest-mypy-plugins", "zope.interface", "furo", "sphinx", "sphinx-notfound-page", "pre-commit", "cloudpickle"]
+docs = ["furo", "sphinx", "zope.interface", "sphinx-notfound-page"]
+tests = ["coverage[toml] (>=5.0.2)", "hypothesis", "pympler", "pytest (>=4.3.0)", "mypy (>=0.900,!=0.940)", "pytest-mypy-plugins", "zope.interface", "cloudpickle"]
+tests_no_zope = ["coverage[toml] (>=5.0.2)", "hypothesis", "pympler", "pytest (>=4.3.0)", "mypy (>=0.900,!=0.940)", "pytest-mypy-plugins", "cloudpickle"]
 
 [[package]]
 name = "black"
@@ -71,27 +46,6 @@ colorama = ["colorama (>=0.4.3)"]
 d = ["aiohttp (>=3.7.4)"]
 jupyter = ["ipython (>=7.8.0)", "tokenize-rt (>=3.2.0)"]
 uvloop = ["uvloop (>=0.15.2)"]
-
-[[package]]
-name = "botorch"
-version = "0.7.2"
-description = "Bayesian Optimization in PyTorch"
-category = "dev"
-optional = false
-python-versions = ">=3.8"
-
-[package.dependencies]
-gpytorch = "1.9.0"
-linear-operator = "0.1.1"
-multipledispatch = "*"
-pyro-ppl = ">=1.8.2"
-scipy = "*"
-torch = ">=1.11"
-
-[package.extras]
-dev = ["pytest", "pytest-cov", "flake8", "ufmt", "flake8-docstrings", "black (==22.3.0)", "usort (==1.0.2)", "sphinx"]
-test = ["pytest", "pytest-cov"]
-tutorials = ["ax-platform", "cma", "jupyter", "kaleido", "matplotlib", "memory-profiler", "pykeops", "torchvision"]
 
 [[package]]
 name = "cfgv"
@@ -145,20 +99,6 @@ description = "Composable style cycles"
 category = "main"
 optional = false
 python-versions = ">=3.6"
-
-[[package]]
-name = "deprecated"
-version = "1.2.12"
-description = "Python @deprecated decorator to deprecate old python classes, functions or methods."
-category = "main"
-optional = false
-python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
-
-[package.dependencies]
-wrapt = ">=1.10,<2"
-
-[package.extras]
-dev = ["tox", "bump2version (<1)", "sphinx (<2)", "importlib-metadata (<3)", "importlib-resources (<4)", "configparser (<5)", "sphinxcontrib-websupport (<2)", "zipp (<2)", "PyTest (<5)", "PyTest-Cov (<2.6)", "pytest", "pytest-cov"]
 
 [[package]]
 name = "dill"
@@ -233,25 +173,6 @@ unicode = ["unicodedata2 (>=14.0.0)"]
 woff = ["zopfli (>=0.1.4)", "brotlicffi (>=0.8.0)", "brotli (>=1.0.1)"]
 
 [[package]]
-name = "gpytorch"
-version = "1.9.0"
-description = "An implementation of Gaussian Processes in Pytorch"
-category = "dev"
-optional = false
-python-versions = ">=3.8"
-
-[package.dependencies]
-linear-operator = ">=0.1.1"
-scikit-learn = "*"
-
-[package.extras]
-dev = ["black", "twine", "pre-commit"]
-examples = ["ipython", "jupyter", "matplotlib", "scipy", "torchvision", "tqdm"]
-keops = ["pykeops (>=1.1.1)"]
-pyro = ["pyro-ppl (>=1.8)"]
-test = ["flake8 (==4.0.1)", "flake8-print (==4.0.0)", "pytest", "nbval"]
-
-[[package]]
 name = "identify"
 version = "2.5.9"
 description = "File identification library for Python"
@@ -301,20 +222,6 @@ colors = ["colorama (>=0.4.3,<0.5.0)"]
 plugins = ["setuptools"]
 
 [[package]]
-name = "jinja2"
-version = "3.1.2"
-description = "A very fast and expressive template engine."
-category = "dev"
-optional = false
-python-versions = ">=3.7"
-
-[package.dependencies]
-MarkupSafe = ">=2.0"
-
-[package.extras]
-i18n = ["Babel (>=2.7)"]
-
-[[package]]
 name = "joblib"
 version = "1.2.0"
 description = "Lightweight pipelining with Python functions"
@@ -339,22 +246,6 @@ optional = false
 python-versions = ">=3.7"
 
 [[package]]
-name = "linear-operator"
-version = "0.1.1"
-description = "A linear operator implementation, primarily designed for finite-dimensional positive definite operators (i.e. kernel matrices)."
-category = "dev"
-optional = false
-python-versions = ">=3.8"
-
-[package.dependencies]
-scipy = "*"
-torch = ">=1.11"
-
-[package.extras]
-dev = ["black", "twine", "pre-commit"]
-test = ["flake8 (==4.0.1)", "flake8-print (==4.0.0)"]
-
-[[package]]
 name = "llvmlite"
 version = "0.39.1"
 description = "lightweight wrapper around basic LLVM functionality"
@@ -374,14 +265,6 @@ python-versions = ">=2.7, <4"
 ephem = ">=3.7.5.3"
 python-dateutil = ">=2.6.1"
 pytz = "*"
-
-[[package]]
-name = "markupsafe"
-version = "2.1.1"
-description = "Safely add untrusted strings to HTML/XML markup."
-category = "dev"
-optional = false
-python-versions = ">=3.7"
 
 [[package]]
 name = "matplotlib"
@@ -410,17 +293,6 @@ description = "McCabe checker, plugin for flake8"
 category = "dev"
 optional = false
 python-versions = ">=3.6"
-
-[[package]]
-name = "multipledispatch"
-version = "0.6.0"
-description = "Multiple dispatch"
-category = "dev"
-optional = false
-python-versions = "*"
-
-[package.dependencies]
-six = "*"
 
 [[package]]
 name = "mypy-extensions"
@@ -458,53 +330,6 @@ description = "NumPy is the fundamental package for array computing with Python.
 category = "main"
 optional = false
 python-versions = ">=3.7"
-
-[[package]]
-name = "nvidia-cublas-cu11"
-version = "11.10.3.66"
-description = "CUBLAS native runtime libraries"
-category = "dev"
-optional = false
-python-versions = ">=3"
-
-[[package]]
-name = "nvidia-cuda-nvrtc-cu11"
-version = "11.7.99"
-description = "NVRTC native runtime libraries"
-category = "dev"
-optional = false
-python-versions = ">=3"
-
-[[package]]
-name = "nvidia-cuda-runtime-cu11"
-version = "11.7.99"
-description = "CUDA Runtime native Libraries"
-category = "dev"
-optional = false
-python-versions = ">=3"
-
-[[package]]
-name = "nvidia-cudnn-cu11"
-version = "8.5.0.96"
-description = "cuDNN runtime libraries"
-category = "dev"
-optional = false
-python-versions = ">=3"
-
-[[package]]
-name = "opt-einsum"
-version = "3.3.0"
-description = "Optimizing numpys einsum function"
-category = "dev"
-optional = false
-python-versions = ">=3.5"
-
-[package.dependencies]
-numpy = ">=1.7"
-
-[package.extras]
-docs = ["sphinx (==1.2.3)", "sphinxcontrib-napoleon", "sphinx-rtd-theme", "numpydoc"]
-tests = ["pytest", "pytest-cov", "pytest-pep8"]
 
 [[package]]
 name = "packaging"
@@ -596,17 +421,6 @@ docs = ["furo (>=2022.9.29)", "proselint (>=0.13)", "sphinx-autodoc-typehints (>
 test = ["appdirs (==1.4.4)", "pytest-cov (>=4)", "pytest-mock (>=3.10)", "pytest (>=7.2)"]
 
 [[package]]
-name = "plotly"
-version = "5.11.0"
-description = "An open-source, interactive data visualization library for Python"
-category = "dev"
-optional = false
-python-versions = ">=3.6"
-
-[package.dependencies]
-tenacity = ">=6.2.0"
-
-[[package]]
 name = "pluggy"
 version = "1.0.0"
 description = "plugin and hook calling mechanisms for python"
@@ -679,41 +493,6 @@ python-versions = ">=3.6.8"
 
 [package.extras]
 diagrams = ["railroad-diagrams", "jinja2"]
-
-[[package]]
-name = "pyro-api"
-version = "0.1.2"
-description = "Generic API for dispatch to Pyro backends."
-category = "dev"
-optional = false
-python-versions = "*"
-
-[package.extras]
-dev = ["sphinx (>=2.0)", "sphinx-rtd-theme", "ipython"]
-test = ["flake8", "pytest (>=5.0)"]
-
-[[package]]
-name = "pyro-ppl"
-version = "1.8.2"
-description = "A Python library for probabilistic modeling and inference"
-category = "dev"
-optional = false
-python-versions = ">=3.7"
-
-[package.dependencies]
-numpy = ">=1.7"
-opt-einsum = ">=2.3.2"
-pyro-api = ">=0.1.1"
-torch = ">=1.11.0"
-tqdm = ">=4.36"
-
-[package.extras]
-dev = ["jupyter (>=1.0.0)", "graphviz (>=0.8)", "matplotlib (>=1.3)", "torchvision (>=0.12.0)", "visdom (>=0.1.4)", "pandas", "pillow (==8.2.0)", "scikit-learn", "seaborn (>=0.11.0)", "wget", "lap", "black (>=21.4b0)", "flake8", "isort (>=5.0)", "mypy (>=0.812)", "nbformat", "nbsphinx (>=0.3.2)", "nbstripout", "nbval", "ninja", "pypandoc", "pytest (>=5.0)", "pytest-xdist", "scipy (>=1.1)", "sphinx", "sphinx-rtd-theme", "yapf"]
-extras = ["jupyter (>=1.0.0)", "graphviz (>=0.8)", "matplotlib (>=1.3)", "torchvision (>=0.12.0)", "visdom (>=0.1.4)", "pandas", "pillow (==8.2.0)", "scikit-learn", "seaborn (>=0.11.0)", "wget", "lap"]
-funsor = ["funsor[torch] (==0.4.3)"]
-horovod = ["horovod[pytorch] (>=0.19)"]
-profile = ["prettytable", "pytest-benchmark", "snakeviz"]
-test = ["jupyter (>=1.0.0)", "graphviz (>=0.8)", "matplotlib (>=1.3)", "torchvision (>=0.12.0)", "visdom (>=0.1.4)", "pandas", "pillow (==8.2.0)", "scikit-learn", "seaborn (>=0.11.0)", "wget", "lap", "black (>=21.4b0)", "flake8", "nbval", "pytest (>=5.0)", "pytest-cov", "scipy (>=1.1)"]
 
 [[package]]
 name = "pytest"
@@ -808,14 +587,6 @@ pandas = ">=0.23"
 scipy = ">=1.0"
 
 [[package]]
-name = "setuptools-git"
-version = "1.2"
-description = "Setuptools revision control system plugin for Git"
-category = "main"
-optional = false
-python-versions = "*"
-
-[[package]]
 name = "setuptools-scm"
 version = "7.0.5"
 description = "the blessed package to manage your versions by scm tags"
@@ -860,17 +631,6 @@ develop = ["cython (>=0.29)"]
 docs = ["sphinx", "nbconvert", "jupyter-client", "ipykernel", "matplotlib", "nbformat", "numpydoc", "pandas-datareader"]
 
 [[package]]
-name = "tenacity"
-version = "8.1.0"
-description = "Retry code until it succeeds"
-category = "dev"
-optional = false
-python-versions = ">=3.6"
-
-[package.extras]
-doc = ["reno", "sphinx", "tornado (>=4.5)"]
-
-[[package]]
 name = "threadpoolctl"
 version = "3.1.0"
 description = "threadpoolctl"
@@ -904,50 +664,14 @@ python-versions = ">=3.6"
 
 [[package]]
 name = "torch"
-version = "1.13.0"
+version = "1.12.1"
 description = "Tensors and Dynamic neural networks in Python with strong GPU acceleration"
-category = "dev"
+category = "main"
 optional = false
 python-versions = ">=3.7.0"
 
 [package.dependencies]
-nvidia-cublas-cu11 = "11.10.3.66"
-nvidia-cuda-nvrtc-cu11 = "11.7.99"
-nvidia-cuda-runtime-cu11 = "11.7.99"
-nvidia-cudnn-cu11 = "8.5.0.96"
 typing-extensions = "*"
-
-[package.extras]
-opt-einsum = ["opt-einsum (>=3.3)"]
-
-[[package]]
-name = "tqdm"
-version = "4.64.1"
-description = "Fast, Extensible Progress Meter"
-category = "dev"
-optional = false
-python-versions = "!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,>=2.7"
-
-[package.dependencies]
-colorama = {version = "*", markers = "platform_system == \"Windows\""}
-
-[package.extras]
-dev = ["py-make (>=0.1.0)", "twine", "wheel"]
-notebook = ["ipywidgets (>=6)"]
-slack = ["slack-sdk"]
-telegram = ["requests"]
-
-[[package]]
-name = "typeguard"
-version = "2.13.3"
-description = "Run-time type checker for Python"
-category = "dev"
-optional = false
-python-versions = ">=3.5.3"
-
-[package.extras]
-doc = ["sphinx-rtd-theme", "sphinx-autodoc-typehints (>=1.2.0)"]
-test = ["pytest", "typing-extensions", "mypy"]
 
 [[package]]
 name = "typing-extensions"
@@ -978,7 +702,7 @@ testing = ["coverage (>=6.2)", "coverage-enable-subprocess (>=1)", "flaky (>=3.7
 name = "wrapt"
 version = "1.14.1"
 description = "Module for decorators, wrappers and monkey patching."
-category = "main"
+category = "dev"
 optional = false
 python-versions = "!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,!=3.4.*,>=2.7"
 
@@ -997,51 +721,38 @@ testing = ["pytest (>=6)", "pytest-checkdocs (>=2.4)", "pytest-flake8", "flake8 
 [metadata]
 lock-version = "1.1"
 python-versions = ">=3.8,<3.10"
-content-hash = "5e651bbc9ad11a90a479b899f3159977b4e774394c42f1bfa28bfb9cf6ee5a77"
+content-hash = "79994c804bb45d01d96c3efdb21d76554154fde2ae657de1f6a4494b30b9ba2b"
 
 [metadata.files]
 astroid = []
 attrs = []
-ax-platform = []
 black = []
-botorch = []
 cfgv = []
 click = []
 colorama = []
 contourpy = []
 cycler = []
-deprecated = []
 dill = []
 distlib = []
 ephem = []
 exceptiongroup = []
 filelock = []
 fonttools = []
-gpytorch = []
 identify = []
 importlib-metadata = []
 iniconfig = []
 isort = []
-jinja2 = []
 joblib = []
 kiwisolver = []
 lazy-object-proxy = []
-linear-operator = []
 llvmlite = []
 lunarcalendar = []
-markupsafe = []
 matplotlib = []
 mccabe = []
-multipledispatch = []
 mypy-extensions = []
 nodeenv = []
 numba = []
 numpy = []
-nvidia-cublas-cu11 = []
-nvidia-cuda-nvrtc-cu11 = []
-nvidia-cuda-runtime-cu11 = []
-nvidia-cudnn-cu11 = []
-opt-einsum = []
 packaging = []
 pandas = []
 parameterized = []
@@ -1049,14 +760,11 @@ pathspec = []
 patsy = []
 pillow = []
 platformdirs = []
-plotly = []
 pluggy = []
 pre-commit = []
 pylint = []
 pymannkendall = []
 pyparsing = []
-pyro-api = []
-pyro-ppl = []
 pytest = []
 python-dateutil = []
 pytz = []
@@ -1064,18 +772,14 @@ pyyaml = []
 scikit-learn = []
 scipy = []
 seaborn = []
-setuptools-git = []
 setuptools-scm = []
 six = []
 statsmodels = []
-tenacity = []
 threadpoolctl = []
 toml = []
 tomli = []
 tomlkit = []
 torch = []
-tqdm = []
-typeguard = []
 typing-extensions = []
 virtualenv = []
 wrapt = []

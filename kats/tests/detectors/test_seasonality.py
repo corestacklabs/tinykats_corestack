@@ -61,8 +61,6 @@ class FFTDetectorTest(TestCase):
     def test_detector(self) -> None:
         detector = FFTDetector(data=self.data)
         result = detector.detector()
-        detector.plot(time_unit="Hour")
-        detector.plot_fft(time_unit="Hour")
         self.assertTrue(result["seasonality_presence"])
         self.assertEqual(int(result["seasonalities"][0]), 24)
 

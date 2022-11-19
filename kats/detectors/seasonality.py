@@ -35,13 +35,6 @@ from typing import Union
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-
-try:
-    import plotly.graph_objs as go
-
-    Figure = go.Figure
-except ImportError:
-    Figure = object
 import scipy.fftpack as fp
 import statsmodels.api as sm
 from scipy.signal import find_peaks  # @manual
@@ -49,7 +42,6 @@ from statsmodels.tsa.stattools import acf
 
 from kats.consts import TimeSeriesData
 from kats.detectors.detector import Detector
-from kats.graphics.plots import make_fourier_plot
 from kats.utils.decomposition import TimeSeriesDecomposition
 
 # from numpy.typing import ArrayLike
@@ -228,34 +220,6 @@ class FFTDetector(Detector):
             "seasonalities": selected_seasonalities,
         }
 
-    def plot(
-        self,
-        time_unit: str,
-        sample_spacing: float = 1.0,
-        title: str = "FFT",
-        mad_threshold: float = 6.0,
-        **kwargs: Any,
-    ) -> Figure:
-        """Plots an FFT plot as a plotly figure
-
-        Args:
-            time_unit: string containing the unit of time (displayed on x axis).
-                E.g. 'Hour'.
-            sample_spacing: Optional; scaling FFT for a different time unit.
-                I.e. for hourly time series, sample_spacing=24.0,
-                FFT x axis will be 1/day.
-            title: Optional; title of the plot.
-            mad_threshold: Optional; constant for the outlier algorithm for peak
-                detector. The larger the value the less sensitive the outlier algorithm
-                is.
-
-        Returns:
-            FFT Plot with peaks, selected peaks, and outlier boundary line.
-        """
-        fft = self.get_fft(sample_spacing)
-        thres, orig_peaks, peaks = self.get_fft_peaks(fft, mad_threshold)
-        return make_fourier_plot(fft, thres, orig_peaks, peaks, f"1/{time_unit}", title=title)
-
     def get_fft(self, sample_spacing: float = 1.0) -> pd.DataFrame:
         """Computes FFT
 
@@ -318,30 +282,3 @@ class FFTDetector(Detector):
         peaks = peaks.loc[~peaks["Remove"]]
         peaks.drop(inplace=True, columns="Remove")
         return threshold, orig_peaks, peaks
-
-    def plot_fft(
-        self,
-        time_unit: str,
-        sample_spacing: float = 1.0,
-        title: str = "FFT",
-        mad_threshold: float = 6.0,
-    ) -> Figure:
-        """Plots an FFT plot as a plotly figure
-
-        Args:
-            time_unit: string containing the unit of time (displayed on x axis).
-                            E.g. 'Hour'
-            sample_spacing: Optional; scaling FFT for a different time unit.
-                I.e. for hourly time series, sample_spacing=24.0,
-                FFT x axis will be 1/day
-            title: Optional; title of the plot
-            mad_threshold: Optional; constant for the outlier algorithm for peak
-                detector. The larger the value the less sensitive the outlier algorithm
-                is.
-
-        Returns:
-            FFT Plot with peaks, selected peaks, and outlier boundary line
-        """
-        fft = self.get_fft(sample_spacing)
-        thres, orig_peaks, peaks = self.get_fft_peaks(fft, mad_threshold)
-        return make_fourier_plot(fft, thres, orig_peaks, peaks, f"1/{time_unit}", title=title)
