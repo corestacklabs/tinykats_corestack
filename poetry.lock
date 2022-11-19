@@ -756,6 +756,17 @@ pytz = ">=2017.3"
 test = ["hypothesis (>=3.58)", "pytest (>=6.0)", "pytest-xdist"]
 
 [[package]]
+name = "parameterized"
+version = "0.8.1"
+description = "Parameterized testing with any Python test framework"
+category = "dev"
+optional = false
+python-versions = "*"
+
+[package.extras]
+dev = ["jinja2"]
+
+[[package]]
 name = "parso"
 version = "0.8.3"
 description = "A Python Parser"
@@ -1314,7 +1325,7 @@ testing = ["pytest (>=6)", "pytest-checkdocs (>=2.4)", "pytest-flake8", "flake8 
 [metadata]
 lock-version = "1.1"
 python-versions = ">=3.8,<3.10"
-content-hash = "c25d01603f481fd8912288dda0982f61987bf154022ac0517ed048ab9838c477"
+content-hash = "6044865271c1230fa50b09bc7d23a0d52de2bbc3b8e3496dac4bf92376cec7f8"
 
 [metadata.files]
 appnope = []
@@ -1374,6 +1385,7 @@ nvidia-cudnn-cu11 = []
 opt-einsum = []
 packaging = []
 pandas = []
+parameterized = []
 parso = []
 patsy = []
 pexpect = []

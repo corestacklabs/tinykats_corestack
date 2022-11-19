@@ -8,8 +8,6 @@ import unittest
 from typing import Any, cast, Dict, List
 from unittest import mock, TestCase
 
-import kats.utils.emp_confidence_int  # noqa
-import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from kats.compat.pandas import assert_frame_equal
@@ -336,99 +334,10 @@ class testEmpConfidenceInt(TestCase):
         with self.assertRaises(ValueError):
             _ = self.unfit_ci.diagnose()
 
-    def test_diagnose(self) -> None:
-        for i, kwargs in enumerate(
-            [
-                {"testname": "typical"},
-                {"testname": "custom_ax", "ax": None},
-                {"testname": "custom_figsize", "figsize": (8, 5)},
-                {"testname": "no_legend", "legend": False},
-                {
-                    "testname": "custom",
-                    "ax": None,
-                    "figsize": (8, 5),
-                    "linecolor": "purple",
-                    "linelabel": "foo",
-                    "secolor": "orange",
-                    "selabel": "bar",
-                    "legend": False,
-                },
-            ]
-        ):
-            with self.subTest(msg=get_name("test_diagnose", i, kwargs)):
-                figsize = kwargs.get("figsize", None)
-                if "ax" in kwargs:
-                    _, ax = plt.subplots(figsize=(6, 4) if figsize is None else figsize)
-                else:
-                    ax = None
-                defaults = self.ci_diagnose_defaults
-                linecolor = kwargs.get("linecolor", defaults["linecolor"])
-                linelabel = kwargs.get("linelabel", defaults["linelabel"])
-                secolor = kwargs.get("secolor", defaults["secolor"])
-                selabel = kwargs.get("selabel", defaults["selabel"])
-                legend = kwargs.get("legend", defaults["legend"])
-                ax = self.ci_plot.diagnose(
-                    ax=ax,
-                    figsize=figsize,
-                    linecolor=linecolor,
-                    linelabel=linelabel,
-                    secolor=secolor,
-                    selabel=selabel,
-                    legend=legend,
-                )
-                self.assertIsNotNone(ax)
-                # TODO: add visual diff tests
 
     def test_plot_error_unfit(self) -> None:
         with self.assertRaises(ValueError):
             _ = self.unfit_ci.plot()
-
-    def test_plot(self) -> None:
-        for i, kwargs in enumerate(
-            [
-                {"testname": "typical"},
-                {"testname": "custom_ax", "ax": None},
-                {"testname": "custom_figsize", "figsize": (8, 5)},
-                {"testname": "no_grid", "grid": False},
-                {
-                    "testname": "custom",
-                    "ax": None,
-                    "figsize": (8, 5),
-                    "linecolor": "purple",
-                    "linelabel": "foo",
-                    "secolor": "orange",
-                    "selabel": "bar",
-                    "legend": False,
-                },
-            ]
-        ):
-            with self.subTest(msg=get_name("test_plot", i, kwargs)):
-                figsize = kwargs.get("figsize", None)
-                if "ax" in kwargs:
-                    _, ax = plt.subplots(figsize=(6, 4) if figsize is None else figsize)
-                else:
-                    ax = None
-                defaults = self.ci_plot_defaults
-                linecolor = kwargs.get("linecolor", defaults["linecolor"])
-                fcstcolor = kwargs.get("fcstcolor", defaults["fcstcolor"])
-                intervalcolor = kwargs.get("intervalcolor", defaults["intervalcolor"])
-                intervalalpha = kwargs.get("intervalalpha", defaults["intervalalpha"])
-                modelcolor = kwargs.get("modelcolor", defaults["modelcolor"])
-                modelalpha = kwargs.get("modelalpha", defaults["modelalpha"])
-                grid = kwargs.get("grid", defaults["grid"])
-                ax = self.ci_plot.plot(
-                    ax=ax,
-                    figsize=figsize,
-                    linecolor=linecolor,
-                    fcstcolor=fcstcolor,
-                    intervalcolor=intervalcolor,
-                    intervalalpha=intervalalpha,
-                    modelcolor=modelcolor,
-                    modelalpha=modelalpha,
-                    grid=grid,
-                )
-                self.assertIsNotNone(ax)
-
 
 if __name__ == "__main__":
     unittest.main()

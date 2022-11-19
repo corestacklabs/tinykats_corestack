@@ -10,10 +10,8 @@ from datetime import datetime
 from typing import cast, List
 from unittest import TestCase
 
-import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import pytest
 import pytz
 from dateutil import parser
 from dateutil.relativedelta import relativedelta
@@ -1401,55 +1399,6 @@ class TimeSeriesDataOpsTest(TimeSeriesBaseTest):
                 time_col_name=TIME_COL_NAME,
             ),
         )
-
-    # pyre-fixme[56]: Pyre was not able to infer the type of the decorator
-    #  `pytest.mark.mpl_image_compare`.
-    @pytest.mark.mpl_image_compare
-    def test_plot(self) -> plt.Figure:
-        # Univariate test case
-        ax = self.ts_univ_1.plot(cols=["y"])
-        self.assertIsNotNone(ax)
-        return plt.gcf()
-
-    # pyre-fixme[56]: Pyre was not able to infer the type of the decorator
-    #  `pytest.mark.mpl_image_compare`.
-    @pytest.mark.mpl_image_compare
-    def test_plot_multivariate(self) -> plt.Figure:
-        # Multivariate test case
-        ax = self.ts_multi_1.plot()
-        self.assertIsNotNone(ax)
-        return plt.gcf()
-
-    # pyre-fixme[56]: Pyre was not able to infer the type of the decorator
-    #  `pytest.mark.mpl_image_compare`.
-    @pytest.mark.mpl_image_compare
-    def test_plot_params(self) -> plt.Figure:
-        # Test more parameter overrides.
-        ax = self.ts_multi_1.plot(
-            figsize=(8, 3), plot_kwargs={"cmap": "Purples"}, grid=False
-        )
-        self.assertIsNotNone(ax)
-        return plt.gcf()
-
-    # pyre-fixme[56]: Pyre was not able to infer the type of the decorator
-    #  `pytest.mark.mpl_image_compare`.
-    @pytest.mark.mpl_image_compare
-    def test_plot_grid_ax(self) -> plt.Figure:
-        # Test grid and ax parameter overrides.
-        fig, ax = plt.subplots(figsize=(6, 4))
-        ax = self.ts_univ_1.plot(ax=ax, grid_kwargs={"lw": 2, "ls": ":"})
-        self.assertIsNotNone(ax)
-        return fig
-
-    def test_plot_missing_column(self) -> None:
-        # Columns not in data.
-        with self.assertRaises(ValueError):
-            self.ts_univ_1.plot(cols=["z"])
-
-    def test_plot_empty(self) -> None:
-        # No data to plot.
-        with self.assertRaises(ValueError):
-            self.ts_empty.plot()
 
 
 class TimeSeriesDataMiscTest(TimeSeriesBaseTest):
