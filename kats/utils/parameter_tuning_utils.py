@@ -9,10 +9,6 @@ This module has a collection of functions. Each function is dedicated for a mode
 returns default search space for hyperparameter tuning that pertains to the model.
 They are called by hyperparemeter tuning module, time_series_parameter_tuning.py.
 
-  Typical usage example:
-
-  SearchMethodFactory.create_search_method(get_default_prophet_parameter_search_space(), ...)
-  SearchMethodFactory.create_search_method(get_default_arnet_parameter_search_space(), ...)
 """
 
 
@@ -21,126 +17,6 @@ from typing import Dict
 from typing import List
 
 import numpy as np
-
-
-def get_default_prophet_parameter_search_space() -> List[Dict[str, Any]]:
-    """Generates default search space as a list of dictionaries and returns it for prophet model.
-
-    Each dictionary in the list corresponds to a hyperparameter, having properties
-    defining that hyperparameter. Properties are name, type, value_type, values,
-    is_ordered. Hyperparameters that are included: seasonality_prior_scale, yearly_seasonality,
-    weekly_seasonality, daily_seasonality, seasonality_mode, changepoint_prior_scale,
-    changepoint_range.
-
-    Args:
-        N/A
-
-    Returns:
-        As described above
-
-    Raises:
-        N/A
-    """
-
-    return [
-        {
-            "name": "seasonality_prior_scale",
-            "type": "choice",
-            "value_type": "float",
-            "values": list(np.logspace(-2, 1, 10, endpoint=True)),
-            "is_ordered": True,
-        },
-        {
-            "name": "yearly_seasonality",
-            "type": "choice",
-            "value_type": "bool",
-            "values": [True, False],
-        },
-        {
-            "name": "weekly_seasonality",
-            "type": "choice",
-            "value_type": "bool",
-            "values": [True, False],
-        },
-        {
-            "name": "daily_seasonality",
-            "type": "choice",
-            "value_type": "bool",
-            "values": [True, False],
-        },
-        {
-            "name": "seasonality_mode",
-            "type": "choice",
-            "value_type": "str",
-            "values": ["additive", "multiplicative"],
-        },
-        {
-            "name": "changepoint_prior_scale",
-            "type": "choice",
-            "value_type": "float",
-            "values": list(np.logspace(-3, 0, 10, endpoint=True)),
-            "is_ordered": True,
-        },
-        {
-            "name": "changepoint_range",
-            "type": "choice",
-            "value_type": "float",
-            "values": list(np.arange(0.8, 0.96, 0.01)),  # last value is 0.95
-            "is_ordered": True,
-        },
-    ]
-
-
-def get_default_neuralprophet_parameter_search_space() -> List[Dict[str, Any]]:
-    """Generates default search space as a list of dictionaries and returns it for neuralprophet model.
-
-    Each dictionary in the list corresponds to a hyperparameter, having properties
-    defining that hyperparameter. Properties are name, type, value_type, values,
-    is_ordered. Hyperparameters that are included: yearly_seasonality,
-    weekly_seasonality, daily_seasonality, seasonality_mode, changepoints_range.
-
-    Args:
-        N/A
-
-    Returns:
-        As described above
-
-    Raises:
-        N/A
-    """
-    return [
-        {
-            "name": "yearly_seasonality",
-            "type": "choice",
-            "value_type": "bool",
-            "values": [True, False],
-        },
-        {
-            "name": "weekly_seasonality",
-            "type": "choice",
-            "value_type": "bool",
-            "values": [True, False],
-        },
-        {
-            "name": "daily_seasonality",
-            "type": "choice",
-            "value_type": "bool",
-            "values": [True, False],
-        },
-        {
-            "name": "seasonality_mode",
-            "type": "choice",
-            "value_type": "str",
-            "values": ["additive", "multiplicative"],
-        },
-        {
-            "name": "changepoints_range",
-            "type": "choice",
-            "value_type": "float",
-            "values": list(np.arange(0.85, 0.96, 0.01)),  # last value is 0.95
-            "is_ordered": True,
-        },
-    ]
 
 
 def get_default_arnet_parameter_search_space() -> List[Dict[str, Any]]:
@@ -207,7 +83,7 @@ def get_default_stlf_parameter_search_space() -> List[Dict[str, Any]]:
             "name": "method",
             "type": "choice",
             "value_type": "str",
-            "values": ["linear", "quadratic", "theta", "prophet"],
+            "values": ["linear", "quadratic", "theta"],
         },
         {
             "name": "m",

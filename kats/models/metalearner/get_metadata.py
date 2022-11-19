@@ -32,8 +32,6 @@ from kats.models.arima import ARIMAModel
 from kats.models.arima import ARIMAParams
 from kats.models.holtwinters import HoltWintersModel
 from kats.models.holtwinters import HoltWintersParams
-from kats.models.prophet import ProphetModel
-from kats.models.prophet import ProphetParams
 from kats.models.sarima import SARIMAModel
 from kats.models.sarima import SARIMAParams
 from kats.models.stlf import STLFModel
@@ -45,7 +43,6 @@ from kats.tsfeatures.tsfeatures import TsFeatures
 candidate_models = {
     "arima": ARIMAModel,
     "holtwinters": HoltWintersModel,
-    "prophet": ProphetModel,
     "theta": ThetaModel,
     "stlf": STLFModel,
     "sarima": SARIMAModel,
@@ -54,7 +51,6 @@ candidate_models = {
 candidate_params = {
     "arima": ARIMAParams,
     "holtwinters": HoltWintersParams,
-    "prophet": ProphetParams,
     "theta": ThetaParams,
     "stlf": STLFParams,
     "sarima": SARIMAParams,
@@ -84,8 +80,8 @@ class GetMetaData:
 
     Attributes:
         data: :class:`kats.consts.TimeSeriesData` object representing the input time series data.
-        all_models: Optional; A dictionary of candidate model classes. Default dictionary includes models of ARIMA, SARIMA, HoltWinters, Prophet, Theta, and STLF.
-        all_params: Optional; A dictionary of the corresponding candidate model parameter classes. Default includes model parameter classes of ARIMA, SARIMA, HoltWinters, Prophet, Theta, and STLF.
+        all_models: Optional; A dictionary of candidate model classes. Default dictionary includes models of ARIMA, SARIMA, HoltWinters, Theta, and STLF.
+        all_params: Optional; A dictionary of the corresponding candidate model parameter classes. Default includes model parameter classes of ARIMA, SARIMA, HoltWinters, Theta, and STLF.
         min_length: Optional; An integer for the minimal length of a time series. Time series data whose length is shorter than min_length will be excluded. Default is 30.
         scale: Optional; A boolean to specify whether or not to rescale the time series data by its maximum values. Default is True. Default is True.
         method: Optional; A SearchMethodEnum object defining the search method for hyper-parameters tuning. Default is random search in the default parameter space.

@@ -22,7 +22,6 @@ from kats.metrics import metrics
 from kats.models import arima
 from kats.models import holtwinters
 from kats.models import linear_model
-from kats.models import prophet
 from kats.models import quadratic_model
 from kats.models import sarima
 from kats.models import theta
@@ -35,7 +34,6 @@ BASE_MODELS: Dict[str, Type[Model]] = {
     "arima": arima.ARIMAModel,
     "holtwinters": holtwinters.HoltWintersModel,
     "sarima": sarima.SARIMAModel,
-    "prophet": prophet.ProphetModel,
     "linear": linear_model.LinearModel,
     "quadratic": quadratic_model.QuadraticModel,
     "theta": theta.ThetaModel,

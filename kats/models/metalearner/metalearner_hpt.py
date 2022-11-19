@@ -34,8 +34,6 @@ from kats.consts import TimeSeriesData
 from kats.tsfeatures.tsfeatures import TsFeatures
 
 _MODELS = {
-    "neuralprophet",
-    "prophet",
     "arima",
     "sarima",
     "holtwinters",
@@ -61,10 +59,6 @@ class DefaultModelParams:
     theta_numerical_idx: List[str] = field(default_factory=list)
     stlf_categorical_idx: List[str] = field(default_factory=list)
     stlf_numerical_idx: List[str] = field(default_factory=list)
-    neuralprophet_categorical_idx: List[str] = field(default_factory=list)
-    neuralprophet_numerical_idx: List[str] = field(default_factory=list)
-    prophet_categorical_idx: List[str] = field(default_factory=list)
-    prophet_numerical_idx: List[str] = field(default_factory=list)
     cusum_categorical_idx: List[str] = field(default_factory=list)
     cusum_numerical_idx: List[str] = field(default_factory=list)
     statsig_categorical_idx: List[str] = field(default_factory=list)
@@ -86,24 +80,6 @@ class DefaultModelParams:
         self.theta_numerical_idx = []
         self.stlf_categorical_idx = ["method", "m"]
         self.stlf_numerical_idx = []
-        self.neuralprophet_categorical_idx = [
-            "yearly_seasonality",
-            "weekly_seasonality",
-            "daily_seasonality",
-            "seasonality_mode",
-            "changepoints_range",
-        ]
-        self.neuralprophet_numerical_idx = []
-        self.prophet_categorical_idx = [
-            "yearly_seasonality",
-            "weekly_seasonality",
-            "daily_seasonality",
-            "seasonality_mode",
-            "seasonality_prior_scale",
-            "changepoint_prior_scale",
-            "changepoint_range",
-        ]
-        self.prophet_numerical_idx = []
         self.cusum_categorical_idx = ["score_func"]
         self.cusum_numerical_idx = [
             "delta_std_ratio",
@@ -131,12 +107,6 @@ class DefaultModelNetworks:
     stlf_n_hidden_shared: List[int] = field(default_factory=list)
     stlf_n_hidden_cat_combo: List[List[int]] = field(default_factory=list)
     stlf_n_hidden_num: List[int] = field(default_factory=list)
-    neuralprophet_n_hidden_shared: List[int] = field(default_factory=list)
-    neuralprophet_n_hidden_cat_combo: List[List[int]] = field(default_factory=list)
-    neuralprophet_n_hidden_num: List[int] = field(default_factory=list)
-    prophet_n_hidden_shared: List[int] = field(default_factory=list)
-    prophet_n_hidden_cat_combo: List[List[int]] = field(default_factory=list)
-    prophet_n_hidden_num: List[int] = field(default_factory=list)
     cusum_n_hidden_shared: List[int] = field(default_factory=list)
     cusum_n_hidden_cat_combo: List[List[int]] = field(default_factory=list)
     cusum_n_hidden_num: List[int] = field(default_factory=list)
@@ -160,12 +130,6 @@ class DefaultModelNetworks:
         self.stlf_n_hidden_shared = [20]
         self.stlf_n_hidden_cat_combo = [[5], [5]]
         self.stlf_n_hidden_num = []
-        self.neuralprophet_n_hidden_shared = [40]
-        self.neuralprophet_n_hidden_cat_combo = [[5], [5], [2], [3], [5]]
-        self.neuralprophet_n_hidden_num = []
-        self.prophet_n_hidden_shared = [40]
-        self.prophet_n_hidden_cat_combo = [[5], [5], [2], [3], [5], [5], [5]]
-        self.prophet_n_hidden_num = []
         self.cusum_n_hidden_shared = [20]
         self.cusum_n_hidden_cat_combo = [[3]]
         self.cusum_n_hidden_num = [5, 5, 5]
@@ -192,7 +156,7 @@ class MetaLearnHPT:
         categorical_idx: Optional; A list of strings of the names of the categorical hyper-parameters. Default is None.
         numerical_idx: Optional; A list of strings of the names of the numerical hyper-parameters. Default is None.
         default_model: Optional; A string of the name of the forecast model whose default settings will be used.
-                       Can be 'arima', 'sarima', 'theta', 'neuralprophet', 'prophet', 'holtwinters', 'stlf' or None. Default is None.
+                       Can be 'arima', 'sarima', 'theta', 'holtwinters', 'stlf' or None. Default is None.
         scale: Optional; A boolean to specify whether or not to normalize time series features to zero mean and unit variance. Default is True.
         load_model: Optional; A boolean to specify whether or not to load a trained model. Default is False.
 
@@ -264,7 +228,7 @@ class MetaLearnHPT:
                     categorical_idx = getattr(default_model_params, categorical_idx_var)
                     numerical_idx = getattr(default_model_params, numerical_idx_var)
                 else:
-                    msg = f"default_model={default_model} is not available! Please choose one from 'neuralprophet', 'prophet', 'arima', 'sarima', 'holtwinters', 'stlf', 'theta', 'cusum', 'statsig'"
+                    msg = f"default_model={default_model} is not available! Please choose one from 'arima', 'sarima', 'holtwinters', 'stlf', 'theta', 'cusum', 'statsig'"
                     raise _log_error(msg)
 
             if (not numerical_idx) and (not categorical_idx):

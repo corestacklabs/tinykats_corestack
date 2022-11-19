@@ -12,8 +12,6 @@ import pandas as pd
 from kats.consts import TimeSeriesData
 from kats.models.holtwinters import HoltWintersModel
 from kats.models.holtwinters import HoltWintersParams
-from kats.models.prophet import ProphetModel
-from kats.models.prophet import ProphetParams
 from kats.models.sarima import SARIMAModel
 from kats.models.sarima import SARIMAParams
 from kats.utils.ensemble_predict_interval import ensemble_predict_interval
@@ -32,31 +30,6 @@ class testEnsemblePredictInterval(TestCase):
         ts = TimeSeriesData(pd.DataFrame({"time": pd.date_range("2021-05-06", periods=180), "val": val}))
         self.test_ts = ts[120:]
         self.hist_ts = ts[:120]
-
-    def test_EPI_Prophet(self) -> None:
-        # test EPI on Prophet model
-        epi = ensemble_predict_interval(
-            # pyre-fixme[6]: Incompatible parameter type
-            model=ProphetModel,
-            model_params=ProphetParams(seasonality_mode="additive"),
-            ts=self.hist_ts,
-            block_size=10,
-            n_block=5,
-            ensemble_size=4,
-        )
-        self.assertEqual(len(epi.ts), 60)
-        self.assertEqual(epi.error_matrix_flag, False)
-        self.assertEqual(epi.projection_flag, False)
-
-        res = epi.get_projection(step=10)
-        self.assertEqual(res.shape, (10, 3))
-        self.assertEqual(epi.error_matrix_flag, True)
-        self.assertEqual(epi.projection_flag, True)
-
-        res_other_conf_level = epi.get_fcst_band_with_level(confidence_level=0.5)
-        self.assertEqual(res_other_conf_level.shape, (10, 3))
-
-        epi.pi_comparison_plot(self.test_ts)
 
     def test_EPI_Sarima(self) -> None:
         # test EPI on SARIMA model

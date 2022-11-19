@@ -39,7 +39,6 @@ from kats.detectors.seasonality import ACFDetector
 from kats.models import arima
 from kats.models import holtwinters
 from kats.models import linear_model
-from kats.models import prophet
 from kats.models import quadratic_model
 from kats.models import sarima
 from kats.models import theta
@@ -58,7 +57,6 @@ MODELS = {
     "arima": arima.ARIMAModel,
     "holtwinters": holtwinters.HoltWintersModel,
     "sarima": sarima.SARIMAModel,
-    "prophet": prophet.ProphetModel,
     "linear": linear_model.LinearModel,
     "quadratic": quadratic_model.QuadraticModel,
     "theta": theta.ThetaModel,
@@ -66,7 +64,6 @@ MODELS = {
 
 # models that can fit seasonal time series data
 SMODELS = {
-    "prophet": prophet.ProphetModel,
     "theta": theta.ThetaModel,
     # "sarima": sarima.SARIMAModel,
 }

@@ -37,19 +37,6 @@ def get_name(funcname: str, num: int, kwargs: Dict[str, Any]) -> str:
     return f"{funcname}_{num}_{testname}"
 
 
-# Output from running
-# ci = EmpConfidenceInt(
-#    ALL_ERRORS,
-#    load_air_passengers(),
-#    ProphetParams(seasonality_mode="multiplicative"),
-#    50,
-#    25,
-#    12,
-#    ProphetModel,
-#    confidence_level=0.9,
-# )
-# _ = ci.get_eci(steps=10, freq="MS")
-# _FROZEN_DATA = ci.predicted
 _FROZEN_DATA = pd.DataFrame(
     {
         "time": [
@@ -293,15 +280,6 @@ class testEmpConfidenceInt(TestCase):
         self.ci_diagnose_defaults = get_default_arguments(ci_plot.diagnose)
         self.ci_plot_defaults = get_default_arguments(ci_plot.plot)
         self.ci_plot.get_eci(steps=10, freq="MS")
-
-    @mock.patch("kats.utils.emp_confidence_int.BackTesterRollingWindow")
-    def test_empConfInt_Prophet(self, backtester: BackTesterRollingWindow) -> None:
-        backtester.raw_errors = _RAW_ERRORS
-        result = self.ci.get_eci(steps=10, freq="MS")
-        expected = _FROZEN_DATA.copy()
-        expected["fcst_lower"] = expected["fcst"]
-        expected["fcst_upper"] = expected["fcst"]
-        assert_frame_equal(expected, result, check_like=True)
 
     def test_errors(self) -> None:
         for i, kwargs in enumerate(

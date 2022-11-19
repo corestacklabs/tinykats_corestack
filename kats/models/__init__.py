@@ -16,13 +16,9 @@ except ImportError:
     import logging
 
     logging.warning("kats.models.lstm not available (requires torch)")
-from . import (  # noqa  # noqa  # noqa  # noqa  # noqa  # noqa  # noqa  # noqa  # noqa  # noqa  # noqa
-    globalmodel,
-)
 from . import metalearner
 from . import model
 from . import nowcasting
-from . import prophet
 from . import quadratic_model
 from . import reconciliation
 from . import sarima
