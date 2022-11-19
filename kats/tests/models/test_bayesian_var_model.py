@@ -43,46 +43,6 @@ class testBayesianVARModel(TestCase):
         m = BayesianVAR(ts, self.params)
         self.assertEqual(list(m.data.to_dataframe().columns), correct_columns)
 
-    # pyre-fixme[56]: Pyre was not able to infer the type of the decorator
-    #  `pytest.mark.mpl_image_compare($parameter$remove_text = True)`.
-    @pytest.mark.mpl_image_compare(remove_text=True)
-    def test_plot(self) -> plt.Figure:
-        params = BayesianVARParams(p=3)
-        m = BayesianVAR(self.TSData_multi, params)
-        m.fit()
-        m.predict(steps=30, include_history=True)
-        with sns.color_palette(n_colors=8):
-            ax = m.plot()
-            self.assertIsNotNone(ax)
-        return plt.gcf()
-
-    # pyre-fixme[56]: Pyre was not able to infer the type of the decorator
-    #  `pytest.mark.mpl_image_compare($parameter$remove_text = True)`.
-    @pytest.mark.mpl_image_compare(remove_text=True)
-    def test_plot_ax(self) -> plt.Figure:
-        params = BayesianVARParams(p=3)
-        m = BayesianVAR(self.TSData_multi, params)
-        m.fit()
-        m.predict(steps=30, include_history=True)
-        with sns.color_palette(n_colors=8):
-            _, ax = plt.subplots(figsize=(5, 4))
-            ax = m.plot(ax=ax)
-            self.assertIsNotNone(ax)
-        return plt.gcf()
-
-    # pyre-fixme[56]: Pyre was not able to infer the type of the decorator
-    #  `pytest.mark.mpl_image_compare($parameter$remove_text = True)`.
-    @pytest.mark.mpl_image_compare(remove_text=True)
-    def test_plot_params(self) -> plt.Figure:
-        params = BayesianVARParams(p=3)
-        m = BayesianVAR(self.TSData_multi, params)
-        m.fit()
-        m.predict(steps=30, include_history=True)
-        with sns.color_palette(n_colors=8):
-            ax = m.plot(figsize=(8, 5), title="Test", ls=".")
-            self.assertIsNotNone(ax)
-        return plt.gcf()
-
     def test_predict_error(self) -> None:
         m = BayesianVAR(self.TSData_multi, self.params)
         with self.assertRaises(ValueError):

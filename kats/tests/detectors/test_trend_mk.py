@@ -177,9 +177,6 @@ class MultivariateMKDetectorTest(TestCase):
     def test_no_trend_data(self) -> None:
         self.assertEqual(len(self.detected_time_points_no_trend), 0)
 
-    def test_heatmap(self) -> None:
-        self.d_no_trend.plot_heat_map()
-
     # pyre-fixme[56]: Pyre was not able to infer the type of the decorator
     #  `parameterized.parameterized.parameterized.expand([["up_trend_detected_trend"],
     #  ["up_trend_detected_seas"]])`.

@@ -559,40 +559,6 @@ class MKDetector(Detector):
 
         return top_metrics.iloc[:top_k]
 
-    def plot_heat_map(self) -> pd.DataFrame:
-        """Plots the Tau of each metric in a heatmap.
-
-        Returns:
-            a dataframe contains Tau for all metrics at all time points.
-        """
-        try:
-            import plotly.graph_objects as go
-        except ImportError:
-            raise RuntimeError("requires plotly to be installed")
-
-        Tau_df, _ = self._metrics_analysis()
-        Tau_df = Tau_df.set_index("ds")
-
-        fig = go.Figure(
-            data=go.Heatmap(
-                z=Tau_df.T.values,
-                x=Tau_df.index,
-                y=Tau_df.columns,
-                colorscale="Viridis",
-                reversescale=True,
-            )
-        )
-
-        fig.update_layout(
-            xaxis_title="time",
-            yaxis_title="value",
-            xaxis={"title": "time", "tickangle": 45},
-        )
-
-        fig.show()
-
-        return Tau_df
-
     def _metrics_analysis(self) -> Tuple[pd.DataFrame, pd.DataFrame]:
         if not self.multivariate:
             raise ValueError("Your data is not multivariate.")

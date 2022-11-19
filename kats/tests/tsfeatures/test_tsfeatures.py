@@ -24,39 +24,6 @@ from kats.data.utils import load_air_passengers
 from kats.tsfeatures.tsfeatures import _FEATURE_GROUP_MAPPING
 from kats.tsfeatures.tsfeatures import TsFeatures
 
-SAMPLE_INPUT_TS_BOCPD_SCALED = pd.DataFrame(
-    {
-        "time": pd.date_range("2021-01-01", "2021-01-25"),
-        "value": [
-            -0.35010234,
-            -0.40149659,
-            -0.1959196,
-            -0.43233314,
-            -0.41177544,
-            -0.44650963,
-            0.0447223,
-            -0.39208192,
-            -0.22477185,
-            -0.11754892,
-            -0.45114025,
-            2.31030965,
-            -0.45090788,
-            3.12980422,
-            2.55511448,
-            -0.45273205,
-            -0.45397689,
-            -0.44716349,
-            -0.45230305,
-            -0.45431129,
-            -0.44282053,
-            -0.44267253,
-            -0.11942641,
-            -0.45190004,
-            -0.44805678,
-        ],
-    }
-)
-
 
 def _univariate_features(feats: Union[Dict[str, float], List[Dict[str, float]]]) -> Dict[str, float]:
     return cast(Dict[str, float], feats)
@@ -76,17 +43,6 @@ class TSfeaturesTest(TestCase):
 
         self.TSData_short = TimeSeriesData(DATA.iloc[:8, :])
         self.TSData_mini = TimeSeriesData(DATA.iloc[:2, :])
-
-        self.ts_bocpd = TimeSeriesData(df=SAMPLE_INPUT_TS_BOCPD_SCALED)
-        self.ts_bocpd_multi = TimeSeriesData(
-            pd.DataFrame(
-                {
-                    "time": SAMPLE_INPUT_TS_BOCPD_SCALED.time,
-                    "value1": SAMPLE_INPUT_TS_BOCPD_SCALED.value,
-                    "value2": SAMPLE_INPUT_TS_BOCPD_SCALED.value,
-                }
-            )
-        )
 
     def assertDictAlmostEqual(self, expected: Dict[str, Any], features: Dict[str, Any], places: int = 4) -> None:
         """Compares that two dictionaries are floating-point almost equal.
@@ -115,78 +71,6 @@ class TSfeaturesTest(TestCase):
             for feat in feats:
                 self.assertFalse(feat in features, f"duplicate feature name {feat}")
                 features.add(feat)
-
-    # pyre-fixme[56]: Pyre was not able to infer the type of the decorator `parameter...
-    @parameterized.expand([("univariate", "ts_bocpd"), ("multivariate", "ts_bocpd_multi")])
-    def test_tsfeatures_basic(self, test_name: str, ts_name: str) -> None:
-        ts = attrgetter(ts_name)(self)
-        features = TsFeatures(hw_params=False).transform(ts)
-        if ts.is_univariate():
-            feature_list = [_univariate_features(features)]
-        else:
-            feature_list = _multivariate_features(features)
-
-        expected = {
-            # statistics_features
-            "length": 25.0,
-            "mean": 0.0,
-            "var": 1.0,
-            "entropy": 0.8808,
-            "lumpiness": 0.2423,
-            "stability": 0.0148,
-            "flat_spots": 1.0,
-            "hurst": -1.3972,
-            "std1st_der": 0.618,
-            "crossing_points": 10.0,
-            "binarize_mean": 0.16,
-            "unitroot_kpss": 0.1567,
-            "heterogeneity": 3.1459,
-            "histogram_mode": -0.4543,
-            "linearity": 0.0,
-            # stl_features
-            "trend_strength": 0.5364,
-            "seasonality_strength": 0.4646,
-            "spikiness": 0.0004,
-            "peak": 6.0,
-            "trough": 5.0,
-            # level_shift_features
-            "level_shift_idx": 0.0,
-            "level_shift_size": 0.0046,
-            # acfpacf_features
-            "y_acf1": 0.2265,
-            "y_acf5": 0.1597,
-            "diff1y_acf1": -0.5021,
-            "diff1y_acf5": 0.3465,
-            "diff2y_acf1": -0.6838,
-            "diff2y_acf5": 0.6092,
-            "y_pacf5": 0.2144,
-            "diff1y_pacf5": 0.4361,
-            "diff2y_pacf5": 4.4276,
-            "seas_acf1": -0.1483,
-            "seas_pacf1": -0.0064,
-            # special_ac
-            "firstmin_ac": 4.0,
-            "firstzero_ac": 4.0,
-            # holt_params
-            "holt_alpha": 0.0,
-            "holt_beta": 0.0
-            # hw_params
-            # cusum_detector
-            # robust_stat_detector
-            # bocp_detector
-            # outlier_detector
-            # trend_detector
-            # nowcasting
-            # seasonalities
-            # time
-        }
-        if statsmodels.version >= "0.12":
-            expected["trend_strength"] = 0.426899
-            expected["seasonality_strength"] = 0.410921
-            expected["spikiness"] = 0.000661
-            expected["holt_alpha"] = 1e-8
-        for feature_vector in feature_list:
-            self.assertDictAlmostEqual(expected, feature_vector)
 
     def test_tsfeatures(self) -> None:
         feature_vector = _univariate_features(TsFeatures().transform(self.TSData))
@@ -382,9 +266,6 @@ class TSfeaturesTest(TestCase):
             "cusum_p_value",
             "robust_num",
             "robust_metric_mean",
-            "bocp_num",
-            "bocp_conf_max",
-            "bocp_conf_mean",
             "outlier_num",
             "trend_num",
             "trend_num_increasing",
@@ -421,9 +302,6 @@ class TSfeaturesTest(TestCase):
             "cusum_p_value": 0.0,
             "robust_num": 3,
             "robust_metric_mean": -31.866667,
-            "bocp_num": 3,
-            "bocp_conf_max": 0.677218,
-            "bocp_conf_mean": 0.587680,
             "outlier_num": 0,
             "trend_num": 2,
             "trend_num_increasing": 2,
@@ -554,115 +432,6 @@ class TSfeaturesTest(TestCase):
                 feats,
             )
 
-    def test_nowcasting_error(self) -> None:
-        ts = TimeSeriesData(df=SAMPLE_INPUT_TS_BOCPD_SCALED)
-        features = _univariate_features(TsFeatures(nowcasting=True).transform(ts))
-        expected = {
-            "trend_strength": 0.536395,
-            "seasonality_strength": 0.464575,
-            "spikiness": 0.000353,
-            "peak": 6,
-            "trough": 5,
-            "level_shift_idx": 0,
-            "level_shift_size": 0.004636,
-            "y_acf1": 0.226546,
-            "y_acf5": 0.159668,
-            "diff1y_acf1": -0.502100,
-            "diff1y_acf5": 0.346528,
-            "diff2y_acf1": -0.683816,
-            "diff2y_acf5": 0.609249,
-            "y_pacf5": 0.214401,
-            "diff1y_pacf5": 0.436150,
-            "diff2y_pacf5": 4.427552,
-            "seas_acf1": -0.148278,
-            "seas_pacf1": -0.006386,
-            "firstmin_ac": 4,
-            "firstzero_ac": 4,
-            "holt_alpha": 1.014757e-09,
-            "holt_beta": 0.0,
-            "hw_alpha": np.nan,
-            "hw_beta": np.nan,
-            "hw_gamma": np.nan,
-            "length": 25,
-            "mean": 1.200000e-09,
-            "var": 1.0,
-            "entropy": 0.880823,
-            "lumpiness": 0.242269,
-            "stability": 0.014825,
-            "flat_spots": 1,
-            "hurst": -1.397158,
-            "std1st_der": 0.618019,
-            "crossing_points": 10,
-            "binarize_mean": 0.16,
-            "unitroot_kpss": 0.156730,
-            "heterogeneity": 3.145863,
-            "histogram_mode": -0.454311,
-            "linearity": 2.607152e-06,
-            "nowcast_roc": -2.750322,
-            "nowcast_mom": -0.00566,
-            "nowcast_ma": 0.069129,
-            "nowcast_lag": 0.095243,
-            "nowcast_macd": -0.076092,
-            "nowcast_macdsign": np.nan,
-            "nowcast_macddiff": np.nan,
-        }
-        if statsmodels.version >= "0.12":
-            expected["trend_strength"] = 0.426899
-            expected["seasonality_strength"] = 0.410921
-            expected["spikiness"] = 0.000661
-            expected["holt_alpha"] = 1e-8
-        self.assertDictAlmostEqual(expected, features)
-
-        _df_ = pd.DataFrame(
-            {
-                "time": range(30),
-                "value": [
-                    1,
-                    4,
-                    9,
-                    4,
-                    5,
-                    5,
-                    7,
-                    2,
-                    5,
-                    1,
-                    6,
-                    3,
-                    6,
-                    5,
-                    5,
-                    6,
-                    9,
-                    10,
-                    5,
-                    6,
-                    1,
-                    4,
-                    9,
-                    4,
-                    5,
-                    5,
-                    7,
-                    2,
-                    5,
-                    1,
-                ],
-            }
-        )
-        ts = TimeSeriesData(df=_df_)
-        features = _univariate_features(TsFeatures(selected_features=["nowcasting"]).transform(ts))
-        expected = {
-            "nowcast_roc": 0.435531,
-            "nowcast_mom": -0.12,
-            "nowcast_ma": 5.130769,
-            "nowcast_lag": 5.08,
-            "nowcast_macd": 0.020018,
-            "nowcast_macdsign": 0.013782,
-            "nowcast_macddiff": -0.114959,
-        }
-        self.assertDictAlmostEqual(expected, features)
-
     def test_tsfeatures_time(self) -> None:
         dates = pd.date_range("2021-01-22", "2021-01-31", tz="US/Pacific").tolist()
         dates += pd.date_range("2022-01-30", "2022-02-04", tz="US/Pacific").tolist()
@@ -694,11 +463,3 @@ class TSfeaturesTest(TestCase):
             "time_freq_Sunday": 0.1875,
         }
         self.assertDictAlmostEqual(expected, features)
-
-    def test_without_jit(self) -> None:
-        with patch.dict("sys.modules", {"numba": None}):
-            importlib.reload(kats.tsfeatures.tsfeatures)
-            self.test_tsfeatures()
-            self.test_nowcasting_error()
-
-        importlib.reload(kats.tsfeatures.tsfeatures)
