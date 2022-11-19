@@ -13,16 +13,19 @@ Do this procedure for m times (ensemble), based on which, generate fcst/fcst_upp
 """
 
 import logging
-
 from multiprocessing import cpu_count
 from multiprocessing.pool import Pool
-from typing import Optional, Tuple, Type
+from typing import Optional
+from typing import Tuple
+from typing import Type
 
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import scipy
-from kats.consts import Params, TimeSeriesData
+
+from kats.consts import Params
+from kats.consts import TimeSeriesData
 from kats.models.model import Model
 
 _LOGGER: logging.Logger = logging.getLogger()
@@ -97,44 +100,30 @@ class ensemble_predict_interval:
 
         # check if the given block_size and n_block are reasonable
         if block_size is None and n_block is None:
-            raise ValueError(
-                "Please provide an initial value for either block_size or n_block."
-            )
+            raise ValueError("Please provide an initial value for either block_size or n_block.")
         elif block_size is None:
             assert n_block is not None
             if n_block < 5:
-                raise ValueError(
-                    f"The given n_block is {n_block}. Please provide a larger block_size."
-                )
+                raise ValueError(f"The given n_block is {n_block}. Please provide a larger block_size.")
             self.n_block: int = n_block
             block_size = len(ts) // (self.n_block + 1)
             if block_size < 10:
-                raise ValueError(
-                    f"Block_size is {block_size}. Please provide a longer TS or a smaller n_block."
-                )
+                raise ValueError(f"Block_size is {block_size}. Please provide a longer TS or a smaller n_block.")
             self.block_size: int = block_size
         elif n_block is None:
             assert block_size is not None
             if block_size < 10:
-                raise ValueError(
-                    f"The given block_size is {block_size}. Please provide a larger n_block."
-                )
+                raise ValueError(f"The given block_size is {block_size}. Please provide a larger n_block.")
             self.block_size: int = block_size
             n_block = len(ts) // self.block_size - 1
             if n_block < 5:
-                raise ValueError(
-                    f"n_block is {n_block}. Please provide a longer TS or a smaller block_size."
-                )
+                raise ValueError(f"n_block is {n_block}. Please provide a longer TS or a smaller block_size.")
             self.n_block: int = n_block
         else:
             if block_size < 10:
-                raise ValueError(
-                    f"The given block_size is {block_size}. Please provide a larger n_block."
-                )
+                raise ValueError(f"The given block_size is {block_size}. Please provide a larger n_block.")
             if n_block < 5:
-                raise ValueError(
-                    f"The given n_block is {n_block}. Please provide a larger block_size."
-                )
+                raise ValueError(f"The given n_block is {n_block}. Please provide a larger block_size.")
             if len(ts) < (n_block + 1) * block_size:
                 raise ValueError(
                     f"The given TS has length {len(ts)}, which is samller than (n_block + 1) * block_size. Please provide a longer TS."
@@ -150,9 +139,7 @@ class ensemble_predict_interval:
 
         # check ensemble size
         if ensemble_size < 4:
-            raise ValueError(
-                f"The given ensemble_size is {ensemble_size}. Please provide a larger n_block."
-            )
+            raise ValueError(f"The given ensemble_size is {ensemble_size}. Please provide a larger n_block.")
         self.ensemble_size: int = ensemble_size
 
         # initial error matrix
@@ -172,12 +159,8 @@ class ensemble_predict_interval:
         train_ts = TimeSeriesData(
             pd.DataFrame(
                 {
-                    "time": self.ts[
-                        idx * self.block_size : (idx + 1) * self.block_size
-                    ].time.to_list(),
-                    "value": self.ts[
-                        idx * self.block_size : (idx + 1) * self.block_size
-                    ].value.to_list(),
+                    "time": self.ts[idx * self.block_size : (idx + 1) * self.block_size].time.to_list(),
+                    "value": self.ts[idx * self.block_size : (idx + 1) * self.block_size].value.to_list(),
                 }
             )
         )
@@ -188,9 +171,7 @@ class ensemble_predict_interval:
         fcst = pred["fcst"]
 
         sigma = np.asarray(
-            self.ts[
-                (idx + 1) * self.block_size : (idx + 2) * self.block_size
-            ].value.to_list()
+            self.ts[(idx + 1) * self.block_size : (idx + 2) * self.block_size].value.to_list()
         ) - np.asarray(fcst)
 
         return idx, sigma
@@ -205,9 +186,7 @@ class ensemble_predict_interval:
         if self.multiprocessing:
             num_process = max(min(self.n_block, (cpu_count() - 1) // 2), 1)
             with Pool(processes=num_process) as pool:
-                records = pool.map(
-                    self._get_error_matrix_single, list(range(self.n_block))
-                )
+                records = pool.map(self._get_error_matrix_single, list(range(self.n_block)))
                 pool.close()
 
             # combine results
@@ -220,9 +199,7 @@ class ensemble_predict_interval:
 
         self.error_matrix_flag = True
 
-    def _projection_single(
-        self, idx: int, step: int = 30, rolling_based: bool = False
-    ) -> Tuple[int, np.ndarray]:
+    def _projection_single(self, idx: int, step: int = 30, rolling_based: bool = False) -> Tuple[int, np.ndarray]:
         """
         Get forecasting for future steps for one chain.
         """
@@ -254,24 +231,16 @@ class ensemble_predict_interval:
             assert pred is not None
             fcst = np.asarray(pred["fcst"])
 
-            fcst[:] += np.random.multivariate_normal(
-                self.error_matrix.mean(0), np.cov(self.error_matrix.T), 1
-            )[0]
+            fcst[:] += np.random.multivariate_normal(self.error_matrix.mean(0), np.cov(self.error_matrix.T), 1)[0]
 
             onechain_fcst[i * self.block_size : (i + 1) * self.block_size] = fcst.copy()
 
             # refresh training_data
             if not rolling_based:
-                training_data = TimeSeriesData(
-                    pd.DataFrame({"time": pred["time"].tolist(), "value": list(fcst)})
-                )
+                training_data = TimeSeriesData(pd.DataFrame({"time": pred["time"].tolist(), "value": list(fcst)}))
             else:
                 training_data.extend(
-                    TimeSeriesData(
-                        pd.DataFrame(
-                            {"time": pred["time"].tolist(), "value": list(fcst)}
-                        )
-                    )
+                    TimeSeriesData(pd.DataFrame({"time": pred["time"].tolist(), "value": list(fcst)}))
                 )
 
         return idx, onechain_fcst[:step]
@@ -314,13 +283,9 @@ class ensemble_predict_interval:
         mi, low, up = np.zeros(step), np.zeros(step), np.zeros(step)
 
         for i in range(step):
-            mi[i], low[i], up[i] = mean_confidence_interval(
-                self.ensemble_fcst[:, i], confidence_level
-            )
+            mi[i], low[i], up[i] = mean_confidence_interval(self.ensemble_fcst[:, i], confidence_level)
 
-        res = pd.DataFrame(
-            {"fcst": list(mi), "fcst_lower": list(low), "fcst_upper": list(up)}
-        )
+        res = pd.DataFrame({"fcst": list(mi), "fcst_lower": list(low), "fcst_upper": list(up)})
 
         self.projection_flag = True
         return res
@@ -339,13 +304,9 @@ class ensemble_predict_interval:
         mi, low, up = np.zeros(step), np.zeros(step), np.zeros(step)
 
         for i in range(step):
-            mi[i], low[i], up[i] = mean_confidence_interval(
-                self.ensemble_fcst[:, i], confidence_level
-            )
+            mi[i], low[i], up[i] = mean_confidence_interval(self.ensemble_fcst[:, i], confidence_level)
 
-        res = pd.DataFrame(
-            {"fcst": list(mi), "fcst_lower": list(low), "fcst_upper": list(up)}
-        )
+        res = pd.DataFrame({"fcst": list(mi), "fcst_lower": list(low), "fcst_upper": list(up)})
 
         return res
 
@@ -373,9 +334,7 @@ class ensemble_predict_interval:
         mi, low, up = np.zeros(T), np.zeros(T), np.zeros(T)
 
         for i in range(T):
-            mi[i], low[i], up[i] = mean_confidence_interval(
-                self.ensemble_fcst[:, i], confidence_level
-            )
+            mi[i], low[i], up[i] = mean_confidence_interval(self.ensemble_fcst[:, i], confidence_level)
 
         fig, ax = plt.subplots()
 

@@ -5,18 +5,18 @@
 
 import math
 from operator import attrgetter
-from typing import Sequence, Tuple
+from typing import Sequence
+from typing import Tuple
 from unittest import TestCase
 
 import numpy as np
 import pandas as pd
-from kats.consts import TimeSeriesData
-from kats.detectors.robust_stat_detection import (
-    RobustStatChangePoint,
-    RobustStatDetector,
-)
 from parameterized.parameterized import parameterized
 from sklearn.datasets import make_spd_matrix
+
+from kats.consts import TimeSeriesData
+from kats.detectors.robust_stat_detection import RobustStatChangePoint
+from kats.detectors.robust_stat_detection import RobustStatDetector
 
 
 class RobustStatTest(TestCase):
@@ -28,33 +28,13 @@ class RobustStatTest(TestCase):
         # Initialize the change_points
         df_noregress = pd.DataFrame({"no_change": [math.sin(i) for i in range(60)]})
 
-        df_increase = pd.DataFrame(
-            {
-                "increase": [
-                    math.sin(i) if i < 41 else math.sin(i) + 17 for i in range(60)
-                ]
-            }
-        )
+        df_increase = pd.DataFrame({"increase": [math.sin(i) if i < 41 else math.sin(i) + 17 for i in range(60)]})
 
-        df_decrease = pd.DataFrame(
-            {
-                "decrease": [
-                    math.sin(i) if i < 23 else math.sin(i) - 25 for i in range(60)
-                ]
-            }
-        )
+        df_decrease = pd.DataFrame({"decrease": [math.sin(i) if i < 23 else math.sin(i) - 25 for i in range(60)]})
 
-        df_spike_pos = pd.DataFrame(
-            {"spike": [math.sin(i) if i != 27 else 30 * math.sin(i) for i in range(60)]}
-        )
+        df_spike_pos = pd.DataFrame({"spike": [math.sin(i) if i != 27 else 30 * math.sin(i) for i in range(60)]})
 
-        df_spike_neg = pd.DataFrame(
-            {
-                "spike": [
-                    math.sin(i) if i != 27 else -30 * math.sin(i) for i in range(60)
-                ]
-            }
-        )
+        df_spike_neg = pd.DataFrame({"spike": [math.sin(i) if i != 27 else -30 * math.sin(i) for i in range(60)]})
 
         def _create_change_pt(
             df: pd.DataFrame,

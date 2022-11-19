@@ -18,17 +18,16 @@ from typing import Optional
 
 import numpy as np
 import pandas as pd
-from kats.consts import TimeSeriesData
 from sklearn.model_selection import RandomizedSearchCV
 from sklearn.neighbors import KernelDensity
+
+from kats.consts import TimeSeriesData
 
 
 class KDEResidualTranslator:
     _kde: Optional[KernelDensity] = None
 
-    def __init__(
-        self, ignore_below_frac: float = 0, ignore_above_frac: float = 1
-    ) -> None:
+    def __init__(self, ignore_below_frac: float = 0, ignore_above_frac: float = 1) -> None:
         """
         Translates residuals (difference between outcome and prediction)
         to false-alarm probability using kernel density estimation
@@ -106,9 +105,7 @@ class KDEResidualTranslator:
             "kernel": ["gaussian"],
             "bandwidth": np.linspace(extent / 1000, extent / 10, 1000),
         }
-        search = RandomizedSearchCV(
-            kde, params, random_state=0, scoring=lambda k, x: k.score_samples(x).sum()
-        )
+        search = RandomizedSearchCV(kde, params, random_state=0, scoring=lambda k, x: k.score_samples(x).sum())
         best_params = search.fit(value.to_frame()).best_params_
         kde = KernelDensity(**best_params)
         kde.fit(value.to_frame())
@@ -205,19 +202,14 @@ class KDEResidualTranslator:
                 raise ValueError("Must not include residuals if supplying yhat")
             residual = y - yhat
             if (yhat_lower is not None) != (yhat_upper is not None):
-                raise ValueError(
-                    "Must supply either both yhat_lower and yhat_upper" "or neither"
-                )
+                raise ValueError("Must supply either both yhat_lower and yhat_upper" "or neither")
             if yhat_lower is not None:
                 assert yhat_upper is not None
                 assert yhat_lower is not None
                 residual /= yhat_upper - yhat_lower
         elif residual is not None:
             if any(c is not None for c in [y, yhat, yhat_lower, yhat_upper]):
-                raise ValueError(
-                    "Must not include y, yhat, yhat_lower, yhat_upper"
-                    "if supplying residuals"
-                )
+                raise ValueError("Must not include y, yhat, yhat_lower, yhat_upper" "if supplying residuals")
         else:
             raise ValueError("Must supply y and yhat or residual")
 

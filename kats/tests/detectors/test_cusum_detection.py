@@ -9,15 +9,14 @@ from unittest import TestCase
 
 import numpy as np
 import pandas as pd
-from kats.consts import TimeSeriesData
-from kats.detectors.cusum_detection import (
-    CUSUMDetector,
-    MultiCUSUMDetector,
-    VectorizedCUSUMDetector,
-)
 from parameterized.parameterized import parameterized
 from scipy.stats import chi2  # @manual
 from sklearn.datasets import make_spd_matrix
+
+from kats.consts import TimeSeriesData
+from kats.detectors.cusum_detection import CUSUMDetector
+from kats.detectors.cusum_detection import MultiCUSUMDetector
+from kats.detectors.cusum_detection import VectorizedCUSUMDetector
 
 
 class CUSUMDetectorTest(TestCase):
@@ -26,11 +25,7 @@ class CUSUMDetectorTest(TestCase):
 
         # increasing with variance detection setup
         df_increase = pd.DataFrame(
-            {
-                "increase": np.concatenate(
-                    [np.random.normal(1, 0.2, 30), np.random.normal(1.5, 0.2, 30)]
-                )
-            }
+            {"increase": np.concatenate([np.random.normal(1, 0.2, 30), np.random.normal(1.5, 0.2, 30)])}
         )
 
         df_increase["time"] = pd.Series(pd.date_range("2019-01-01", "2019-03-01"))
@@ -41,11 +36,7 @@ class CUSUMDetectorTest(TestCase):
 
         # decreasing detection setup
         df_decrease = pd.DataFrame(
-            {
-                "decrease": np.concatenate(
-                    [np.random.normal(1, 0.2, 50), np.random.normal(0.5, 0.2, 10)]
-                )
-            }
+            {"decrease": np.concatenate([np.random.normal(1, 0.2, 50), np.random.normal(0.5, 0.2, 10)])}
         )
 
         df_decrease["time"] = pd.Series(pd.date_range("2019-01-01", "2019-03-01"))
@@ -101,16 +92,10 @@ class CUSUMDetectorTest(TestCase):
 
         # test on step change with no variance
         df_increase_no_var = pd.DataFrame(
-            {
-                "increase": np.concatenate(
-                    [np.random.normal(1, 0, 30), np.random.normal(2, 0, 30)]
-                )
-            }
+            {"increase": np.concatenate([np.random.normal(1, 0, 30), np.random.normal(2, 0, 30)])}
         )
 
-        df_increase_no_var["time"] = pd.Series(
-            pd.date_range("2019-01-01", "2019-03-01")
-        )
+        df_increase_no_var["time"] = pd.Series(pd.date_range("2019-01-01", "2019-03-01"))
 
         no_var_timeseries = TimeSeriesData(df_increase_no_var)
         self.no_var_detector = CUSUMDetector(no_var_timeseries)
@@ -175,9 +160,7 @@ class CUSUMDetectorTest(TestCase):
         ]
     )
     def test_cp_index(self, metadata_name: str, expected: int) -> None:
-        self.assertLessEqual(
-            abs(attrgetter(metadata_name)(self).cp_index - expected), 1
-        )
+        self.assertLessEqual(abs(attrgetter(metadata_name)(self).cp_index - expected), 1)
 
     # pyre-ignore[56]: Pyre was not able to infer the type of the decorator
     #  `parameterized.parameterized.parameterized.expand([["inc_metadata", "increase"],
@@ -195,9 +178,7 @@ class CUSUMDetectorTest(TestCase):
         self.assertLess(self.inc_metadata.mu0, self.inc_metadata.mu1)
 
     def test_increasing_correct_delta(self) -> None:
-        self.assertEqual(
-            self.inc_metadata.delta, self.inc_metadata.mu1 - self.inc_metadata.mu0
-        )
+        self.assertEqual(self.inc_metadata.delta, self.inc_metadata.mu1 - self.inc_metadata.mu0)
 
     def test_increasing_regression(self) -> None:
         self.assertTrue(self.inc_metadata.regression_detected)
@@ -265,14 +246,10 @@ class CUSUMDetectorTest(TestCase):
                 cos_j = np.cos(lambda_p * j)
                 sin_j = np.sin(lambda_p * j)
                 gamma_jtp1[j - 1] = (
-                    gamma_jt[j - 1] * cos_j
-                    + gamma_star_jt[j - 1] * sin_j
-                    + noise_std * np.random.randn()
+                    gamma_jt[j - 1] * cos_j + gamma_star_jt[j - 1] * sin_j + noise_std * np.random.randn()
                 )
                 gamma_star_jtp1[j - 1] = (
-                    -gamma_jt[j - 1] * sin_j
-                    + gamma_star_jt[j - 1] * cos_j
-                    + noise_std * np.random.randn()
+                    -gamma_jt[j - 1] * sin_j + gamma_star_jt[j - 1] * cos_j + noise_std * np.random.randn()
                 )
             series[t] = np.sum(gamma_jtp1)
             gamma_jt = gamma_jtp1
@@ -326,9 +303,7 @@ class CUSUMDetectorTest(TestCase):
         logging_detector = CUSUMDetector(timeseries)
 
         with self.assertLogs(level=level):
-            logging_detector.detector(
-                magnitude_quantile=mag_q, interest_window=[40, 60]
-            )
+            logging_detector.detector(magnitude_quantile=mag_q, interest_window=[40, 60])
 
     def test_ts_without_name(self) -> None:
         n = 10
@@ -429,9 +404,7 @@ class MultiCUSUMDetectorTest(TestCase):
             ["dec_metadata", "dec_metadata.mu0", "dec_metadata.mu1"],
         ]
     )
-    def test_correct_delta(
-        self, metadata_name: str, mu0_name: str, mu1_name: str
-    ) -> None:
+    def test_correct_delta(self, metadata_name: str, mu0_name: str, mu1_name: str) -> None:
         for d, diff in zip(
             attrgetter(metadata_name)(self).delta,
             attrgetter(mu1_name)(self) - attrgetter(mu0_name)(self),
@@ -523,25 +496,17 @@ class VectorizedCUSUMDetectorTest(TestCase):
         # increasing with variance detection setup
         df = pd.DataFrame(
             {
-                "increase": np.concatenate(
-                    [np.random.normal(1, 0.2, 30), np.random.normal(1.5, 0.2, 30)]
-                ),
-                "decrease": np.concatenate(
-                    [np.random.normal(1, 0.2, 50), np.random.normal(0.5, 0.2, 10)]
-                ),
+                "increase": np.concatenate([np.random.normal(1, 0.2, 30), np.random.normal(1.5, 0.2, 30)]),
+                "decrease": np.concatenate([np.random.normal(1, 0.2, 50), np.random.normal(0.5, 0.2, 10)]),
             }
         )
         df["time"] = pd.Series(pd.date_range("2019-01-01", "2019-03-01"))
 
-        self.inc_change_points = CUSUMDetector(
-            TimeSeriesData(df[["increase", "time"]])
-        ).detector()
-        self.dec_change_points = CUSUMDetector(
-            TimeSeriesData(df[["decrease", "time"]])
-        ).detector()
-        self.dec_change_points_int_window = CUSUMDetector(
-            TimeSeriesData(df[["decrease", "time"]])
-        ).detector(change_directions=["decrease"], interest_window=(35, 55))
+        self.inc_change_points = CUSUMDetector(TimeSeriesData(df[["increase", "time"]])).detector()
+        self.dec_change_points = CUSUMDetector(TimeSeriesData(df[["decrease", "time"]])).detector()
+        self.dec_change_points_int_window = CUSUMDetector(TimeSeriesData(df[["decrease", "time"]])).detector(
+            change_directions=["decrease"], interest_window=(35, 55)
+        )
 
         timeseries = TimeSeriesData(df)
         change_points_vectorized_ = VectorizedCUSUMDetector(timeseries).detector_()
@@ -557,9 +522,9 @@ class VectorizedCUSUMDetectorTest(TestCase):
         # change points for the second column in the matrix
         self.dec_change_points_vectorized = change_points_vectorized[1]
 
-        self.dec_change_points_vectorized_int_window = VectorizedCUSUMDetector(
-            timeseries
-        ).detector_(change_directions=["decrease"], interest_window=(35, 55))[1]
+        self.dec_change_points_vectorized_int_window = VectorizedCUSUMDetector(timeseries).detector_(
+            change_directions=["decrease"], interest_window=(35, 55)
+        )[1]
 
     def test_vectorized_results(self) -> None:
         # check if vectorized CUSUM produces the same results with the original CUSUM

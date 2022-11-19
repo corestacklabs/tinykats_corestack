@@ -4,27 +4,49 @@
 # LICENSE file in the root directory of this source tree.
 
 import unittest
-from typing import Dict, Optional, Union
+from typing import Dict
+from typing import Optional
+from typing import Union
 from unittest import TestCase
 
 import pandas as pd
+from parameterized.parameterized import parameterized
+
 from kats.compat.pandas import assert_frame_equal
 from kats.consts import TimeSeriesData
 from kats.data.utils import load_data  # @manual
-from kats.models.arima import ARIMAModel, ARIMAParams
+from kats.models.arima import ARIMAModel
+from kats.models.arima import ARIMAParams
 from kats.tests.models.test_models_dummy_data import (
     PEYTON_FCST_15_ARIMA_PARAM_1_MODEL_1,
+)
+from kats.tests.models.test_models_dummy_data import (
     PEYTON_FCST_15_ARIMA_PARAM_1_MODEL_1_INCL_HIST,
+)
+from kats.tests.models.test_models_dummy_data import (
     PEYTON_FCST_15_ARIMA_PARAM_1_MODEL_2,
+)
+from kats.tests.models.test_models_dummy_data import (
     PEYTON_FCST_15_ARIMA_PARAM_2_MODEL_1,
+)
+from kats.tests.models.test_models_dummy_data import (
     PEYTON_FCST_15_ARIMA_PARAM_2_MODEL_2,
+)
+from kats.tests.models.test_models_dummy_data import (
     PEYTON_FCST_30_ARIMA_PARAM_1_MODEL_1,
+)
+from kats.tests.models.test_models_dummy_data import (
     PEYTON_FCST_30_ARIMA_PARAM_1_MODEL_1_INCL_HIST,
+)
+from kats.tests.models.test_models_dummy_data import (
     PEYTON_FCST_30_ARIMA_PARAM_1_MODEL_2,
+)
+from kats.tests.models.test_models_dummy_data import (
     PEYTON_FCST_30_ARIMA_PARAM_2_MODEL_1,
+)
+from kats.tests.models.test_models_dummy_data import (
     PEYTON_FCST_30_ARIMA_PARAM_2_MODEL_2,
 )
-from parameterized.parameterized import parameterized
 
 STEPS_1 = 15
 STEPS_2 = 30
@@ -32,9 +54,7 @@ STEPS_2 = 30
 TEST_DATA = {
     "daily": {
         "ts": TimeSeriesData(load_data("peyton_manning.csv")),
-        "invalid_ts": TimeSeriesData(
-            load_data("multivariate_anomaly_simulated_data.csv")
-        ),
+        "invalid_ts": TimeSeriesData(load_data("multivariate_anomaly_simulated_data.csv")),
         # "ts_nan": TimeSeriesData(df=PEYTON_INPUT_NAN),
         "freq": "D",
         "p1": ARIMAParams(p=1, d=1, q=1),

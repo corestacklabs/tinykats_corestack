@@ -7,15 +7,24 @@ import logging
 import time
 from multiprocessing import cpu_count
 from multiprocessing.dummy import Pool
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any
+from typing import Dict
+from typing import List
+from typing import Optional
+from typing import Tuple
+from typing import Union
 
 import joblib
 import numpy as np
 import pandas as pd
 import torch
+
 from kats.consts import TimeSeriesData
-from kats.models.globalmodel.model import GMModel, gmparam_from_string
-from kats.models.globalmodel.utils import GMParam, gmpreprocess, split
+from kats.models.globalmodel.model import GMModel
+from kats.models.globalmodel.model import gmparam_from_string
+from kats.models.globalmodel.utils import GMParam
+from kats.models.globalmodel.utils import gmpreprocess
+from kats.models.globalmodel.utils import split
 
 
 class GMEnsemble:
@@ -157,9 +166,7 @@ class GMEnsemble:
     # pyre-fixme[2]: Parameter must be annotated.
     def _predict_single_gm(self, gm, test_TSs, steps, test_batch_size=1000):
         t = time.time()
-        fcst = gm.predict(
-            test_TSs, steps=steps, raw=True, test_batch_size=test_batch_size
-        )
+        fcst = gm.predict(test_TSs, steps=steps, raw=True, test_batch_size=test_batch_size)
         logging.info(f"fcst {len(fcst)} TSs with {time.time()-t}.")
         return fcst
 
@@ -189,18 +196,12 @@ class GMEnsemble:
             m = max(1, int(n * test_size))
             np.random.shuffle(keys)
             all_test_TSs = {keys[i]: data[keys[i]] for i in range(m)}
-            test_train_TSs, test_valid_TSs = gmpreprocess(
-                self.params, all_test_TSs, mode="test"
-            )
+            test_train_TSs, test_valid_TSs = gmpreprocess(self.params, all_test_TSs, mode="test")
             all_train_TSs = {keys[i]: data[keys[i]] for i in range(m, n)}
-            train_TSs, valid_TSs = gmpreprocess(
-                self.params, all_train_TSs, mode="train", valid_set=valid_set
-            )
+            train_TSs, valid_TSs = gmpreprocess(self.params, all_train_TSs, mode="train", valid_set=valid_set)
             self.test_ids = list(test_train_TSs.keys())
         else:
-            train_TSs, valid_TSs = gmpreprocess(
-                self.params, data, mode="train", valid_set=valid_set
-            )
+            train_TSs, valid_TSs = gmpreprocess(self.params, data, mode="train", valid_set=valid_set)
             test_train_TSs, test_valid_TSs = None, None
             self.test_ids = []
 
@@ -227,9 +228,7 @@ class GMEnsemble:
             pool.join()
             # return results
             self.gm_info = results
-            logging.info(
-                f"fit {self.model_num} global models using time {time.time()-t0}"
-            )
+            logging.info(f"fit {self.model_num} global models using time {time.time()-t0}")
         else:
             self.gm_info = []
             t0 = time.time()
@@ -245,9 +244,7 @@ class GMEnsemble:
                     )
                     self.gm_info.append(info)
                     i += 1
-            logging.info(
-                f"fit {self.model_num} global models using time {time.time()-t0}"
-            )
+            logging.info(f"fit {self.model_num} global models using time {time.time()-t0}")
         return
 
     # pyre-fixme[3]: Return annotation cannot contain `Any`.
@@ -263,32 +260,23 @@ class GMEnsemble:
     ) -> Tuple[Any, Any]:
         """Combine the forecasts from each global model."""
 
-        fcst = [
-            self._ensemble_func([fcsts[i][j] for i in range(len(fcsts))], axis=0)
-            for j in range(len(fcsts[0]))
-        ]
+        fcst = [self._ensemble_func([fcsts[i][j] for i in range(len(fcsts))], axis=0) for j in range(len(fcsts[0]))]
         if raw:
             return idx, fcst
         else:
             n_quantile = len(self.params.quantile)
 
-            df = pd.DataFrame(
-                np.column_stack([t.reshape(n_quantile, -1) for t in fcst]).T, copy=False
-            ).iloc[:steps]
+            df = pd.DataFrame(np.column_stack([t.reshape(n_quantile, -1) for t in fcst]).T, copy=False).iloc[:steps]
 
             df.columns = col_names
-            df["time"] = pd.date_range(
-                first_timestamp + self.params.freq, periods=steps, freq=self.params.freq
-            )
+            df["time"] = pd.date_range(first_timestamp + self.params.freq, periods=steps, freq=self.params.freq)
             return idx, df
 
     # pyre-fixme[3]: Return annotation cannot contain `Any`.
     def predict(
         self,
         # pyre-fixme[2]: Parameter annotation cannot contain `Any`.
-        test_TSs: Union[
-            TimeSeriesData, List[TimeSeriesData], Dict[Any, TimeSeriesData]
-        ],
+        test_TSs: Union[TimeSeriesData, List[TimeSeriesData], Dict[Any, TimeSeriesData]],
         steps: int,
         test_batch_size: int = 500,
         raw: bool = False,
@@ -331,21 +319,12 @@ class GMEnsemble:
             pool.close()
             pool.join()
         else:
-            all_fcsts = [
-                m.predict(test_TSs, steps, raw=True, test_batch_size=test_batch_size)
-                for m in self.gm_models
-            ]
-        logging.info(
-            f"time for all global model to generate forecasts: {time.time() - t0}."
-        )
+            all_fcsts = [m.predict(test_TSs, steps, raw=True, test_batch_size=test_batch_size) for m in self.gm_models]
+        logging.info(f"time for all global model to generate forecasts: {time.time() - t0}.")
 
-        keys = (
-            test_TSs.keys() if isinstance(test_TSs, dict) else np.arange(len(test_TSs))
-        )
+        keys = test_TSs.keys() if isinstance(test_TSs, dict) else np.arange(len(test_TSs))
 
-        col_names = (
-            [f"fcst_quantile_{q}" for q in self.params.quantile] if (not raw) else None
-        )
+        col_names = [f"fcst_quantile_{q}" for q in self.params.quantile] if (not raw) else None
         if self.multi:
             cf_params = [
                 (
@@ -395,20 +374,12 @@ class GMEnsemble:
         try:
             # clean-up unnecessary info
             [gm._reset_nn_states() for gm in self.gm_models]
-            state_dict = (
-                [gm.rnn.state_dict() for gm in self.gm_models]
-                if self.params.model_type == "rnn"
-                else None
-            )
+            state_dict = [gm.rnn.state_dict() for gm in self.gm_models] if self.params.model_type == "rnn" else None
             encoder_dict = (
-                [gm.encoder.state_dict() for gm in self.gm_models]
-                if self.params.model_type == "s2s"
-                else None
+                [gm.encoder.state_dict() for gm in self.gm_models] if self.params.model_type == "s2s" else None
             )
             decoder_dict = (
-                [gm.decoder.state_dict() for gm in self.gm_models]
-                if self.params.model_type == "s2s"
-                else None
+                [gm.decoder.state_dict() for gm in self.gm_models] if self.params.model_type == "s2s" else None
             )
             gmparam_string = self.params.to_string()
             info = {
@@ -440,13 +411,9 @@ class GMEnsemble:
     def evaluate(
         self,
         # pyre-fixme[2]: Parameter annotation cannot contain `Any`.
-        test_train_TSs: Union[
-            TimeSeriesData, List[TimeSeriesData], Dict[Any, TimeSeriesData]
-        ],
+        test_train_TSs: Union[TimeSeriesData, List[TimeSeriesData], Dict[Any, TimeSeriesData]],
         # pyre-fixme[2]: Parameter annotation cannot contain `Any`.
-        test_valid_TSs: Union[
-            TimeSeriesData, List[TimeSeriesData], Dict[Any, TimeSeriesData]
-        ],
+        test_valid_TSs: Union[TimeSeriesData, List[TimeSeriesData], Dict[Any, TimeSeriesData]],
     ) -> pd.DataFrame:
         """Evaluate the GMEnsemble object performance.
 
@@ -461,9 +428,7 @@ class GMEnsemble:
         """
 
         if type(test_train_TSs) != type(test_valid_TSs):
-            msg = (
-                "The data type of test_train_TSs and test_valid_TSs should be the same."
-            )
+            msg = "The data type of test_train_TSs and test_valid_TSs should be the same."
             logging.error(msg)
             raise ValueError(msg)
 
@@ -476,11 +441,7 @@ class GMEnsemble:
             msg = "test_train_TSs and test_valid_TSs should be of the same length."
             logging.error(msg)
             raise ValueError(msg)
-        keys = (
-            test_train_TSs.keys()
-            if isinstance(test_train_TSs, dict)
-            else range(len(test_train_TSs))
-        )
+        keys = test_train_TSs.keys() if isinstance(test_train_TSs, dict) else range(len(test_train_TSs))
         if len(keys) == 0:
             msg = "The input collection of time series should not be empty."
             logging.error(msg)
@@ -489,17 +450,11 @@ class GMEnsemble:
         steps = np.max([len(test_valid_TSs[t]) for t in keys])
 
         fcst = self.predict(test_train_TSs, steps=steps, raw=True)
-        logging.info(
-            f"Successfully generate forecasts for all test time series with length {steps}."
-        )
+        logging.info(f"Successfully generate forecasts for all test time series with length {steps}.")
         eval_func = self.gm_models[0].build_validation_function()
         fcst_window = self.params.fcst_window
         ans = []
-        keys = (
-            test_train_TSs.keys()
-            if isinstance(test_train_TSs, dict)
-            else range(len(test_train_TSs))
-        )
+        keys = test_train_TSs.keys() if isinstance(test_train_TSs, dict) else range(len(test_train_TSs))
         for k in keys:
             tmp = test_valid_TSs[k].value.values
             tmp_step = len(tmp) // fcst_window + int(len(tmp) % fcst_window != 0)
@@ -528,11 +483,7 @@ def load_gmensemble_from_file(file_name: str) -> GMEnsemble:
     try:
         info = joblib.load(open(file_name, "rb"))
         gmparam = gmparam_from_string(info["gmparam_string"])
-        n = (
-            len(info["state_dict"])
-            if info["state_dict"] is not None
-            else len(info["encoder_dict"])
-        )
+        n = len(info["state_dict"]) if info["state_dict"] is not None else len(info["encoder_dict"])
         gm_models = []
         for i in range(n):
             tmp_gmmodel = GMModel(gmparam)
@@ -546,9 +497,7 @@ def load_gmensemble_from_file(file_name: str) -> GMEnsemble:
             gm_models.append(tmp_gmmodel)
         info["gmensemble_params"]["gmparam"] = gmparam
         # ensure max_core parameter dose not mess-up model reuse.
-        info["gmensemble_params"]["max_core"] = int(
-            min(info["gmensemble_params"]["max_core"], cpu_count())
-        )
+        info["gmensemble_params"]["max_core"] = int(min(info["gmensemble_params"]["max_core"], cpu_count()))
         gmensemble = GMEnsemble(**info["gmensemble_params"])
         gmensemble.gm_models = gm_models
         gmensemble.gm_info = info["gm_info"]

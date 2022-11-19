@@ -11,22 +11,19 @@ from unittest import TestCase
 
 import numpy as np
 import pandas as pd
+from parameterized.parameterized import parameterized
+
 from kats.consts import TimeSeriesData
 from kats.data.utils import load_air_passengers
 from kats.detectors.detector_consts import AnomalyResponse
-from kats.detectors.prophet_detector import (
-    ProphetDetectorModel,
-    ProphetScoreFunction,
-    ProphetTrendDetectorModel,
-)
+from kats.detectors.prophet_detector import ProphetDetectorModel
+from kats.detectors.prophet_detector import ProphetScoreFunction
+from kats.detectors.prophet_detector import ProphetTrendDetectorModel
 from kats.utils.simulator import Simulator
-from parameterized.parameterized import parameterized
 
 
 class TestProphetDetector(TestCase):
-    def create_random_ts(
-        self, seed: int, length: int, magnitude: float, slope_factor: float
-    ) -> TimeSeriesData:
+    def create_random_ts(self, seed: int, length: int, magnitude: float, slope_factor: float) -> TimeSeriesData:
         np.random.seed(seed)
         sim = Simulator(n=length, freq="1D", start=pd.to_datetime("2020-01-01"))
 
@@ -114,9 +111,7 @@ class TestProphetDetector(TestCase):
         ts.value.iloc[:start_index] *= 0
         ts.value.iloc[end_index:] *= 0
 
-    def add_trend_shift(
-        self, ts: TimeSeriesData, length: int, freq: str, magnitude: float
-    ) -> None:
+    def add_trend_shift(self, ts: TimeSeriesData, length: int, freq: str, magnitude: float) -> None:
         ts_df = ts.to_dataframe()
         sim = Simulator(n=length, freq=freq, start=pd.to_datetime("2020-01-01"))
         elevation = sim.trend_shift_sim(
@@ -129,9 +124,7 @@ class TestProphetDetector(TestCase):
         )
         elevation_df = elevation.to_dataframe()
 
-        ts_df_elevated = (
-            ts_df.set_index("time") + elevation_df.set_index("time")
-        ).reset_index()
+        ts_df_elevated = (ts_df.set_index("time") + elevation_df.set_index("time")).reset_index()
 
         elevated_ts = TimeSeriesData(df=ts_df_elevated)
         ts.value = elevated_ts.value
@@ -170,9 +163,7 @@ class TestProphetDetector(TestCase):
         duration = event_end - event_start
 
         magnitude = (max_val - min_val) / 2
-        event_magnitude = (
-            2 * magnitude * event_relative_magnitude * (signal_to_noise_ratio + 1)
-        )
+        event_magnitude = 2 * magnitude * event_relative_magnitude * (signal_to_noise_ratio + 1)
 
         event1_start = event_start + int(duration / 4)
         event1_end = event_end
@@ -236,9 +227,7 @@ class TestProphetDetector(TestCase):
 
         return merged_ts
 
-    def calc_stds(
-        self, predicted_val: float, upper_bound: float, lower_bound: float
-    ) -> Tuple[float, float]:
+    def calc_stds(self, predicted_val: float, upper_bound: float, lower_bound: float) -> Tuple[float, float]:
         actual_upper_std = (50**0.5) * (upper_bound - predicted_val) / 0.8
         actual_lower_std = (50**0.5) * (predicted_val - lower_bound) / 0.8
 
@@ -261,9 +250,7 @@ class TestProphetDetector(TestCase):
         else:
             return (actual_val - predicted_val) / lower_std
 
-    def scenario_results(
-        self, seed: int, include_anomaly: bool, use_serialized_model: bool
-    ) -> AnomalyResponse:
+    def scenario_results(self, seed: int, include_anomaly: bool, use_serialized_model: bool) -> AnomalyResponse:
         """Prediction results for common data and model test scenarios"""
         ts = self.create_random_ts(seed, 100, 10, 2)
 
@@ -285,9 +272,7 @@ class TestProphetDetector(TestCase):
     # pyre-fixme[56]: Pyre was not able to infer the type of the decorator `parameter...
     # pyre-fixme[56]: Pyre was not able to infer the type of the decorator `parameter...
     @parameterized.expand(SEED_AND_SERIALIZATIONS)
-    def test_no_anomaly_prediction_length(
-        self, seed: int, use_serialized_model: bool
-    ) -> None:
+    def test_no_anomaly_prediction_length(self, seed: int, use_serialized_model: bool) -> None:
         include_anomaly = False
         res = self.scenario_results(seed, include_anomaly, use_serialized_model)
         self.assertEqual(len(res.scores), 10)
@@ -295,9 +280,7 @@ class TestProphetDetector(TestCase):
     # pyre-fixme[56]: Pyre was not able to infer the type of the decorator `parameter...
     # pyre-fixme[56]: Pyre was not able to infer the type of the decorator `parameter...
     @parameterized.expand(SEED_AND_SERIALIZATIONS)
-    def test_anomaly_prediction_length(
-        self, seed: int, use_serialized_model: bool
-    ) -> None:
+    def test_anomaly_prediction_length(self, seed: int, use_serialized_model: bool) -> None:
         include_anomaly = True
         res = self.scenario_results(seed, include_anomaly, use_serialized_model)
         self.assertEqual(len(res.scores), 10)
@@ -305,9 +288,7 @@ class TestProphetDetector(TestCase):
     # pyre-fixme[56]: Pyre was not able to infer the type of the decorator `parameter...
     # pyre-fixme[56]: Pyre was not able to infer the type of the decorator `parameter...
     @parameterized.expand(SEED_AND_SERIALIZATIONS)
-    def test_finds_no_anomaly_when_no_anomaly(
-        self, seed: int, use_serialized_model: bool
-    ) -> None:
+    def test_finds_no_anomaly_when_no_anomaly(self, seed: int, use_serialized_model: bool) -> None:
         # Prophet should not find any anomalies on a well formed synthetic time series
         include_anomaly = False
         res = self.scenario_results(seed, include_anomaly, use_serialized_model)
@@ -317,9 +298,7 @@ class TestProphetDetector(TestCase):
     # pyre-fixme[56]: Pyre was not able to infer the type of the decorator `parameter...
     # pyre-fixme[56]: Pyre was not able to infer the type of the decorator `parameter...
     @parameterized.expand(SEED_AND_SERIALIZATIONS)
-    def test_finds_anomaly_when_anomaly_present(
-        self, seed: int, use_serialized_model: bool
-    ) -> None:
+    def test_finds_anomaly_when_anomaly_present(self, seed: int, use_serialized_model: bool) -> None:
         # Prophet should find anomalies
         include_anomaly = True
         res = self.scenario_results(seed, include_anomaly, use_serialized_model)
@@ -389,9 +368,7 @@ class TestProphetDetector(TestCase):
         min_val = 0
         max_val = 1000
 
-        baseline_ts = self.create_multi_seasonality_ts(
-            seed, length, freq, min_val, max_val, signal_to_noise_ratio
-        )
+        baseline_ts = self.create_multi_seasonality_ts(seed, length, freq, min_val, max_val, signal_to_noise_ratio)
         test_ts = self.add_multi_event(
             baseline_ts,
             seed,
@@ -409,9 +386,7 @@ class TestProphetDetector(TestCase):
 
         # Train on all data up to 0.5 days after the event
         event_end_idx = int(length * event_end_ratio)
-        train_idx = (
-            test_ts.time >= test_ts.time.iloc[event_end_idx] + timedelta(hours=12)
-        ).idxmax()
+        train_idx = (test_ts.time >= test_ts.time.iloc[event_end_idx] + timedelta(hours=12)).idxmax()
 
         test_df = test_ts.to_dataframe()
         train_ts = TimeSeriesData(df=test_df.iloc[:train_idx])
@@ -422,12 +397,8 @@ class TestProphetDetector(TestCase):
             pred_ts_df_map[remove_outliers] = model.fit_predict(test_ts, train_ts)
 
         # Model trained without outliers should have lower RMSE
-        rmse_w_outliers = (
-            (pred_ts_df_map[False].predicted_ts.value - test_ts.value) ** 2
-        ).mean() ** 0.5
-        rmse_no_outliers = (
-            (pred_ts_df_map[True].predicted_ts.value - test_ts.value) ** 2
-        ).mean() ** 0.5
+        rmse_w_outliers = ((pred_ts_df_map[False].predicted_ts.value - test_ts.value) ** 2).mean() ** 0.5
+        rmse_no_outliers = ((pred_ts_df_map[True].predicted_ts.value - test_ts.value) ** 2).mean() ** 0.5
         self.assertGreaterEqual(
             rmse_w_outliers,
             rmse_no_outliers,
@@ -572,9 +543,7 @@ class TestProphetDetector(TestCase):
         #  SupportsAbs[SupportsRound[object]]]` but got `float`.
         self.assertAlmostEqual(response.scores.value[5], actual_z_score, places=15)
 
-    @unittest.skip(
-        "Prophet doesn't learn heteroskedastic seasonality with params used by ProphetDetectorModel"
-    )
+    @unittest.skip("Prophet doesn't learn heteroskedastic seasonality with params used by ProphetDetectorModel")
     def test_heteroskedastic_noise_signal(self) -> None:
         """Tests the z-score strategy on signals with heteroskedastic noise
 
@@ -589,8 +558,7 @@ class TestProphetDetector(TestCase):
         # add heteroskedastic noise to the data
 
         ts.value *= (
-            (ts.time - pd.to_datetime("2020-01-01")) % timedelta(days=7)
-            > timedelta(days=3.5)
+            (ts.time - pd.to_datetime("2020-01-01")) % timedelta(days=7) > timedelta(days=3.5)
         ) * np.random.rand(100 * 24) + 0.5
 
         ts.value[93 * 24] += 100
@@ -652,9 +620,7 @@ class TestProphetDetector(TestCase):
         response1 = model.fit_predict(test_ts[90 * 24 :], ts1[: 90 * 24])
         response2 = model.fit_predict(test_ts[90 * 24 :], ts2[: 90 * 24])
 
-        self.assertGreater(
-            response2.scores.value[test_index], response1.scores.value[test_index]
-        )
+        self.assertGreater(response2.scores.value[test_index], response1.scores.value[test_index])
 
 
 class TestProphetTrendDetectorModel(TestCase):
@@ -664,9 +630,7 @@ class TestProphetTrendDetectorModel(TestCase):
 
     def test_response_shape_for_single_series(self) -> None:
         single_ts = TimeSeriesData(self.data)
-        response_single_ts = self.trend_detector.fit_predict(
-            data=single_ts, historical_data=None
-        )
+        response_single_ts = self.trend_detector.fit_predict(data=single_ts, historical_data=None)
 
         self.assertEqual(response_single_ts.scores.time.shape, single_ts.time.shape)
 
@@ -681,9 +645,7 @@ class TestProphetTrendDetectorModel(TestCase):
     def test_response_shape_with_historical_data(self) -> None:
         single_ts = TimeSeriesData(self.data)
         historical_ts = TimeSeriesData(self.data)
-        single_ts.time = single_ts.time + pd.tseries.offsets.DateOffset(
-            months=len(self.data)
-        )
+        single_ts.time = single_ts.time + pd.tseries.offsets.DateOffset(months=len(self.data))
         response = self.trend_detector.fit_predict(single_ts, historical_ts)
 
         self.assertTrue(np.array_equal(response.scores.time, single_ts.time))
@@ -710,13 +672,7 @@ class TestProphetTrendDetectorModel(TestCase):
             unix_time_units="s",
         )
 
-        response_with_historical_data = self.trend_detector.fit_predict(
-            data=data_ts, historical_data=hist_ts
-        )
-        self.assertEqual(
-            response_with_historical_data.scores.value.shape, data_ts.value.shape
-        )
+        response_with_historical_data = self.trend_detector.fit_predict(data=data_ts, historical_data=hist_ts)
+        self.assertEqual(response_with_historical_data.scores.value.shape, data_ts.value.shape)
         response_wo_historical_data = self.trend_detector.fit_predict(data=hist_ts)
-        self.assertEqual(
-            response_wo_historical_data.scores.value.shape, hist_ts.value.shape
-        )
+        self.assertEqual(response_wo_historical_data.scores.value.shape, hist_ts.value.shape)

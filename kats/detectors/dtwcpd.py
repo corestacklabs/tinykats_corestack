@@ -11,17 +11,22 @@ algorithm as a DetectorModel, to provide a common interface.
 from __future__ import annotations
 
 import logging
-
-# Put code into Kats class
-
 from collections import defaultdict
 from dataclasses import dataclass
-from typing import Dict, List, Optional, Sequence, Type
+from typing import Dict
+from typing import List
+from typing import Optional
+from typing import Sequence
+from typing import Type
 
 import numpy as np
 import pandas as pd
-from kats.consts import TimeSeriesChangePoint, TimeSeriesData
+
+from kats.consts import TimeSeriesChangePoint
+from kats.consts import TimeSeriesData
 from kats.detectors.detector import Detector
+
+# Put code into Kats class
 
 
 class DTWCPDChangePoint(TimeSeriesChangePoint):
@@ -136,9 +141,7 @@ class DTWCPDDetector(Detector):
             )
 
         if str(type(self.data.value)) == "<class 'pandas.core.series.Series'>":
-            raise DTWTimeSeriesTooSmallException(
-                "The input time series is not multivariate"
-            )
+            raise DTWTimeSeriesTooSmallException("The input time series is not multivariate")
 
     # pyre-fixme[14]: `detector` overrides method defined in `Detector` inconsistently.
     def detector(self) -> Sequence[DTWCPDChangePoint]:
@@ -236,9 +239,7 @@ class DTWCPDDetector(Detector):
         for i in range(len(s1)):
             for j in range(max(0, i - w), min(len(s2), i + w)):
                 dist = (s1[i] - s2[j]) ** 2
-                DTW[(i, j)] = dist + min(
-                    DTW[(i - 1, j)], DTW[(i, j - 1)], DTW[(i - 1, j - 1)]
-                )
+                DTW[(i, j)] = dist + min(DTW[(i - 1, j)], DTW[(i, j - 1)], DTW[(i - 1, j - 1)])
         return np.sqrt(float(DTW[len(s1) - 1, len(s2) - 1]))
 
     @staticmethod
@@ -276,9 +277,7 @@ class DTWCPDDetector(Detector):
         self, ts2list_of_non_zero_subsequences: Dict[str, Dict[int, List[float]]]
     ) -> Dict[str, DTWSubsequenceMatch]:
         max_min_dists = defaultdict()
-        for c, (ts_name_a, subsequences_a) in enumerate(
-            ts2list_of_non_zero_subsequences.items()
-        ):
+        for c, (ts_name_a, subsequences_a) in enumerate(ts2list_of_non_zero_subsequences.items()):
             m = []
             for inda, subsequence_a in subsequences_a.items():
                 distances = []
@@ -295,11 +294,7 @@ class DTWCPDDetector(Detector):
                             if (ts_name_a == ts_name_b) and (
                                 # They overlap
                                 (indb <= inda <= indb + self.sliding_window_size - 1)
-                                or (
-                                    indb
-                                    <= inda + self.sliding_window_size - 1
-                                    <= indb + self.sliding_window_size - 1
-                                )
+                                or (indb <= inda + self.sliding_window_size - 1 <= indb + self.sliding_window_size - 1)
                             ):
                                 continue
 
@@ -337,17 +332,12 @@ class DTWCPDDetector(Detector):
             max_min_dists[ts_name_a] = max(m, key=lambda x: x.distance)
 
             if c % 50 == 0:
-                logging.info(
-                    "%d out of %d processed ..."
-                    % (c, len(ts2list_of_non_zero_subsequences))
-                )
+                logging.info("%d out of %d processed ..." % (c, len(ts2list_of_non_zero_subsequences)))
 
         max_min_dists = dict(max_min_dists)
         return max_min_dists
 
-    def _find_subsequences_anomalies(
-        self, max_min_dists: Dict[str, DTWSubsequenceMatch]
-    ) -> List[DTWCPDChangePoint]:
+    def _find_subsequences_anomalies(self, max_min_dists: Dict[str, DTWSubsequenceMatch]) -> List[DTWCPDChangePoint]:
         """
         Given a set of subsequences with at least one non-zero value,
         detect the ones that are significantly dissimilar from others.
@@ -365,9 +355,7 @@ class DTWCPDDetector(Detector):
                 outliers.append(
                     DTWCPDChangePoint(
                         start_time=self.data.time[t.matching_ts_index],
-                        end_time=self.data.time[
-                            t.matching_ts_index + self.sliding_window_size - 1
-                        ],
+                        end_time=self.data.time[t.matching_ts_index + self.sliding_window_size - 1],
                         confidence=score,
                         ts_name=ts_name,
                     )

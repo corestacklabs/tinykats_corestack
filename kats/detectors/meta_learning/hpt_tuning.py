@@ -15,26 +15,35 @@ from __future__ import annotations
 import logging
 import math
 from dataclasses import dataclass
-from typing import Any, Dict, List, Optional, Sequence, Set, Type, Union
+from typing import Any
+from typing import Dict
+from typing import List
+from typing import Optional
+from typing import Sequence
+from typing import Set
+from typing import Type
+from typing import Union
 
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+
 from kats.consts import TimeSeriesData
 from kats.detectors.detector import DetectorModel
+from kats.detectors.meta_learning.exceptions import KatsDetectorHPTIllegalHyperParameter
 from kats.detectors.meta_learning.exceptions import (
-    KatsDetectorHPTIllegalHyperParameter,
     KatsDetectorHPTModelUsedBeforeTraining,
-    KatsDetectorHPTTrainError,
-    KatsDetectorsUnimplemented,
+)
+from kats.detectors.meta_learning.exceptions import KatsDetectorHPTTrainError
+from kats.detectors.meta_learning.exceptions import KatsDetectorsUnimplemented
+from kats.detectors.meta_learning.metalearning_detection_model import (
+    PARAMS_TO_SCALE_DOWN,
 )
 from kats.detectors.meta_learning.metalearning_detection_model import (
     metadata_detect_preprocessor,
-    PARAMS_TO_SCALE_DOWN,
 )
 from kats.models.metalearner.metalearner_hpt import MetaLearnHPT
 from kats.tsfeatures.tsfeatures import TsFeatures
-
 
 _log: logging.Logger = logging.getLogger(__name__)
 
@@ -68,15 +77,11 @@ def metadata_detect_reader(
     preprocess meta data table to get the input for class MetaDetectHptSelect
     """
     # table's format: [{"hpt_res":..., "features":..., "best_model":...}, ...]
-    table = metadata_detect_preprocessor(
-        rawdata=rawdata, params_to_scale_down=params_to_scale_down
-    )
+    table = metadata_detect_preprocessor(rawdata=rawdata, params_to_scale_down=params_to_scale_down)
 
     metadata = {}
     metadata["data_x"] = pd.DataFrame([item["features"] for item in table])
-    metadata["data_y"] = pd.DataFrame(
-        [pd.Series(item["hpt_res"][algorithm_name][0]) for item in table]
-    )
+    metadata["data_y"] = pd.DataFrame([pd.Series(item["hpt_res"][algorithm_name][0]) for item in table])
 
     return metadata
 
@@ -153,9 +158,7 @@ class MetaDetectHptSelect:
         # remove parameters which are constants
         # this causes the neural network training to fail otherwise
         self.const_params_dict: Dict[str, Any] = self.get_const_params(self._data_y)
-        label_cols = [
-            x for x in self._data_y.columns if x not in self.const_params_dict.keys()
-        ]
+        label_cols = [x for x in self._data_y.columns if x not in self.const_params_dict.keys()]
         self._data_y = self._data_y[label_cols]
         msg = """
             Removed parameters (columns) in data_y which are constants.
@@ -175,14 +178,10 @@ class MetaDetectHptSelect:
                 # pyre-fixme[6]
                 MetaDetectHptSelect._init_detection_model(detector_model, hp.to_dict())
             except Exception as e:
-                raise KatsDetectorHPTIllegalHyperParameter(
-                    detector_model.__name__, idx, hp.to_dict(), e
-                )
+                raise KatsDetectorHPTIllegalHyperParameter(detector_model.__name__, idx, hp.to_dict(), e)
 
     @staticmethod
-    def _init_detection_model(
-        detector_model: Type[DetectorModel], hyper_parameters: Dict[str, Any]
-    ) -> None:
+    def _init_detection_model(detector_model: Type[DetectorModel], hyper_parameters: Dict[str, Any]) -> None:
         """
         returns detection algorithm for given algorithm name initialized with given hyper parameters
         """
@@ -238,14 +237,10 @@ class MetaDetectHptSelect:
         const_cat_provided = set(cat_idx) & set(self.const_params_dict.keys())
 
         if len(const_num_provided) > 0:
-            raise ValueError(
-                f"{const_num_provided} is constant value in data_y, and we have removed that column."
-            )
+            raise ValueError(f"{const_num_provided} is constant value in data_y, and we have removed that column.")
 
         if len(const_cat_provided) > 0:
-            raise ValueError(
-                f"{const_cat_provided} is constant value in data_y, and we have removed that column."
-            )
+            raise ValueError(f"{const_cat_provided} is constant value in data_y, and we have removed that column.")
 
         # n_hiddent cat_combo should have same dimensions as number
         # of categorical variables. Else, MetaLearnHPT throws an error
@@ -301,9 +296,7 @@ class MetaDetectHptSelect:
         features_array = np.asarray(features_dict.values())
         return self.get_hpt_from_features(features_array)
 
-    def get_hpt_from_features(
-        self, source_x: Union[np.ndarray, List[np.ndarray], pd.DataFrame]
-    ) -> pd.DataFrame:
+    def get_hpt_from_features(self, source_x: Union[np.ndarray, List[np.ndarray], pd.DataFrame]) -> pd.DataFrame:
         assert self._meta_hpt_model is not None
 
         ans = self._meta_hpt_model.pred_by_feature(source_x)

@@ -4,10 +4,15 @@
 # LICENSE file in the root directory of this source tree.
 
 import logging
-from typing import Any, Generic, Optional, Tuple, TypeVar
+from typing import Any
+from typing import Generic
+from typing import Optional
+from typing import Tuple
+from typing import TypeVar
 
 import matplotlib.pyplot as plt
 import pandas as pd
+
 from kats.consts import TimeSeriesData
 
 ParamsType = TypeVar("ParamsType")

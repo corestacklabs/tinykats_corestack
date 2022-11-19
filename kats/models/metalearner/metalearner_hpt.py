@@ -12,8 +12,15 @@ This module contains two classes, including:
 
 import collections
 import logging
-from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional, Sequence, Tuple, Union
+from dataclasses import dataclass
+from dataclasses import field
+from typing import Any
+from typing import Dict
+from typing import List
+from typing import Optional
+from typing import Sequence
+from typing import Tuple
+from typing import Union
 
 import joblib
 import matplotlib.pyplot as plt
@@ -21,9 +28,10 @@ import numpy as np
 import pandas as pd
 import torch
 import torch.nn as nn
+from sklearn.model_selection import train_test_split
+
 from kats.consts import TimeSeriesData
 from kats.tsfeatures.tsfeatures import TsFeatures
-from sklearn.model_selection import train_test_split
 
 _MODELS = {
     "neuralprophet",
@@ -268,15 +276,9 @@ class MetaLearnHPT:
             # pyre-fixme[4]: Attribute must be annotated.
             self.numerical_idx = numerical_idx
             # pyre-fixme[4]: Attribute must be annotated.
-            self._target_num = (
-                np.asarray(self.dataY[self.numerical_idx])
-                if self.numerical_idx
-                else None
-            )
+            self._target_num = np.asarray(self.dataY[self.numerical_idx]) if self.numerical_idx else None
             # pyre-fixme[4]: Attribute must be annotated.
-            self._dim_output_num = (
-                self._target_num.shape[1] if self.numerical_idx else 0
-            )
+            self._dim_output_num = self._target_num.shape[1] if self.numerical_idx else 0
             self._get_target_cat()
             self._validate_data()
             # pyre-fixme[4]: Attribute must be annotated.
@@ -309,11 +311,7 @@ class MetaLearnHPT:
             self.cat_code_dict[col] = dict(enumerate(self.dataY[col].cat.categories))
             self.dataY[col] = self.dataY[col].cat.codes.values
 
-        self.target_cat = (
-            np.asarray(self.dataY[self.categorical_idx])
-            if self.categorical_idx
-            else None
-        )
+        self.target_cat = np.asarray(self.dataY[self.categorical_idx]) if self.categorical_idx else None
         self.dim_output_cat = n_cat
 
     def get_default_model(self) -> Optional[str]:
@@ -358,9 +356,7 @@ class MetaLearnHPT:
         return res
 
     @staticmethod
-    def _get_hidden_and_output_num(
-        n_hidden_num: List[int], out_dim_num: int
-    ) -> List[int]:
+    def _get_hidden_and_output_num(n_hidden_num: List[int], out_dim_num: int) -> List[int]:
         # If there is no numerical variable, out_dim_num = []
         if not out_dim_num:
             return []
@@ -395,11 +391,7 @@ class MetaLearnHPT:
             None.
         """
 
-        network_structure = (
-            (n_hidden_shared is None)
-            and (n_hidden_cat_combo is None)
-            and (n_hidden_num is None)
-        )
+        network_structure = (n_hidden_shared is None) and (n_hidden_cat_combo is None) and (n_hidden_num is None)
 
         default_model = self.__default_model
         default_model_networks = DefaultModelNetworks()
@@ -413,9 +405,7 @@ class MetaLearnHPT:
                 n_hidden_cat_combo_var = f"{default_model}_n_hidden_cat_combo"
                 n_hidden_num_var = f"{default_model}_n_hidden_num"
                 n_hidden_shared = getattr(default_model_networks, n_hidden_shared_var)
-                n_hidden_cat_combo = getattr(
-                    default_model_networks, n_hidden_cat_combo_var
-                )
+                n_hidden_cat_combo = getattr(default_model_networks, n_hidden_cat_combo_var)
                 n_hidden_num = getattr(default_model_networks, n_hidden_num_var)
             else:
                 msg = f"Default neural network for model {default_model} is not implemented!"
@@ -447,9 +437,7 @@ class MetaLearnHPT:
             n_hidden_and_output_cat_combo=self._get_hidden_and_output_cat_combo(
                 n_hidden_cat_combo, self.dim_output_cat
             ),
-            n_hidden_and_output_num=self._get_hidden_and_output_num(
-                n_hidden_num, self._dim_output_num
-            ),
+            n_hidden_and_output_num=self._get_hidden_and_output_num(n_hidden_num, self._dim_output_num),
         )
         print("Multi-task neural network structure:")
         print(self.model)
@@ -465,34 +453,20 @@ class MetaLearnHPT:
         Optional[torch.FloatTensor],
     ]:
         # split to train and validation sets
-        train_idx, val_idx = train_test_split(
-            np.arange(len(self.dataX)), test_size=val_size
-        )
+        train_idx, val_idx = train_test_split(np.arange(len(self.dataX)), test_size=val_size)
 
         # change training set to tensors
         x_fs = torch.from_numpy(self.dataX[train_idx, :]).float()
-        y_cat = (
-            torch.from_numpy(self.target_cat[train_idx, :]).long()
-            if self.categorical_idx
-            else None
-        )
+        y_cat = torch.from_numpy(self.target_cat[train_idx, :]).long() if self.categorical_idx else None
         y_num = (
-            torch.from_numpy(self._target_num[train_idx, :].astype("float")).float()
-            if self.numerical_idx
-            else None
+            torch.from_numpy(self._target_num[train_idx, :].astype("float")).float() if self.numerical_idx else None
         )
 
         # change validation set to tensors
         x_fs_val = torch.from_numpy(self.dataX[val_idx, :]).float()
-        y_cat_val = (
-            torch.from_numpy(self.target_cat[val_idx, :]).long()
-            if self.categorical_idx
-            else None
-        )
+        y_cat_val = torch.from_numpy(self.target_cat[val_idx, :]).long() if self.categorical_idx else None
         y_num_val = (
-            torch.from_numpy(self._target_num[val_idx, :].astype("float")).float()
-            if self.numerical_idx
-            else None
+            torch.from_numpy(self._target_num[val_idx, :].astype("float")).float() if self.numerical_idx else None
         )
         # pyre-fixme[7]: Expected `Tuple[FloatTensor, Optional[LongTensor],
         #  Optional[FloatTensor], FloatTensor, Optional[LongTensor],
@@ -560,29 +534,21 @@ class MetaLearnHPT:
             raise _log_error("Haven't built a model. Please build a model first!")
 
         if method == "SGD":
-            optimizer = torch.optim.SGD(
-                self.model.parameters(), lr=lr, momentum=momentum
-            )
+            optimizer = torch.optim.SGD(self.model.parameters(), lr=lr, momentum=momentum)
         elif method == "Adam":
             optimizer = torch.optim.Adam(self.model.parameters(), lr=lr)
         else:
-            raise _log_error(
-                "Only support SGD and Adam optimaizer. Please use 'SGD' or 'Adam'."
-            )
+            raise _log_error("Only support SGD and Adam optimaizer. Please use 'SGD' or 'Adam'.")
 
         if val_size <= 0 or val_size >= 1:
             raise _log_error("Illegal validation size.")
 
         # get training tensors
-        x_fs, y_cat, y_num, x_fs_val, y_cat_val, y_num_val = self._prepare_data(
-            val_size
-        )
+        x_fs, y_cat, y_num, x_fs_val, y_cat_val, y_num_val = self._prepare_data(val_size)
 
         # validate batch size
         if batch_size >= x_fs.size()[0]:
-            raise _log_error(
-                f"batch_size {batch_size} is larger than training data size {x_fs.size()[0]}!"
-            )
+            raise _log_error(f"batch_size {batch_size} is larger than training data size {x_fs.size()[0]}!")
 
         # variables for early stopping
         min_val_loss = np.inf
@@ -599,9 +565,7 @@ class MetaLearnHPT:
                 o1, o2 = self.model.forward(batch_x)
                 tmp_y_cat = y_cat[indices] if y_cat is not None else None
                 tmp_y_num = y_num[indices] if y_num is not None else None
-                loss_cat_train, loss_num_train = self._loss_function(
-                    o1, o2, tmp_y_cat, tmp_y_num
-                )
+                loss_cat_train, loss_num_train = self._loss_function(o1, o2, tmp_y_cat, tmp_y_num)
                 cur_loss = loss_cat_train + loss_num_train / loss_scale
                 optimizer.zero_grad()
                 cur_loss.backward()
@@ -615,9 +579,7 @@ class MetaLearnHPT:
 
             # Record loss of validatiaon set for each epoch.
             o1_val, o2_val = self.model.forward(x_fs_val)
-            loss_cat_val, loss_num_val = self._loss_function(
-                o1_val, o2_val, y_cat_val, y_num_val
-            )
+            loss_cat_val, loss_num_val = self._loss_function(o1_val, o2_val, y_cat_val, y_num_val)
             self._loss_path["LOSS_val_cat"].append(loss_cat_val.item())
             self._loss_path["LOSS_val_num"].append(loss_num_val.item())
             loss_sum_val = loss_cat_val + loss_num_val / loss_scale
@@ -648,9 +610,7 @@ class MetaLearnHPT:
         ts = TimeSeriesData(pd.DataFrame(source_ts.to_dataframe().copy()))
 
         if self.model is None:
-            raise _log_error(
-                "Haven't trained a model. Please train a model or load a model before predicting."
-            )
+            raise _log_error("Haven't trained a model. Please train a model or load a model before predicting.")
 
         if ts_scale:
             # scale time series to make ts features more stable
@@ -665,9 +625,7 @@ class MetaLearnHPT:
 
         if np.any(np.isnan(new_feature_vector)):
             LOGGER.warning(
-                "Time series features contain NaNs!"
-                f"Time series features are {new_feature}. "
-                "Fill in NaNs with 0."
+                "Time series features contain NaNs!" f"Time series features are {new_feature}. " "Fill in NaNs with 0."
             )
 
         pred_res = self.pred_by_feature([new_feature_vector])[0]
@@ -685,9 +643,7 @@ class MetaLearnHPT:
         ]
         return res
 
-    def pred_by_feature(
-        self, source_x: Union[np.ndarray, List[np.ndarray], pd.DataFrame]
-    ) -> List[Dict[str, Any]]:
+    def pred_by_feature(self, source_x: Union[np.ndarray, List[np.ndarray], pd.DataFrame]) -> List[Dict[str, Any]]:
         """Predict hyper-parameters for time series features.
 
         Args:
@@ -698,9 +654,7 @@ class MetaLearnHPT:
         """
 
         if self.model is None:
-            raise _log_error(
-                "Haven't trained a model. Please train a model or load a model before predicting."
-            )
+            raise _log_error("Haven't trained a model. Please train a model or load a model before predicting.")
         if isinstance(source_x, List):
             x = np.row_stack(source_x)
         elif isinstance(source_x, pd.DataFrame):
@@ -718,11 +672,7 @@ class MetaLearnHPT:
 
         self.model.eval()
         cats, nums = self.model(x)
-        cats = (
-            [torch.argmax(t, dim=1).detach().numpy() for t in cats]
-            if cats is not None
-            else []
-        )
+        cats = [torch.argmax(t, dim=1).detach().numpy() for t in cats] if cats is not None else []
         nums = nums.detach().numpy() if nums is not None else []
 
         ans = [{} for _ in range(n)]
@@ -765,9 +715,7 @@ class MetaLearnHPT:
         try:
             self.__dict__ = joblib.load(file_path)
         except Exception as e:
-            raise _log_error(
-                f"Fail to load model from {file_path}, and error message is: {e}"
-            )
+            raise _log_error(f"Fail to load model from {file_path}, and error message is: {e}")
 
     def plot(
         self,
@@ -801,10 +749,7 @@ class MetaLearnHPT:
             The matplotlib Axes.
         """
 
-        if (
-            not self._loss_path["LOSS_train_cat"]
-            and not self._loss_path["LOSS_train_num"]
-        ):
+        if not self._loss_path["LOSS_train_cat"] and not self._loss_path["LOSS_train_num"]:
             raise _log_error("Using a loaded model or no trained model!")
 
         if figsize is None:
@@ -861,11 +806,7 @@ class MultitaskNet(nn.Module):
         super(MultitaskNet, self).__init__()
         self.shared_layer = nn.ModuleList()
         for i in range(len(input_and_n_hidden_shared) - 1):
-            self.shared_layer.append(
-                nn.Linear(
-                    input_and_n_hidden_shared[i], input_and_n_hidden_shared[i + 1]
-                )
-            )
+            self.shared_layer.append(nn.Linear(input_and_n_hidden_shared[i], input_and_n_hidden_shared[i + 1]))
 
         self.cat_layer_combo = nn.ModuleList()
         for n_hidden_and_output_cat in n_hidden_and_output_cat_combo:

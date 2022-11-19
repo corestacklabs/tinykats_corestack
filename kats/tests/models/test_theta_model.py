@@ -4,30 +4,38 @@
 # LICENSE file in the root directory of this source tree.
 
 import unittest
-from typing import cast, Dict, Optional, Union
+from typing import Dict
+from typing import Optional
+from typing import Union
+from typing import cast
 from unittest import TestCase
 from unittest.mock import patch
 
 import numpy as np
 import pandas as pd
-from kats.compat import statsmodels
-from kats.compat.pandas import assert_frame_equal, assert_series_equal
-from kats.consts import TimeSeriesData
-from kats.data.utils import load_air_passengers, load_data
-from kats.models.theta import ThetaModel, ThetaParams
-from kats.tests.models.test_models_dummy_data import (
-    AIR_FCST_15_THETA_INCL_HIST_SM_11,
-    AIR_FCST_15_THETA_INCL_HIST_SM_12,
-    AIR_FCST_15_THETA_SM_11,
-    AIR_FCST_15_THETA_SM_12,
-    NONSEASONAL_INPUT,
-    PEYTON_FCST_30_THETA_INCL_HIST_SM_11,
-    PEYTON_FCST_30_THETA_INCL_HIST_SM_12,
-    PEYTON_FCST_30_THETA_SM_11,
-    PEYTON_FCST_30_THETA_SM_12,
-)
 from parameterized.parameterized import parameterized
 
+from kats.compat import statsmodels
+from kats.compat.pandas import assert_frame_equal
+from kats.compat.pandas import assert_series_equal
+from kats.consts import TimeSeriesData
+from kats.data.utils import load_air_passengers
+from kats.data.utils import load_data
+from kats.models.theta import ThetaModel
+from kats.models.theta import ThetaParams
+from kats.tests.models.test_models_dummy_data import AIR_FCST_15_THETA_INCL_HIST_SM_11
+from kats.tests.models.test_models_dummy_data import AIR_FCST_15_THETA_INCL_HIST_SM_12
+from kats.tests.models.test_models_dummy_data import AIR_FCST_15_THETA_SM_11
+from kats.tests.models.test_models_dummy_data import AIR_FCST_15_THETA_SM_12
+from kats.tests.models.test_models_dummy_data import NONSEASONAL_INPUT
+from kats.tests.models.test_models_dummy_data import (
+    PEYTON_FCST_30_THETA_INCL_HIST_SM_11,
+)
+from kats.tests.models.test_models_dummy_data import (
+    PEYTON_FCST_30_THETA_INCL_HIST_SM_12,
+)
+from kats.tests.models.test_models_dummy_data import PEYTON_FCST_30_THETA_SM_11
+from kats.tests.models.test_models_dummy_data import PEYTON_FCST_30_THETA_SM_12
 
 TEST_DATA: Dict[str, Dict[str, Union[ThetaParams, TimeSeriesData, pd.DataFrame]]] = {
     "short": {
@@ -45,11 +53,7 @@ TEST_DATA: Dict[str, Dict[str, Union[ThetaParams, TimeSeriesData, pd.DataFrame]]
         "params": ThetaParams(m=2),
     },
     "constant": {
-        "ts": TimeSeriesData(
-            pd.DataFrame(
-                {"time": pd.date_range("1960-12-01", "1963-01-01", freq="m"), "y": 10.0}
-            )
-        ),
+        "ts": TimeSeriesData(pd.DataFrame({"time": pd.date_range("1960-12-01", "1963-01-01", freq="m"), "y": 10.0})),
         "params": ThetaParams(m=2),
     },
     "nonseasonal": {
@@ -57,9 +61,7 @@ TEST_DATA: Dict[str, Dict[str, Union[ThetaParams, TimeSeriesData, pd.DataFrame]]
         "params": ThetaParams(m=4),
     },
     "daily": {
-        "ts": TimeSeriesData(
-            load_data("peyton_manning.csv").set_axis(["time", "y"], axis=1)
-        ),
+        "ts": TimeSeriesData(load_data("peyton_manning.csv").set_axis(["time", "y"], axis=1)),
         "params": ThetaParams(),
         "params_negative": ThetaParams(m=-5),
     },
@@ -67,9 +69,7 @@ TEST_DATA: Dict[str, Dict[str, Union[ThetaParams, TimeSeriesData, pd.DataFrame]]
         "ts": load_air_passengers(),
         "params": ThetaParams(m=12),
     },
-    "multivariate": {
-        "ts": TimeSeriesData(load_data("multivariate_anomaly_simulated_data.csv"))
-    },
+    "multivariate": {"ts": TimeSeriesData(load_data("multivariate_anomaly_simulated_data.csv"))},
 }
 
 
@@ -94,11 +94,7 @@ class ThetaModelTest(TestCase):
                 0.05,
                 False,
                 None,
-                (
-                    AIR_FCST_15_THETA_SM_11
-                    if statsmodels.version < "0.12"
-                    else AIR_FCST_15_THETA_SM_12
-                ),
+                (AIR_FCST_15_THETA_SM_11 if statsmodels.version < "0.12" else AIR_FCST_15_THETA_SM_12),
             ],
             [
                 "monthly, include history",
@@ -122,11 +118,7 @@ class ThetaModelTest(TestCase):
                 0.05,
                 False,
                 None,
-                (
-                    PEYTON_FCST_30_THETA_SM_11
-                    if statsmodels.version < "0.12"
-                    else PEYTON_FCST_30_THETA_SM_12
-                ),
+                (PEYTON_FCST_30_THETA_SM_11 if statsmodels.version < "0.12" else PEYTON_FCST_30_THETA_SM_12),
             ],
             [
                 "daily, include history",
@@ -158,9 +150,7 @@ class ThetaModelTest(TestCase):
         np.random.seed(0)
         m = ThetaModel(data=ts, params=params)
         m.fit()
-        forecast_df = m.predict(
-            steps=steps, alpha=alpha, include_history=include_history, freq=freq
-        )
+        forecast_df = m.predict(steps=steps, alpha=alpha, include_history=include_history, freq=freq)
         assert_frame_equal(truth, forecast_df)
 
     # pyre-fixme[56]: Pyre was not able to infer the type of the decorator `parameter...
@@ -240,9 +230,7 @@ class ThetaModelTest(TestCase):
         if seasonality_removed:
             self.assertFalse(ts.value.equals(deseas_data.value))
         else:
-            assert_series_equal(
-                cast(pd.Series, ts.value), cast(pd.Series, deseas_data.value)
-            )
+            assert_series_equal(cast(pd.Series, ts.value), cast(pd.Series, deseas_data.value))
 
         self.assertEqual(decomp_is_none, m.decomp is None)
 
@@ -294,24 +282,20 @@ class ThetaModelTest(TestCase):
         self.assertRaises(ValueError, m.predict, 30)
 
         # seasonal data must be deseasonalized before fit
-        with patch.object(
-            m, "deseasonalize", (lambda self: self.data).__get__(m)
-        ), patch.object(m, "check_seasonality"):
+        with patch.object(m, "deseasonalize", (lambda self: self.data).__get__(m)), patch.object(
+            m, "check_seasonality"
+        ):
             m.seasonal = True
             m.decomp = None
             self.assertRaises(ValueError, m.fit)
 
         with patch(
             "kats.utils.decomposition.TimeSeriesDecomposition.decomposer",
-            return_value={
-                "seasonal": cast(TimeSeriesData, TEST_DATA["daily"]["ts"]) * 0
-            },
+            return_value={"seasonal": cast(TimeSeriesData, TEST_DATA["daily"]["ts"]) * 0},
         ):
             # Don't deseasonalize if any seasonal index = 0
             deseas_data = m.deseasonalize()
-            expected = cast(
-                pd.Series, cast(TimeSeriesData, TEST_DATA["daily"]["ts"]).value
-            )
+            expected = cast(pd.Series, cast(TimeSeriesData, TEST_DATA["daily"]["ts"]).value)
             assert_series_equal(expected, cast(pd.Series, deseas_data.value))
 
 

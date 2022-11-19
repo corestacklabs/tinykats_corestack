@@ -23,7 +23,14 @@ Typical usage example:
 """
 
 import logging
-from typing import Any, Dict, List, Optional, Sequence, Tuple, Type, Union
+from typing import Any
+from typing import Dict
+from typing import List
+from typing import Optional
+from typing import Sequence
+from typing import Tuple
+from typing import Type
+from typing import Union
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -37,12 +44,13 @@ except ImportError:
     Figure = object
 import scipy.fftpack as fp
 import statsmodels.api as sm
+from scipy.signal import find_peaks  # @manual
+from statsmodels.tsa.stattools import acf
+
 from kats.consts import TimeSeriesData
 from kats.detectors.detector import Detector
 from kats.graphics.plots import make_fourier_plot
 from kats.utils.decomposition import TimeSeriesDecomposition
-from scipy.signal import find_peaks  # @manual
-from statsmodels.tsa.stattools import acf
 
 # from numpy.typing import ArrayLike
 ArrayLike = Union[np.ndarray, Sequence[float]]
@@ -68,9 +76,7 @@ class ACFDetector(Detector):
     def __init__(self, data: TimeSeriesData) -> None:
         super().__init__(data=data)
         if not isinstance(self.data.value, pd.Series):
-            msg = "Only support univariate time series, but get {type}.".format(
-                type=type(self.data.value)
-            )
+            msg = "Only support univariate time series, but get {type}.".format(type=type(self.data.value))
             logging.error(msg)
             raise ValueError(msg)
         self.decomposed = False
@@ -86,9 +92,7 @@ class ACFDetector(Detector):
     # pyre-fixme[14]: Inconsistent override [14]: `kats.detectors.seasonality.ACFDetector.detector` overrides method defined in `Detector` inconsistently. Could not find parameter `method` in overriding signature.
     # pyre-fixme[14]: `kats.detectors.seasonality.ACFDetector.detector` overrides method defined in `Detector` inconsistently. Returned type `Dict[str, typing.Any]` is not a subtype of the overridden return `None`.
     # pyre-fixme[15]: `detector` overrides method defined in `Detector` inconsistently.
-    def detector(
-        self, lags: Optional[int] = None, diff: int = 1, alpha: Optional[float] = 0.01
-    ) -> Dict[str, Any]:
+    def detector(self, lags: Optional[int] = None, diff: int = 1, alpha: Optional[float] = 0.01) -> Dict[str, Any]:
         """Detect seasonality
 
         This method runs acf and returns if seasonality detected in the given time series
@@ -197,9 +201,7 @@ class FFTDetector(Detector):
 
     # pyre-fixme[14]: `detector` overrides method defined in `Detector` inconsistently.
     # pyre-fixme[15]: `detector` overrides method defined in `Detector` inconsistently.
-    def detector(
-        self, sample_spacing: float = 1.0, mad_threshold: float = 6.0
-    ) -> Dict[str, Any]:
+    def detector(self, sample_spacing: float = 1.0, mad_threshold: float = 6.0) -> Dict[str, Any]:
         """Detect seasonality with FFT
 
         Args:
@@ -252,9 +254,7 @@ class FFTDetector(Detector):
         """
         fft = self.get_fft(sample_spacing)
         thres, orig_peaks, peaks = self.get_fft_peaks(fft, mad_threshold)
-        return make_fourier_plot(
-            fft, thres, orig_peaks, peaks, f"1/{time_unit}", title=title
-        )
+        return make_fourier_plot(fft, thres, orig_peaks, peaks, f"1/{time_unit}", title=title)
 
     def get_fft(self, sample_spacing: float = 1.0) -> pd.DataFrame:
         """Computes FFT
@@ -276,9 +276,7 @@ class FFTDetector(Detector):
 
         return pd.DataFrame({"freq": freq[0], "ampl": ampl[0]}, copy=False)
 
-    def get_fft_peaks(
-        self, fft: pd.DataFrame, mad_threshold: float = 6.0
-    ) -> Tuple[float, pd.DataFrame, pd.DataFrame]:
+    def get_fft_peaks(self, fft: pd.DataFrame, mad_threshold: float = 6.0) -> Tuple[float, pd.DataFrame, pd.DataFrame]:
         """Computes peaks in fft, selects the highest peaks (outliers) and
             removes the harmonics (multiplies of the base harmonics found)
 
@@ -346,6 +344,4 @@ class FFTDetector(Detector):
         """
         fft = self.get_fft(sample_spacing)
         thres, orig_peaks, peaks = self.get_fft_peaks(fft, mad_threshold)
-        return make_fourier_plot(
-            fft, thres, orig_peaks, peaks, f"1/{time_unit}", title=title
-        )
+        return make_fourier_plot(fft, thres, orig_peaks, peaks, f"1/{time_unit}", title=title)

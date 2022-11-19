@@ -20,14 +20,21 @@ Kats development style.
 """
 
 import logging
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any
+from typing import Callable
+from typing import Dict
+from typing import List
+from typing import Optional
 
 import numpy as np
 import pandas as pd
-from kats.consts import Params, TimeSeriesData
+from statsmodels.tsa.arima_model import ARIMA
+from statsmodels.tsa.arima_model import ARIMAResults
+
+from kats.consts import Params
+from kats.consts import TimeSeriesData
 from kats.models.model import Model
 from kats.utils.parameter_tuning_utils import get_default_arima_parameter_search_space
-from statsmodels.tsa.arima_model import ARIMA, ARIMAResults
 
 
 class ARIMAParams(Params):
@@ -61,10 +68,7 @@ class ARIMAParams(Params):
         self.exog = kwargs.get("exog", None)
         self.dates = kwargs.get("dates", None)
         self.freq = kwargs.get("freq", None)
-        logging.debug(
-            "Initialized ARIMAParams with parameters. "
-            f"p:{p}, d:{d}, q:{q}, kwargs:{kwargs}"
-        )
+        logging.debug("Initialized ARIMAParams with parameters. " f"p:{p}, d:{d}, q:{q}, kwargs:{kwargs}")
 
     def validate_params(self) -> None:
         logging.info("Method validate_params() is not implemented.")
@@ -105,10 +109,7 @@ class ARIMAModel(Model[ARIMAParams]):
         super().__init__(data, params)
         # pyre-fixme[16]: `Optional` has no attribute `value`.
         if not isinstance(self.data.value, pd.Series):
-            msg = (
-                "Only support univariate time series, but got "
-                f"{type(self.data.value)}."
-            )
+            msg = "Only support univariate time series, but got " f"{type(self.data.value)}."
             logging.error(msg)
             raise ValueError(msg)
 
@@ -195,9 +196,7 @@ class ARIMAModel(Model[ARIMAParams]):
 
     # pyre-fixme[14]: `predict` overrides method defined in `Model` inconsistently.
     # pyre-fixme[15]: `predict` overrides method defined in `Model` inconsistently.
-    def predict(
-        self, steps: int, include_history: bool = False, **kwargs: Any
-    ) -> pd.DataFrame:
+    def predict(self, steps: int, include_history: bool = False, **kwargs: Any) -> pd.DataFrame:
         """Predict with fitted ARIMA model
 
         Args:
@@ -252,10 +251,7 @@ class ARIMAModel(Model[ARIMAParams]):
                 )
                 self.fcst_df = fcst_df = pd.concat([hist_fcst, fcst_df], copy=False)
             except Exception as e:
-                msg = (
-                    "Fail to generate in-sample forecasts for historical data "
-                    f"with error message {e}."
-                )
+                msg = "Fail to generate in-sample forecasts for historical data " f"with error message {e}."
                 logging.error(msg)
                 raise ValueError(msg)
         logging.debug(f"Return forecast data: {fcst_df}")

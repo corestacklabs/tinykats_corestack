@@ -8,11 +8,13 @@ from unittest import TestCase
 
 import numpy as np
 import pandas as pd
+from parameterized import parameterized
+
 from kats.consts import TimeSeriesData
 from kats.data.utils import load_air_passengers
-from kats.detectors.bocpd_model import BocpdDetectorModel, BocpdTrendDetectorModel
+from kats.detectors.bocpd_model import BocpdDetectorModel
+from kats.detectors.bocpd_model import BocpdTrendDetectorModel
 from kats.utils.simulator import Simulator
-from parameterized import parameterized
 
 
 class BocpdDetectorModelTest(TestCase):
@@ -47,9 +49,7 @@ class BocpdDetectorModelTest(TestCase):
         # setup history model
         history_model_ts_length = 450
         history_model_ts_history_length = 100
-        self.history_model_scores_length = (
-            history_model_ts_length - history_model_ts_history_length
-        )
+        self.history_model_scores_length = history_model_ts_length - history_model_ts_history_length
 
         level_ts_history = TimeSeriesData(
             time=self.level_ts.time.iloc[:history_model_ts_history_length],
@@ -68,16 +68,12 @@ class BocpdDetectorModelTest(TestCase):
         )
 
         history_bocpd_detector = BocpdDetectorModel()
-        self.history_model = history_bocpd_detector.fit_predict(
-            historical_data=level_ts_history, data=level_ts_data
-        )
+        self.history_model = history_bocpd_detector.fit_predict(historical_data=level_ts_history, data=level_ts_data)
 
         # setup of slow drift model
         self.slow_drift_model_ts_length = 200
 
-        drift_model_sim = Simulator(
-            n=self.slow_drift_model_ts_length, start="2018-01-01"
-        )
+        drift_model_sim = Simulator(n=self.slow_drift_model_ts_length, start="2018-01-01")
         drift_model_trend_ts = drift_model_sim.trend_shift_sim(
             random_seed=15,
             cp_arr=[100],
@@ -89,9 +85,7 @@ class BocpdDetectorModelTest(TestCase):
         )
 
         drift_model_bocpd_detector = BocpdDetectorModel(slow_drift=True)
-        self.slow_drift_model = drift_model_bocpd_detector.fit_predict(
-            data=drift_model_trend_ts
-        )
+        self.slow_drift_model = drift_model_bocpd_detector.fit_predict(data=drift_model_trend_ts)
 
         # setup of no drift model
         no_drift_model_bocpd_detector = BocpdDetectorModel(slow_drift=False)
@@ -117,9 +111,7 @@ class BocpdDetectorModelTest(TestCase):
         # we want to make sure those are detected
         # we set some slack for them be detected
         # 5 time points before/after
-        self.assertTrue(
-            np.max(anom.scores.value.values[from_interval:to_interval]) > threshold
-        )
+        self.assertTrue(np.max(anom.scores.value.values[from_interval:to_interval]) > threshold)
 
     # pyre-fixme[16]: Module `parameterized` has no attribute `expand`.
     @parameterized.expand(
@@ -141,9 +133,7 @@ class BocpdDetectorModelTest(TestCase):
             ],
         ]
     )
-    def test_scores_length_validation(
-        self, name: str, attribute_predicted: str, attribute_actual: str
-    ) -> None:
+    def test_scores_length_validation(self, name: str, attribute_predicted: str, attribute_actual: str) -> None:
         self.assertEqual(
             len(attrgetter(attribute_predicted)(self)),
             attrgetter(attribute_actual)(self),
@@ -160,10 +150,7 @@ class BocpdDetectorModelTest(TestCase):
         threshold = 0.4
         # we test for the two changepoints in 200, 350, but shifted by 100
         # since that is the length of the history
-        self.assertTrue(
-            np.max(self.history_model.scores.value.values[from_interval:to_interval])
-            > threshold
-        )
+        self.assertTrue(np.max(self.history_model.scores.value.values[from_interval:to_interval]) > threshold)
 
     def test_slow_drift_threshold(self) -> None:
         threshold = 0.4
@@ -171,9 +158,7 @@ class BocpdDetectorModelTest(TestCase):
         # we want to make sure that is detected
         # we set some slack for them be detected
         # 5 time points before/after
-        self.assertTrue(
-            np.max(self.slow_drift_model.scores.value.values[95:105]) > threshold
-        )
+        self.assertTrue(np.max(self.slow_drift_model.scores.value.values[95:105]) > threshold)
 
     def test_serialize_ignore_slow_drift_parm(self) -> None:
         # In setup section:
@@ -192,23 +177,13 @@ class BocpdDetectorModelTest(TestCase):
         # this data is in the same format as OneDetection
         # it also crosses the daylight savings time
         history_time_list = (
-            (
-                pd.date_range(
-                    "2020-03-01", "2020-03-10", tz="US/Pacific", freq="1d"
-                ).astype(int)
-                / 1e9
-            )
+            (pd.date_range("2020-03-01", "2020-03-10", tz="US/Pacific", freq="1d").astype(int) / 1e9)
             .astype(int)
             .to_list()
         )
 
         data_time_list = (
-            (
-                pd.date_range(
-                    "2020-03-11", "2020-03-20", tz="US/Pacific", freq="1d"
-                ).astype(int)
-                / 1e9
-            )
+            (pd.date_range("2020-03-11", "2020-03-20", tz="US/Pacific", freq="1d").astype(int) / 1e9)
             .astype(int)
             .to_list()
         )
@@ -249,9 +224,7 @@ class TestBocpdTrendDetectorModel(TestCase):
 
     def test_response_shape_for_single_series(self) -> None:
         single_ts = TimeSeriesData(self.data)
-        response_single_ts = self.trend_detector.fit_predict(
-            data=single_ts, historical_data=None
-        )
+        response_single_ts = self.trend_detector.fit_predict(data=single_ts, historical_data=None)
 
         self.assertEqual(response_single_ts.scores.time.shape, single_ts.time.shape)
 
@@ -266,9 +239,7 @@ class TestBocpdTrendDetectorModel(TestCase):
     def test_response_shape_with_historical_data(self) -> None:
         single_ts = TimeSeriesData(self.data)
         historical_ts = TimeSeriesData(self.data)
-        single_ts.time = single_ts.time + pd.tseries.offsets.DateOffset(
-            months=len(self.data)
-        )
+        single_ts.time = single_ts.time + pd.tseries.offsets.DateOffset(months=len(self.data))
         response = self.trend_detector.fit_predict(single_ts, historical_ts)
 
         self.assertTrue(np.array_equal(response.scores.time, single_ts.time))

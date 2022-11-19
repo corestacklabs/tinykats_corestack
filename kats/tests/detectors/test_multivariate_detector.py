@@ -8,6 +8,7 @@ from unittest import TestCase
 
 import numpy as np
 import pandas as pd
+
 from kats.consts import TimeSeriesData
 from kats.data.utils import load_data
 from kats.detectors.multivariate_detector import MultivariateAnomalyDetectorModel
@@ -20,9 +21,7 @@ class TestMultivariateAnomalyDetectorModel(TestCase):
 
     def test_response_shape_for_multi_series(self) -> None:
         multi_ts = TimeSeriesData(self.data)
-        response_multi_ts = self.outlier_detector.fit_predict(
-            data=multi_ts, historical_data=None
-        )
+        response_multi_ts = self.outlier_detector.fit_predict(data=multi_ts, historical_data=None)
 
         self.assertEqual(response_multi_ts.scores.time.shape, multi_ts.time.shape)
 
@@ -37,9 +36,7 @@ class TestMultivariateAnomalyDetectorModel(TestCase):
     def test_response_shape_with_historical_data(self) -> None:
         single_ts = TimeSeriesData(self.data)
         historical_ts = TimeSeriesData(self.data)
-        single_ts.time = single_ts.time + pd.tseries.offsets.DateOffset(
-            days=len(self.data)
-        )
+        single_ts.time = single_ts.time + pd.tseries.offsets.DateOffset(days=len(self.data))
         response = self.outlier_detector.fit_predict(single_ts, historical_ts)
 
         self.assertTrue(np.array_equal(response.scores.time, single_ts.time))

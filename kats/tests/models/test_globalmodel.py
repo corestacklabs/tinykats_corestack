@@ -6,42 +6,44 @@
 import logging
 import os
 from functools import partial
-from typing import Dict, List, Union
-from unittest import mock, TestCase
+from typing import Dict
+from typing import List
+from typing import Union
+from unittest import TestCase
+from unittest import mock
 
 import numpy as np
 import pandas as pd
 import torch
-from kats.consts import TimeSeriesData
-from kats.models.globalmodel.backtester import GMBackTester, GMBackTesterExpandingWindow
-from kats.models.globalmodel.data_processor import GMBatch, GMDataLoader
-from kats.models.globalmodel.ensemble import GMEnsemble, load_gmensemble_from_file
-from kats.models.globalmodel.model import GMModel, load_gmmodel_from_file
-from kats.models.globalmodel.serialize import (
-    global_model_to_json,
-    load_global_model_from_json,
-)
-from kats.models.globalmodel.stdmodel import STDGlobalModel
-from kats.models.globalmodel.utils import (
-    AdjustedPinballLoss,
-    DilatedRNNStack,
-    fill_missing_value_na,
-    get_filters,
-    GMFeature,
-    GMParam,
-    gmparam_from_string,
-    LSTM2Cell,
-    pad_ts,
-    PinballLoss,
-    S2Cell,
-    split,
-)
 from parameterized.parameterized import parameterized
 
+from kats.consts import TimeSeriesData
+from kats.models.globalmodel.backtester import GMBackTester
+from kats.models.globalmodel.backtester import GMBackTesterExpandingWindow
+from kats.models.globalmodel.data_processor import GMBatch
+from kats.models.globalmodel.data_processor import GMDataLoader
+from kats.models.globalmodel.ensemble import GMEnsemble
+from kats.models.globalmodel.ensemble import load_gmensemble_from_file
+from kats.models.globalmodel.model import GMModel
+from kats.models.globalmodel.model import load_gmmodel_from_file
+from kats.models.globalmodel.serialize import global_model_to_json
+from kats.models.globalmodel.serialize import load_global_model_from_json
+from kats.models.globalmodel.stdmodel import STDGlobalModel
+from kats.models.globalmodel.utils import AdjustedPinballLoss
+from kats.models.globalmodel.utils import DilatedRNNStack
+from kats.models.globalmodel.utils import GMFeature
+from kats.models.globalmodel.utils import GMParam
+from kats.models.globalmodel.utils import LSTM2Cell
+from kats.models.globalmodel.utils import PinballLoss
+from kats.models.globalmodel.utils import S2Cell
+from kats.models.globalmodel.utils import fill_missing_value_na
+from kats.models.globalmodel.utils import get_filters
+from kats.models.globalmodel.utils import gmparam_from_string
+from kats.models.globalmodel.utils import pad_ts
+from kats.models.globalmodel.utils import split
 
-def get_ts(
-    n: int, start_time: str, seed: int = 560, freq: str = "D", has_nans: bool = True
-) -> TimeSeriesData:
+
+def get_ts(n: int, start_time: str, seed: int = 560, freq: str = "D", has_nans: bool = True) -> TimeSeriesData:
     """
     Helper function for generating TimeSeriesData.
     """
@@ -71,9 +73,7 @@ def _gm_mock_predict_func(
     return {i: [np.random.randn(n)] * m for i in range(len(TSs))}
 
 
-def _gm_mock_predict_func_2(
-    TSs: Dict[int, TimeSeriesData], steps: int
-) -> Dict[int, pd.DataFrame]:
+def _gm_mock_predict_func_2(TSs: Dict[int, TimeSeriesData], steps: int) -> Dict[int, pd.DataFrame]:
     tpd = pd.DataFrame(
         {
             "time": pd.date_range("2021-05-06", periods=steps),
@@ -298,9 +298,7 @@ class TestGMParam(TestCase):
         )
 
     def test_daily_s2s(self) -> None:
-        GMParam(
-            freq="d", input_window=45, fcst_window=30, seasonality=7, model_type="s2s"
-        )
+        GMParam(freq="d", input_window=45, fcst_window=30, seasonality=7, model_type="s2s")
 
 
 class LSTM2CellTest(TestCase):
@@ -345,14 +343,10 @@ class DilatedRNNStackTest(TestCase):
             rnn(input_t)
 
     def test_others(self) -> None:
-        self.assertRaises(
-            ValueError, DilatedRNNStack, [[1, 2]], "randomcell", 20, 20, 10
-        )
+        self.assertRaises(ValueError, DilatedRNNStack, [[1, 2]], "randomcell", 20, 20, 10)
         self.assertRaises(ValueError, DilatedRNNStack, [], "LSTM2Cell", 20, 20, 10)
         self.assertRaises(ValueError, DilatedRNNStack, [], "LSTM2Cell", 20, 20, 10, 20)
-        self.assertRaises(
-            ValueError, DilatedRNNStack, [[1, 2]], "S2Cell", 20, 50, -5, 10
-        )
+        self.assertRaises(ValueError, DilatedRNNStack, [[1, 2]], "S2Cell", 20, 50, -5, 10)
 
     def test_encoder_decoder(self) -> None:
         x = torch.randn(5, 20)
@@ -364,9 +358,7 @@ class DilatedRNNStackTest(TestCase):
             output_size=None,
             h_size=2,
         )
-        decoder = DilatedRNNStack(
-            [[1], [3]], "S2Cell", input_size=20, state_size=50, output_size=30, h_size=2
-        )
+        decoder = DilatedRNNStack([[1], [3]], "S2Cell", input_size=20, state_size=50, output_size=30, h_size=2)
         for _ in range(2):
             _ = encoder(x)
             encoder.prepare_decoder(decoder)
@@ -511,9 +503,7 @@ class GMBatchTest(TestCase):
 
         GMParam_collects = [
             # RNN GM with seasonality
-            GMParam(
-                freq="d", input_window=10, fcst_window=7, seasonality=3, fcst_step_num=2
-            ),
+            GMParam(freq="d", input_window=10, fcst_window=7, seasonality=3, fcst_step_num=2),
             # RNN GM without seasonality
             GMParam(freq="d", input_window=10, fcst_window=7, seasonality=1),
             # RNN GM with seasonlaity and feature
@@ -525,9 +515,7 @@ class GMBatchTest(TestCase):
                 gmfeature="simple_date",
             ),
             # S2S GM
-            GMParam(
-                freq="d", input_window=5, fcst_window=3, seasonality=2, model_type="s2s"
-            ),
+            GMParam(freq="d", input_window=5, fcst_window=3, seasonality=2, model_type="s2s"),
         ]
 
         GMBatch_params = [
@@ -585,8 +573,7 @@ class GMBatchTest(TestCase):
         # valid indices
         if batch.training:  # for training
             self.assertEqual(
-                batch.train_indices[-1]
-                + params.fcst_window * batch.training_encoder_step_num,
+                batch.train_indices[-1] + params.fcst_window * batch.training_encoder_step_num,
                 batch.train_length,
             )
             self.assertTrue(len(batch.train_indices) >= params.min_training_step_num)
@@ -598,9 +585,7 @@ class GMBatchTest(TestCase):
                         f"valid_indices with length = {len(batch.valid_indices)}, {params.validation_step_num}",
                     )
                 else:
-                    self.assertTrue(
-                        len(batch.valid_indices) == batch.training_encoder_step_num
-                    )
+                    self.assertTrue(len(batch.valid_indices) == batch.training_encoder_step_num)
         else:  # for testing
             self.assertEqual(
                 batch.train_indices[-1] + params.min_training_step_length,
@@ -626,9 +611,7 @@ class GMBatchTest(TestCase):
 class AdjustedPinballLossTest(TestCase):
     def test_adjustedpinballloss(self) -> None:
         quantile = torch.tensor([0.5, 0.05, 0.95, 0.9])
-        rnn = DilatedRNNStack(
-            [[1, 2], [2, 2, 4]], "LSTM", input_size=20, state_size=50, output_size=4 * 3
-        )
+        rnn = DilatedRNNStack([[1, 2], [2, 2, 4]], "LSTM", input_size=20, state_size=50, output_size=4 * 3)
         fcst = rnn(torch.randn(3, 20))
         actuals = torch.tensor(
             [
@@ -661,9 +644,7 @@ class AdjustedPinballLossTest(TestCase):
     def test_other(self) -> None:
         self.assertRaises(ValueError, AdjustedPinballLoss, quantile=torch.tensor([]))
         self.assertRaises(ValueError, AdjustedPinballLoss, quantile=torch.tensor([[]]))
-        self.assertRaises(
-            ValueError, AdjustedPinballLoss, quantile=torch.tensor([[0.5]])
-        )
+        self.assertRaises(ValueError, AdjustedPinballLoss, quantile=torch.tensor([[0.5]]))
 
         self.assertRaises(
             ValueError,
@@ -736,9 +717,7 @@ class GMModelTest(TestCase):
 
     # pyre-fixme[2]: Parameter must be annotated.
     def _test_single_gmmodel(self, gmmodel, train_ts, valid_ts) -> None:
-        _ = gmmodel.train(
-            train_ts, valid_ts, train_ts, valid_ts, fcst_monitor=True, debug=True
-        )
+        _ = gmmodel.train(train_ts, valid_ts, train_ts, valid_ts, fcst_monitor=True, debug=True)
         pred = gmmodel.predict(train_ts, 50)
         _ = gmmodel.predict(train_ts[0], 20)
         _ = gmmodel.evaluate(train_ts, valid_ts)
@@ -756,9 +735,7 @@ class GMModelTest(TestCase):
 
 class GMParamConversionTest(TestCase):
     def test_conversion(self) -> None:
-        origin_gmparam = GMParam(
-            freq="d", input_window=10, fcst_window=7, gmfeature=["simple_date"]
-        )
+        origin_gmparam = GMParam(freq="d", input_window=10, fcst_window=7, gmfeature=["simple_date"])
         gmparam_str = origin_gmparam.to_string()
         new_gmparam = gmparam_from_string(gmparam_str)
         self.assertEqual(
@@ -768,9 +745,7 @@ class GMParamConversionTest(TestCase):
         )
 
     def test_copy(self) -> None:
-        origin_gmparam = GMParam(
-            freq="d", input_window=10, fcst_window=7, gmfeature=["simple_date"]
-        )
+        origin_gmparam = GMParam(freq="d", input_window=10, fcst_window=7, gmfeature=["simple_date"])
         self.assertEqual(
             origin_gmparam,
             origin_gmparam.copy(),
@@ -817,15 +792,11 @@ class GMBacktesterTest(TestCase):
 
     def test_other(self) -> None:
         # Check that gmparam is a valid object
-        self.assertRaises(
-            ValueError, GMBackTester, data=TSs, gmparam=None, backtest_timestamp=[]
-        )
+        self.assertRaises(ValueError, GMBackTester, data=TSs, gmparam=None, backtest_timestamp=[])
 
         # Check that backtest_timestamp is not empty
         gmparam = GMParam(freq="d", input_window=7, fcst_window=5, epoch_size=2)
-        self.assertRaises(
-            ValueError, GMBackTester, data=TSs, gmparam=gmparam, backtest_timestamp=[]
-        )
+        self.assertRaises(ValueError, GMBackTester, data=TSs, gmparam=gmparam, backtest_timestamp=[])
 
         # Check splits is valid
         self.assertRaises(
@@ -1075,9 +1046,7 @@ class STDGlobalModelTest(TestCase):
 class GMBackTesterExpandingWindowTest(TestCase):
     def test_GMBTEW(self) -> None:
 
-        gmparam = GMParam(
-            input_window=10, fcst_window=7, seasonality=6, fcst_step_num=2, freq="D"
-        )
+        gmparam = GMParam(input_window=10, fcst_window=7, seasonality=6, fcst_step_num=2, freq="D")
 
         gmm1 = GMModel(gmparam)
         gmm1.build_rnn()
@@ -1089,30 +1058,22 @@ class GMBackTesterExpandingWindowTest(TestCase):
 
         gme.gm_models = [gmm1, gmm2]
 
-        gmbtew1 = GMBackTesterExpandingWindow(
-            ["mape", "mse"], TSs[0], gmm1, 60, 80, 20, 5, True
-        )
+        gmbtew1 = GMBackTesterExpandingWindow(["mape", "mse"], TSs[0], gmm1, 60, 80, 20, 5, True)
 
         gmbtew1.run_backtest()
 
-        gmbtew2 = GMBackTesterExpandingWindow(
-            ["mape", "mse"], TSs[0], gme, 60, 80, 20, 5, True
-        )
+        gmbtew2 = GMBackTesterExpandingWindow(["mape", "mse"], TSs[0], gme, 60, 80, 20, 5, True)
 
         gmbtew2.run_backtest()
 
-        gmbtew3 = GMBackTesterExpandingWindow(
-            ["mape", "mse"], TSs[0], gme, 60, 80, 20, 5, False
-        )
+        gmbtew3 = GMBackTesterExpandingWindow(["mape", "mse"], TSs[0], gme, 60, 80, 20, 5, False)
 
         gmbtew3.run_backtest()
 
     def test_other(self) -> None:
         # Check that data and gmparam have same freq
         ts = get_ts(80, "2020-05-06", 560, "W")
-        gmparam = GMParam(
-            input_window=10, fcst_window=7, seasonality=6, fcst_step_num=2, freq="D"
-        )
+        gmparam = GMParam(input_window=10, fcst_window=7, seasonality=6, fcst_step_num=2, freq="D")
         gmm1 = GMModel(gmparam)
         gmm1.build_rnn()
 

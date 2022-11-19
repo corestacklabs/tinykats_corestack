@@ -5,7 +5,12 @@
 
 import logging
 import warnings
-from typing import cast, Dict, Generator, Optional, Sequence, Union
+from typing import Dict
+from typing import Generator
+from typing import Optional
+from typing import Sequence
+from typing import Union
+from typing import cast
 
 try:
     from typing import Protocol
@@ -126,9 +131,7 @@ def _arrays(*args: Optional[ArrayLike]) -> Generator[np.ndarray, None, None]:
         if n_samples is None:
             n_samples = a.shape[0]
         elif a.shape[0] != n_samples:
-            raise ValueError(
-                f"Arrays have different number of samples ({a.shape}, expected {n_samples})"
-            )
+            raise ValueError(f"Arrays have different number of samples ({a.shape}, expected {n_samples})")
         yield a
 
 
@@ -180,19 +183,13 @@ def _safe_divide(
 # methods need to use those.
 
 
-def _err(
-    y_true: np.ndarray, y_pred: np.ndarray, sample_weight: Optional[np.ndarray] = None
-) -> np.ndarray:
+def _err(y_true: np.ndarray, y_pred: np.ndarray, sample_weight: Optional[np.ndarray] = None) -> np.ndarray:
     if sample_weight is None:
         return y_true - y_pred
-    return _safe_divide(
-        np.multiply(y_true - y_pred, sample_weight), np.nansum(sample_weight)
-    )
+    return _safe_divide(np.multiply(y_true - y_pred, sample_weight), np.nansum(sample_weight))
 
 
-def error(
-    y_true: ArrayLike, y_pred: ArrayLike, sample_weight: Optional[ArrayLike] = None
-) -> np.ndarray:
+def error(y_true: ArrayLike, y_pred: ArrayLike, sample_weight: Optional[ArrayLike] = None) -> np.ndarray:
     """Compute the error.
 
     Args:
@@ -206,9 +203,7 @@ def error(
     return _err(*_arrays(y_true, y_pred, sample_weight))
 
 
-def _abs_err(
-    y_true: np.ndarray, y_pred: np.ndarray, sample_weight: Optional[np.ndarray] = None
-) -> np.ndarray:
+def _abs_err(y_true: np.ndarray, y_pred: np.ndarray, sample_weight: Optional[np.ndarray] = None) -> np.ndarray:
     err = np.abs(y_true - y_pred)
     if sample_weight is None:
         return err
@@ -217,9 +212,7 @@ def _abs_err(
     return _safe_divide(err, np.nansum(sample_weight))
 
 
-def absolute_error(
-    y_true: ArrayLike, y_pred: ArrayLike, sample_weight: Optional[ArrayLike] = None
-) -> np.ndarray:
+def absolute_error(y_true: ArrayLike, y_pred: ArrayLike, sample_weight: Optional[ArrayLike] = None) -> np.ndarray:
     """Compute the absolute error.
 
     Args:
@@ -233,9 +226,7 @@ def absolute_error(
     return _abs_err(*_arrays(y_true, y_pred, sample_weight))
 
 
-def _pct_err(
-    y_true: np.ndarray, y_pred: np.ndarray, sample_weight: Optional[np.ndarray] = None
-) -> np.ndarray:
+def _pct_err(y_true: np.ndarray, y_pred: np.ndarray, sample_weight: Optional[np.ndarray] = None) -> np.ndarray:
     err = y_true - y_pred
     if sample_weight is None:
         return _safe_divide(err, y_true)
@@ -244,9 +235,7 @@ def _pct_err(
     return _safe_divide(err, y_true * np.nansum(sample_weight))
 
 
-def percentage_error(
-    y_true: ArrayLike, y_pred: ArrayLike, sample_weight: Optional[ArrayLike] = None
-) -> np.ndarray:
+def percentage_error(y_true: ArrayLike, y_pred: ArrayLike, sample_weight: Optional[ArrayLike] = None) -> np.ndarray:
     """Compute the percentage error.
 
     Args:
@@ -260,9 +249,7 @@ def percentage_error(
     return _pct_err(*_arrays(y_true, y_pred, sample_weight))
 
 
-def _abs_pct_err(
-    y_true: np.ndarray, y_pred: np.ndarray, sample_weight: Optional[np.ndarray] = None
-) -> np.ndarray:
+def _abs_pct_err(y_true: np.ndarray, y_pred: np.ndarray, sample_weight: Optional[np.ndarray] = None) -> np.ndarray:
     err = np.abs(y_true - y_pred)
     if sample_weight is None:
         return _safe_divide(err, y_true)
@@ -322,9 +309,7 @@ def continuous_rank_probability_score(y_true: ArrayLike, y_pred: ArrayLike) -> f
 #                   y_pred: ArrayLike) -> float:
 
 
-def frequency_exceeds_relative_threshold(
-    y_true: ArrayLike, y_pred: ArrayLike, threshold: float
-) -> float:
+def frequency_exceeds_relative_threshold(y_true: ArrayLike, y_pred: ArrayLike, threshold: float) -> float:
     """Compute the fraction of true that exceeds threshold times prediction.
 
     Args:
@@ -417,9 +402,7 @@ def mean_absolute_error(
     """
     if isinstance(multioutput, str):
         if multioutput not in {"raw_values", "uniform_average"}:
-            raise ValueError(
-                "multioutput must be 'raw_values', 'uniform_average', or an array of floats"
-            )
+            raise ValueError("multioutput must be 'raw_values', 'uniform_average', or an array of floats")
 
     err = absolute_error(y_true, y_pred)
     if not err.shape[0]:
@@ -527,9 +510,7 @@ def mean_squared_error(
         return np.nanmean((y_true - y_pred) ** 2)
 
     y_true, y_pred, sample_weight = _arrays(y_true, y_pred, sample_weight)
-    se = np.nanmean((y_true - y_pred) ** 2 * sample_weight, axis=0) / np.average(
-        sample_weight, axis=0
-    )
+    se = np.nanmean((y_true - y_pred) ** 2 * sample_weight, axis=0) / np.average(sample_weight, axis=0)
     return np.nanmean(se)
 
 
@@ -570,9 +551,7 @@ def root_mean_squared_log_error(
     """
     if not len(y_true):
         return np.nan
-    return np.sqrt(
-        mean_squared_error(np.log1p(y_true), np.log1p(y_pred), sample_weight)
-    )
+    return np.sqrt(mean_squared_error(np.log1p(y_true), np.log1p(y_pred), sample_weight))
 
 
 def root_mean_squared_percentage_error(
@@ -594,14 +573,10 @@ def root_mean_squared_percentage_error(
         return np.nan
     with warnings.catch_warnings():
         warnings.simplefilter("ignore", category=RuntimeWarning)
-        return np.sqrt(
-            np.nanmean(_pct_err(*_arrays(y_true, y_pred, sample_weight)) ** 2)
-        )
+        return np.sqrt(np.nanmean(_pct_err(*_arrays(y_true, y_pred, sample_weight)) ** 2))
 
 
-def scaled_symmetric_mean_absolute_percentage_error(
-    y_true: ArrayLike, y_pred: ArrayLike
-) -> float:
+def scaled_symmetric_mean_absolute_percentage_error(y_true: ArrayLike, y_pred: ArrayLike) -> float:
     """Compute the scaled symmetric mean absolute percentage error (SMAPE).
 
     Traditionally, SMAPE goes from 0 to 200%. This function goes from
@@ -628,14 +603,10 @@ def symmetric_bias(y_true: ArrayLike, y_pred: ArrayLike) -> float:
     Returns:
         The the symmetric bias (sbias) value.
     """
-    return -2 * np.nanmean(
-        _safe_divide(error(y_true, y_pred), np.abs(y_true) + np.abs(y_pred))
-    )
+    return -2 * np.nanmean(_safe_divide(error(y_true, y_pred), np.abs(y_true) + np.abs(y_pred)))
 
 
-def symmetric_mean_absolute_percentage_error(
-    y_true: ArrayLike, y_pred: ArrayLike
-) -> float:
+def symmetric_mean_absolute_percentage_error(y_true: ArrayLike, y_pred: ArrayLike) -> float:
     """Compute the symmetric mean absolute percentage error (SMAPE).
 
     Args:
@@ -666,9 +637,7 @@ def tracking_signal(y_true: ArrayLike, y_pred: ArrayLike) -> float:
     return np.nan if err == 0 else np.sum(y_true - y_pred) / err
 
 
-def mult_exceed(
-    y_true: ArrayLike, y_pred: ArrayLike, threshold: ArrayLike
-) -> np.ndarray:
+def mult_exceed(y_true: ArrayLike, y_pred: ArrayLike, threshold: ArrayLike) -> np.ndarray:
     """Compute exceed rate for quantile estimates.
 
     For threshold t (0<t<=0.5), the exceed rate of t is defined as:
@@ -701,13 +670,9 @@ def mult_exceed(
     n, horizon = y_true.shape
 
     if y_pred.shape[0] != n:
-        raise ValueError(
-            f"Arrays have different number of samples ({y_pred.shape}, expected {n, m*horizon})"
-        )
+        raise ValueError(f"Arrays have different number of samples ({y_pred.shape}, expected {n, m*horizon})")
     elif y_pred.shape[1] != (m * horizon):
-        raise ValueError(
-            f"Arrays have different number of samples ({y_pred.shape}, expected {n, m*horizon})"
-        )
+        raise ValueError(f"Arrays have different number of samples ({y_pred.shape}, expected {n, m*horizon})")
 
     y_true = np.tile(y_true, m)
     mask = np.repeat((threshold > 0.5) * 2 - 1, horizon)
@@ -812,9 +777,7 @@ def mult_coverage(
     return diff.astype(int)
 
 
-def interval_score(
-    y_true: ArrayLike, y_lower: ArrayLike, y_upper: ArrayLike, alpha: float = 0.2
-) -> float:
+def interval_score(y_true: ArrayLike, y_lower: ArrayLike, y_upper: ArrayLike, alpha: float = 0.2) -> float:
     """
     Compute the mean interval score of the confidence intervals based on the actual values
     Args:
@@ -831,11 +794,7 @@ def interval_score(
     lower_diff = y_true - y_lower < 0
     upper_diff = y_true - y_upper > 0
     range_ = y_upper - y_lower
-    int_score = (
-        range_
-        + lower_diff * ((y_lower - y_true) * 2 / alpha)
-        + upper_diff * ((y_true - y_upper) * 2 / alpha)
-    )
+    int_score = range_ + lower_diff * ((y_lower - y_true) * 2 / alpha) + upper_diff * ((y_true - y_upper) * 2 / alpha)
 
     return np.nanmean(int_score, axis=0)
 
@@ -864,16 +823,9 @@ def mult_interval_score(
     lower_diff = y_true - y_lower < 0
     upper_diff = y_true - y_upper > 0
     range_ = y_upper - y_lower
-    int_score = (
-        range_
-        + lower_diff * ((y_lower - y_true) * 2 / alpha)
-        + upper_diff * ((y_true - y_upper) * 2 / alpha)
-    )
+    int_score = range_ + lower_diff * ((y_lower - y_true) * 2 / alpha) + upper_diff * ((y_true - y_upper) * 2 / alpha)
     if rolling_window is not None:
-        return (
-            np.convolve(int_score, np.ones(rolling_window), mode="same")
-            / rolling_window
-        )
+        return np.convolve(int_score, np.ones(rolling_window), mode="same") / rolling_window
 
     return int_score
 

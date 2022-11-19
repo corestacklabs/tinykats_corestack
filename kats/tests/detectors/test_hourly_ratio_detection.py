@@ -3,15 +3,17 @@
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
 
-from typing import cast, Union
+from typing import Union
+from typing import cast
 from unittest import TestCase
 
 import numpy as np
 import pandas as pd
+from parameterized import parameterized
+
 from kats.consts import TimeSeriesData
 from kats.data.utils import load_data
 from kats.detectors.hourly_ratio_detection import HourlyRatioDetector
-from parameterized import parameterized
 
 
 class HourlyRatioDectorTest(TestCase):
@@ -32,14 +34,10 @@ class HourlyRatioDectorTest(TestCase):
         cls.valid_minutely_ts = cls.data_generation(freq="T")
 
         plot_before_detector_ts = cls.data_generation(freq="T")
-        cls.plot_before_detector_hr = HourlyRatioDetector(
-            plot_before_detector_ts, freq="T", aggregate="max"
-        )
+        cls.plot_before_detector_hr = HourlyRatioDetector(plot_before_detector_ts, freq="T", aggregate="max")
 
     @classmethod
-    def data_generation(
-        cls, freq: str = "H", drop: bool = True, frac: float = 0.95
-    ) -> TimeSeriesData:
+    def data_generation(cls, freq: str = "H", drop: bool = True, frac: float = 0.95) -> TimeSeriesData:
         time = pd.date_range("2018-01-01", "2020-01-01", freq=freq)
         n = len(time)
         x = np.arange(n)
@@ -81,9 +79,7 @@ class HourlyRatioDectorTest(TestCase):
 
     def test_minutely_other_aggregate(self) -> None:
         ts = self.invalid_minutely_ts
-        self.assertRaises(
-            ValueError, HourlyRatioDetector, data=ts, aggregate="other_method"
-        )
+        self.assertRaises(ValueError, HourlyRatioDetector, data=ts, aggregate="other_method")
 
     def test_plot_before_detector(self) -> None:
         hr = self.plot_before_detector_hr

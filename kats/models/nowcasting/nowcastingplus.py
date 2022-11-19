@@ -17,19 +17,30 @@ and class NowcastingPlusModel, which is the model.
   output = nr.predict()
 """
 
-from __future__ import absolute_import, division, print_function, unicode_literals
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+from __future__ import unicode_literals
 
 import logging
-from typing import Any, List
+from typing import Any
+from typing import List
 
-import kats.models.model as m
 import numpy as np
 import pandas as pd
-from kats.consts import Params, TimeSeriesData
-from kats.models.nowcasting.feature_extraction import LAG, MA, MOM, ROC
-from kats.models.nowcasting.model_io import deserialize_from_zippy, serialize_for_zippy
-from sklearn import linear_model, preprocessing
+from sklearn import linear_model
+from sklearn import preprocessing
 from sklearn.linear_model import LinearRegression
+
+import kats.models.model as m
+from kats.consts import Params
+from kats.consts import TimeSeriesData
+from kats.models.nowcasting.feature_extraction import LAG
+from kats.models.nowcasting.feature_extraction import MA
+from kats.models.nowcasting.feature_extraction import MOM
+from kats.models.nowcasting.feature_extraction import ROC
+from kats.models.nowcasting.model_io import deserialize_from_zippy
+from kats.models.nowcasting.model_io import serialize_for_zippy
 
 
 # pyre-fixme[3]: Return type must be annotated.
@@ -99,9 +110,7 @@ class NowcastingPlusModel(m.Model):
         super().__init__(data, params)
         # pyre-fixme[16]: Optional type has no attribute `value`.
         if not isinstance(self.data.value, pd.Series):
-            msg = "Only support univariate time series, but get {type}.".format(
-                type=type(self.data.value)
-            )
+            msg = "Only support univariate time series, but get {type}.".format(type=type(self.data.value))
             logging.error(msg)
             raise ValueError(msg)
         # pyre-fixme[4]: Attribute must be annotated.
@@ -138,18 +147,14 @@ class NowcastingPlusModel(m.Model):
             poly_feature_names.append("poly_" + str(degree))
 
         # filterout + - inf, nan
-        self.df_poly = self.df_poly[
-            ~self.df_poly.isin([np.nan, np.inf, -np.inf]).any(1)
-        ]
+        self.df_poly = self.df_poly[~self.df_poly.isin([np.nan, np.inf, -np.inf]).any(1)]
 
         # Save the poly feature name
         self.poly_feature_names = poly_feature_names
         feature_names = []
 
         #########################################################################################
-        train_index_poly = self.df_poly[
-            ~self.df_poly.isin([np.nan, np.inf, -np.inf]).any(1)
-        ].index
+        train_index_poly = self.df_poly[~self.df_poly.isin([np.nan, np.inf, -np.inf]).any(1)].index
         X_train_poly, y_train_poly = (
             self.df_poly[self.poly_feature_names].loc[train_index_poly],
             self.df_poly["y"].loc[train_index_poly],
@@ -176,9 +181,7 @@ class NowcastingPlusModel(m.Model):
             self.df = MA(self.df, n)
             feature_names.append("MA_" + str(n))
 
-        self.df = self.df[
-            ~self.df.isin([np.nan, np.inf, -np.inf]).any(1)
-        ]  # filterout + - inf, nan
+        self.df = self.df[~self.df.isin([np.nan, np.inf, -np.inf]).any(1)]  # filterout + - inf, nan
         self.feature_names = feature_names
 
     def label_extraction(self) -> None:
@@ -190,9 +193,7 @@ class NowcastingPlusModel(m.Model):
     def fit(self) -> None:
         """Fits model."""
 
-        logging.debug(
-            "Call fit() with parameters: " "step:{step}".format(step=self.step)
-        )
+        logging.debug("Call fit() with parameters: " "step:{step}".format(step=self.step))
 
         n = 1
         train_index = self.df[~self.df.isin([np.nan, np.inf, -np.inf]).any(1)].index
@@ -203,9 +204,7 @@ class NowcastingPlusModel(m.Model):
         self.scaler = std_scaler
 
         n = self.step
-        y_train = (
-            self.df["label"].loc[train_index] - self.y_train_season_obj[train_index]
-        ).diff(-n)[:-n]
+        y_train = (self.df["label"].loc[train_index] - self.y_train_season_obj[train_index]).diff(-n)[:-n]
         X_train = X_train[:-n]
 
         reg = linear_model.LassoCV()
@@ -230,10 +229,7 @@ class NowcastingPlusModel(m.Model):
             A float variable, the forecast at future step.
         """
 
-        logging.debug(
-            "Call predict() with parameters. "
-            "Forecast 1 step only, kwargs:{kwargs}".format(kwargs=kwargs)
-        )
+        logging.debug("Call predict() with parameters. " "Forecast 1 step only, kwargs:{kwargs}".format(kwargs=kwargs))
 
         X_test = self.df[-self.step :][self.feature_names]
         X_test = self.scaler.transform(X_test)

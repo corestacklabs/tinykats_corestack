@@ -7,6 +7,19 @@ optional = false
 python-versions = "*"
 
 [[package]]
+name = "astroid"
+version = "2.12.12"
+description = "An abstract syntax tree for Python with inference support."
+category = "dev"
+optional = false
+python-versions = ">=3.7.2"
+
+[package.dependencies]
+lazy-object-proxy = ">=1.4.0"
+typing-extensions = {version = ">=3.10", markers = "python_version < \"3.10\""}
+wrapt = {version = ">=1.11,<2", markers = "python_version < \"3.11\""}
+
+[[package]]
 name = "asttokens"
 version = "2.1.0"
 description = "Annotate AST trees with source code positions"
@@ -68,6 +81,28 @@ optional = false
 python-versions = "*"
 
 [[package]]
+name = "black"
+version = "22.10.0"
+description = "The uncompromising code formatter."
+category = "dev"
+optional = false
+python-versions = ">=3.7"
+
+[package.dependencies]
+click = ">=8.0.0"
+mypy-extensions = ">=0.4.3"
+pathspec = ">=0.9.0"
+platformdirs = ">=2"
+tomli = {version = ">=1.1.0", markers = "python_full_version < \"3.11.0a7\""}
+typing-extensions = {version = ">=3.10.0.0", markers = "python_version < \"3.10\""}
+
+[package.extras]
+colorama = ["colorama (>=0.4.3)"]
+d = ["aiohttp (>=3.7.4)"]
+jupyter = ["ipython (>=7.8.0)", "tokenize-rt (>=3.2.0)"]
+uvloop = ["uvloop (>=0.15.2)"]
+
+[[package]]
 name = "botorch"
 version = "0.7.2"
 description = "Bayesian Optimization in PyTorch"
@@ -98,6 +133,25 @@ python-versions = "*"
 
 [package.dependencies]
 pycparser = "*"
+
+[[package]]
+name = "cfgv"
+version = "3.3.1"
+description = "Validate configuration and produce human readable error messages."
+category = "dev"
+optional = false
+python-versions = ">=3.6.1"
+
+[[package]]
+name = "click"
+version = "8.1.3"
+description = "Composable command line interface toolkit"
+category = "dev"
+optional = false
+python-versions = ">=3.7"
+
+[package.dependencies]
+colorama = {version = "*", markers = "platform_system == \"Windows\""}
 
 [[package]]
 name = "cmdstanpy"
@@ -213,6 +267,25 @@ wrapt = ">=1.10,<2"
 dev = ["tox", "bump2version (<1)", "sphinx (<2)", "importlib-metadata (<3)", "importlib-resources (<4)", "configparser (<5)", "sphinxcontrib-websupport (<2)", "zipp (<2)", "PyTest (<5)", "PyTest-Cov (<2.6)", "pytest", "pytest-cov"]
 
 [[package]]
+name = "dill"
+version = "0.3.6"
+description = "serialize all of python"
+category = "dev"
+optional = false
+python-versions = ">=3.7"
+
+[package.extras]
+graph = ["objgraph (>=1.7.2)"]
+
+[[package]]
+name = "distlib"
+version = "0.3.6"
+description = "Distribution utilities"
+category = "dev"
+optional = false
+python-versions = "*"
+
+[[package]]
 name = "entrypoints"
 version = "0.4"
 description = "Discover and load entry points from installed packages."
@@ -271,6 +344,18 @@ pystan = ">=2.14"
 python-dateutil = ">=2.8.0"
 setuptools-git = ">=1.2"
 tqdm = ">=4.36.1"
+
+[[package]]
+name = "filelock"
+version = "3.8.0"
+description = "A platform independent file lock."
+category = "dev"
+optional = false
+python-versions = ">=3.7"
+
+[package.extras]
+docs = ["furo (>=2022.6.21)", "sphinx (>=5.1.1)", "sphinx-autodoc-typehints (>=1.19.1)"]
+testing = ["covdefaults (>=2.2)", "coverage (>=6.4.2)", "pytest (>=7.1.2)", "pytest-cov (>=3)", "pytest-timeout (>=2.1)"]
 
 [[package]]
 name = "fonttools"
@@ -334,6 +419,17 @@ convertdate = ">=2.3.0"
 hijri-converter = "*"
 korean-lunar-calendar = "*"
 python-dateutil = "*"
+
+[[package]]
+name = "identify"
+version = "2.5.9"
+description = "File identification library for Python"
+category = "dev"
+optional = false
+python-versions = ">=3.7"
+
+[package.extras]
+license = ["ukkonen"]
 
 [[package]]
 name = "importlib-metadata"
@@ -438,6 +534,20 @@ widgetsnbextension = ">=4.0,<5.0"
 test = ["jsonschema", "pytest (>=3.6.0)", "pytest-cov", "pytz"]
 
 [[package]]
+name = "isort"
+version = "5.10.1"
+description = "A Python utility / library to sort Python imports."
+category = "dev"
+optional = false
+python-versions = ">=3.6.1,<4.0"
+
+[package.extras]
+pipfile_deprecated_finder = ["pipreqs", "requirementslib"]
+requirements_deprecated_finder = ["pipreqs", "pip-api"]
+colors = ["colorama (>=0.4.3,<0.5.0)"]
+plugins = ["setuptools"]
+
+[[package]]
 name = "jedi"
 version = "0.18.1"
 description = "An autocompletion tool for Python that can be used for text editors."
@@ -536,6 +646,14 @@ optional = false
 python-versions = "*"
 
 [[package]]
+name = "lazy-object-proxy"
+version = "1.8.0"
+description = "A fast and thorough lazy object proxy."
+category = "dev"
+optional = false
+python-versions = ">=3.7"
+
+[[package]]
 name = "linear-operator"
 version = "0.1.1"
 description = "A linear operator implementation, primarily designed for finite-dimensional positive definite operators (i.e. kernel matrices)."
@@ -612,6 +730,14 @@ python-versions = ">=3.5"
 traitlets = "*"
 
 [[package]]
+name = "mccabe"
+version = "0.7.0"
+description = "McCabe checker, plugin for flake8"
+category = "dev"
+optional = false
+python-versions = ">=3.6"
+
+[[package]]
 name = "multipledispatch"
 version = "0.6.0"
 description = "Multiple dispatch"
@@ -621,6 +747,14 @@ python-versions = "*"
 
 [package.dependencies]
 six = "*"
+
+[[package]]
+name = "mypy-extensions"
+version = "0.4.3"
+description = "Experimental type system extensions for programs checked with the mypy typechecker."
+category = "dev"
+optional = false
+python-versions = "*"
 
 [[package]]
 name = "nest-asyncio"
@@ -655,6 +789,14 @@ tqdm = ">=4.50.2"
 [package.extras]
 dev = ["black", "livelossplot (>=0.5.3)", "pytest-cov", "pytest (>=6.2.3)", "sphinx (>=4.2.0)", "twine", "wheel"]
 live = ["livelossplot (>=0.5.3)"]
+
+[[package]]
+name = "nodeenv"
+version = "1.7.0"
+description = "Node.js virtual environment builder"
+category = "dev"
+optional = false
+python-versions = ">=2.7,!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,!=3.4.*,!=3.5.*,!=3.6.*"
 
 [[package]]
 name = "numba"
@@ -779,6 +921,14 @@ qa = ["flake8 (==3.8.3)", "mypy (==0.782)"]
 testing = ["docopt", "pytest (<6.0.0)"]
 
 [[package]]
+name = "pathspec"
+version = "0.10.2"
+description = "Utility library for gitignore style pattern matching of file paths."
+category = "dev"
+optional = false
+python-versions = ">=3.7"
+
+[[package]]
 name = "patsy"
 version = "0.5.3"
 description = "A Python package for describing statistical models and for building design matrices."
@@ -860,6 +1010,22 @@ dev = ["pre-commit", "tox"]
 testing = ["pytest", "pytest-benchmark"]
 
 [[package]]
+name = "pre-commit"
+version = "2.20.0"
+description = "A framework for managing and maintaining multi-language pre-commit hooks."
+category = "dev"
+optional = false
+python-versions = ">=3.7"
+
+[package.dependencies]
+cfgv = ">=2.0.0"
+identify = ">=1.0.0"
+nodeenv = ">=0.11.1"
+pyyaml = ">=5.1"
+toml = "*"
+virtualenv = ">=20.0.8"
+
+[[package]]
 name = "prompt-toolkit"
 version = "3.0.32"
 description = "Library for building powerful interactive command lines in Python"
@@ -926,6 +1092,41 @@ python-versions = ">=3.6"
 
 [package.extras]
 plugins = ["importlib-metadata"]
+
+[[package]]
+name = "pylint"
+version = "2.15.5"
+description = "python code static checker"
+category = "dev"
+optional = false
+python-versions = ">=3.7.2"
+
+[package.dependencies]
+astroid = ">=2.12.12,<=2.14.0-dev0"
+colorama = {version = ">=0.4.5", markers = "sys_platform == \"win32\""}
+dill = ">=0.2"
+isort = ">=4.2.5,<6"
+mccabe = ">=0.6,<0.8"
+platformdirs = ">=2.2.0"
+tomli = {version = ">=1.1.0", markers = "python_version < \"3.11\""}
+tomlkit = ">=0.10.1"
+typing-extensions = {version = ">=3.10.0", markers = "python_version < \"3.10\""}
+
+[package.extras]
+spelling = ["pyenchant (>=3.2,<4.0)"]
+testutils = ["gitpython (>3)"]
+
+[[package]]
+name = "pymannkendall"
+version = "1.4.1"
+description = "A python package for non-parametric Mann-Kendall family of trend tests."
+category = "dev"
+optional = false
+python-versions = "*"
+
+[package.dependencies]
+numpy = "*"
+scipy = "*"
 
 [[package]]
 name = "pymeeus"
@@ -1039,6 +1240,14 @@ description = "Python for Window Extensions"
 category = "main"
 optional = false
 python-versions = "*"
+
+[[package]]
+name = "pyyaml"
+version = "6.0"
+description = "YAML parser and emitter for Python"
+category = "dev"
+optional = false
+python-versions = ">=3.6"
 
 [[package]]
 name = "pyzmq"
@@ -1185,12 +1394,28 @@ optional = false
 python-versions = ">=3.6"
 
 [[package]]
+name = "toml"
+version = "0.10.2"
+description = "Python Library for Tom's Obvious, Minimal Language"
+category = "dev"
+optional = false
+python-versions = ">=2.6, !=3.0.*, !=3.1.*, !=3.2.*"
+
+[[package]]
 name = "tomli"
 version = "2.0.1"
 description = "A lil' TOML parser"
 category = "main"
 optional = false
 python-versions = ">=3.7"
+
+[[package]]
+name = "tomlkit"
+version = "0.11.6"
+description = "Style preserving TOML library"
+category = "dev"
+optional = false
+python-versions = ">=3.6"
 
 [[package]]
 name = "torch"
@@ -1287,6 +1512,23 @@ optional = false
 python-versions = ">=3.7"
 
 [[package]]
+name = "virtualenv"
+version = "20.16.7"
+description = "Virtual Python Environment builder"
+category = "dev"
+optional = false
+python-versions = ">=3.6"
+
+[package.dependencies]
+distlib = ">=0.3.6,<1"
+filelock = ">=3.4.1,<4"
+platformdirs = ">=2.4,<3"
+
+[package.extras]
+docs = ["proselint (>=0.13)", "sphinx (>=5.3)", "sphinx-argparse (>=0.3.2)", "sphinx-rtd-theme (>=1)", "towncrier (>=22.8)"]
+testing = ["coverage (>=6.2)", "coverage-enable-subprocess (>=1)", "flaky (>=3.7)", "packaging (>=21.3)", "pytest (>=7.0.1)", "pytest-env (>=0.6.2)", "pytest-freezegun (>=0.4.2)", "pytest-mock (>=3.6.1)", "pytest-randomly (>=3.10.3)", "pytest-timeout (>=2.1)"]
+
+[[package]]
 name = "wcwidth"
 version = "0.2.5"
 description = "Measures the displayed width of unicode strings in a terminal"
@@ -1325,16 +1567,20 @@ testing = ["pytest (>=6)", "pytest-checkdocs (>=2.4)", "pytest-flake8", "flake8 
 [metadata]
 lock-version = "1.1"
 python-versions = ">=3.8,<3.10"
-content-hash = "6044865271c1230fa50b09bc7d23a0d52de2bbc3b8e3496dac4bf92376cec7f8"
+content-hash = "fb213b8e46aa0ec5a1581d254919a812754895a9011bf903706f4b3bfa166569"
 
 [metadata.files]
 appnope = []
+astroid = []
 asttokens = []
 attrs = []
 ax-platform = []
 backcall = []
+black = []
 botorch = []
 cffi = []
+cfgv = []
+click = []
 cmdstanpy = []
 colorama = []
 contourpy = []
@@ -1345,20 +1591,25 @@ dataclasses = []
 debugpy = []
 decorator = []
 deprecated = []
+dill = []
+distlib = []
 entrypoints = []
 ephem = []
 exceptiongroup = []
 executing = []
 fbprophet = []
+filelock = []
 fonttools = []
 gpytorch = []
 hijri-converter = []
 holidays = []
+identify = []
 importlib-metadata = []
 iniconfig = []
 ipykernel = []
 ipython = []
 ipywidgets = []
+isort = []
 jedi = []
 jinja2 = []
 joblib = []
@@ -1367,15 +1618,19 @@ jupyter-core = []
 jupyterlab-widgets = []
 kiwisolver = []
 korean-lunar-calendar = []
+lazy-object-proxy = []
 linear-operator = []
 llvmlite = []
 lunarcalendar = []
 markupsafe = []
 matplotlib = []
 matplotlib-inline = []
+mccabe = []
 multipledispatch = []
+mypy-extensions = []
 nest-asyncio = []
 neuralprophet = []
+nodeenv = []
 numba = []
 numpy = []
 nvidia-cublas-cu11 = []
@@ -1387,6 +1642,7 @@ packaging = []
 pandas = []
 parameterized = []
 parso = []
+pathspec = []
 patsy = []
 pexpect = []
 pickleshare = []
@@ -1394,6 +1650,7 @@ pillow = []
 platformdirs = []
 plotly = []
 pluggy = []
+pre-commit = []
 prompt-toolkit = []
 psutil = []
 ptyprocess = []
@@ -1401,6 +1658,8 @@ pure-eval = []
 py = []
 pycparser = []
 pygments = []
+pylint = []
+pymannkendall = []
 pymeeus = []
 pyparsing = []
 pyro-api = []
@@ -1410,6 +1669,7 @@ pytest = []
 python-dateutil = []
 pytz = []
 pywin32 = []
+pyyaml = []
 pyzmq = []
 scikit-learn = []
 scipy = []
@@ -1421,7 +1681,9 @@ stack-data = []
 statsmodels = []
 tenacity = []
 threadpoolctl = []
+toml = []
 tomli = []
+tomlkit = []
 torch = []
 torch-lr-finder = []
 tornado = []
@@ -1429,6 +1691,7 @@ tqdm = []
 traitlets = []
 typeguard = []
 typing-extensions = []
+virtualenv = []
 wcwidth = []
 widgetsnbextension = []
 wrapt = []

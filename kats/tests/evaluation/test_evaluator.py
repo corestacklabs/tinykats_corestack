@@ -10,8 +10,10 @@ import unittest.mock as mock
 
 import numpy as np
 import pandas as pd
+
 from kats.compat.pandas import assert_frame_equal
-from kats.evaluation.evaluator import EvaluationObject, Evaluator
+from kats.evaluation.evaluator import EvaluationObject
+from kats.evaluation.evaluator import Evaluator
 from kats.metrics.metrics import core_metric
 from kats.tests.test_backtester_dummy_data import PROPHET_0_108_FCST_DUMMY_DATA
 
@@ -80,8 +82,7 @@ class EvaluatorTest(unittest.TestCase):
     def test_evaluate(self) -> None:
         # Set up data
         PROPHET_0_108_FCST_DUMMY_DATA["rand_fcst"] = (
-            np.random.randint(1, 6, PROPHET_0_108_FCST_DUMMY_DATA.shape[0])
-            + PROPHET_0_108_FCST_DUMMY_DATA["fcst"]
+            np.random.randint(1, 6, PROPHET_0_108_FCST_DUMMY_DATA.shape[0]) + PROPHET_0_108_FCST_DUMMY_DATA["fcst"]
         )
         labels = np.asarray(PROPHET_0_108_FCST_DUMMY_DATA["fcst"])
         preds = np.asarray(PROPHET_0_108_FCST_DUMMY_DATA["rand_fcst"])

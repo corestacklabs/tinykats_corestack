@@ -8,15 +8,12 @@ try:
 except ImportError:
     import logging
 
-    logging.warning(
-        "kats.models.metalearner.get_metadata requires ax-platform be installed"
-    )
+    logging.warning("kats.models.metalearner.get_metadata requires ax-platform be installed")
 try:
     from . import metalearner_hpt  # noqa
 except ImportError:
     import logging
 
-    logging.warning(
-        "kats.models.metalearner.metalearner_hpt requires torch be installed"
-    )
-from . import metalearner_modelselect, metalearner_predictability  # noqa  # noqa
+    logging.warning("kats.models.metalearner.metalearner_hpt requires torch be installed")
+from . import metalearner_modelselect  # noqa  # noqa
+from . import metalearner_predictability

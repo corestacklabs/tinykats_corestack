@@ -10,10 +10,12 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import pytest
 import seaborn as sns
+
 from kats.compat.pandas import assert_frame_equal
 from kats.consts import TimeSeriesData
 from kats.data.utils import load_data
-from kats.models.bayesian_var import BayesianVAR, BayesianVARParams
+from kats.models.bayesian_var import BayesianVAR
+from kats.models.bayesian_var import BayesianVARParams
 
 
 class testBayesianVARModel(TestCase):

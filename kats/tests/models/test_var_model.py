@@ -5,15 +5,17 @@
 
 import unittest
 from unittest import TestCase
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
+from unittest.mock import patch
 
 import matplotlib.pyplot as plt
 import pandas as pd
-from kats.consts import TimeSeriesData
-from kats.data.utils import load_data
-from kats.models.var import VARModel, VARParams
 from parameterized.parameterized import parameterized
 
+from kats.consts import TimeSeriesData
+from kats.data.utils import load_data
+from kats.models.var import VARModel
+from kats.models.var import VARParams
 
 TEST_DATA = {
     "multivariate": {
@@ -40,9 +42,7 @@ class testVARModel(TestCase):
 
         # check whether the values are close and shapes are correct
         truth = truth.to_dataframe().iloc[:, 1:]
-        pred_forecast = pd.concat(
-            [v["fcst"].to_dataframe().iloc[:, 1:2] for _, v in pred.items()], axis=1
-        )
+        pred_forecast = pd.concat([v["fcst"].to_dataframe().iloc[:, 1:2] for _, v in pred.items()], axis=1)
         pred_forecast.columns = truth.columns
         self.assertTrue(truth.subtract(pred_forecast).values.max() < 5)
 
@@ -59,9 +59,7 @@ class testVARModel(TestCase):
     @patch("pandas.concat")
     def test_predict_exception(self, ts: TimeSeriesData, mock_obj: MagicMock) -> None:
         mock_obj.side_effect = Exception
-        with self.assertRaisesRegex(
-            Exception, "^Failed to generate in-sample forecasts for historical data"
-        ):
+        with self.assertRaisesRegex(Exception, "^Failed to generate in-sample forecasts for historical data"):
             params = VARParams()
             m = VARModel(ts, params)
             m.fit()

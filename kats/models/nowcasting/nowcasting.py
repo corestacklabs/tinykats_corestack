@@ -17,18 +17,26 @@ and class NowcastingModel, which is the model.
   output = nr.predict()
 """
 
-from __future__ import absolute_import, division, print_function, unicode_literals
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+from __future__ import unicode_literals
 
 import logging
-from typing import Any, List
+from typing import Any
+from typing import List
 
-import kats.models.model as m
 import numpy as np
 import pandas as pd
-from kats.consts import Params, TimeSeriesData
-from kats.models.nowcasting.feature_extraction import LAG, ROC
-from kats.models.nowcasting.model_io import deserialize_from_zippy, serialize_for_zippy
 from sklearn.ensemble import GradientBoostingRegressor
+
+import kats.models.model as m
+from kats.consts import Params
+from kats.consts import TimeSeriesData
+from kats.models.nowcasting.feature_extraction import LAG
+from kats.models.nowcasting.feature_extraction import ROC
+from kats.models.nowcasting.model_io import deserialize_from_zippy
+from kats.models.nowcasting.model_io import serialize_for_zippy
 
 
 class NowcastingParams(Params):
@@ -77,9 +85,7 @@ class NowcastingModel(m.Model):
         super().__init__(data, params)
         # pyre-fixme[16]: Optional type has no attribute `value`.
         if not isinstance(self.data.value, pd.Series):
-            msg = "Only support univariate time series, but get {type}.".format(
-                type=type(self.data.value)
-            )
+            msg = "Only support univariate time series, but get {type}.".format(type=type(self.data.value))
             logging.error(msg)
             raise ValueError(msg)
         # pyre-fixme[4]: Attribute must be annotated.
@@ -122,27 +128,21 @@ class NowcastingModel(m.Model):
         for n in [10, 15, 20, 25, 30]:
             self.df = LAG(self.df, n)
             feature_names.append("LAG_" + str(n))
-        self.df = self.df[
-            ~self.df.isin([np.nan, np.inf, -np.inf]).any(1)
-        ]  # filterout + - inf, nan
+        self.df = self.df[~self.df.isin([np.nan, np.inf, -np.inf]).any(1)]  # filterout + - inf, nan
         self.feature_names = feature_names
 
     def label_extraction(self) -> None:
         """Extracts labels from time seires data."""
 
         # pyre-fixme[16]: Optional type has no attribute `to_dataframe`.
-        self.df["label"] = LAG(self.data.to_dataframe(), -self.step)[
-            "LAG_-" + str(self.step)
-        ]
+        self.df["label"] = LAG(self.data.to_dataframe(), -self.step)["LAG_-" + str(self.step)]
 
     ###################### module 1: for offline training ######################
 
     def fit(self) -> None:
         """Fits model."""
 
-        logging.debug(
-            "Call fit() with parameters: " "step:{step}".format(step=self.step)
-        )
+        logging.debug("Call fit() with parameters: " "step:{step}".format(step=self.step))
         train_index = self.df[~self.df.isin([np.nan, np.inf, -np.inf]).any(1)].index
         X_train, y_train = (
             self.df[self.feature_names].loc[train_index],
@@ -177,10 +177,7 @@ class NowcastingModel(m.Model):
             A float variable, the forecast at future step.
         """
 
-        logging.debug(
-            "Call predict() with parameters. "
-            "Forecast 1 step only, kwargs:{kwargs}".format(kwargs=kwargs)
-        )
+        logging.debug("Call predict() with parameters. " "Forecast 1 step only, kwargs:{kwargs}".format(kwargs=kwargs))
         if model:
             self.model = model
         if df is not None:

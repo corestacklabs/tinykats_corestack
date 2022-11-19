@@ -16,7 +16,9 @@ They are called by hyperparemeter tuning module, time_series_parameter_tuning.py
 """
 
 
-from typing import Any, Dict, List
+from typing import Any
+from typing import Dict
+from typing import List
 
 import numpy as np
 
@@ -423,9 +425,7 @@ def get_default_var_parameter_search_space() -> List[Dict[str, Any]]:
 
     # TODO: remove raise error, then implement the default parameter
     # space definition.
-    raise NotImplementedError(
-        "get_parameter_search_space() method has not been implemented for " "VAR model."
-    )
+    raise NotImplementedError("get_parameter_search_space() method has not been implemented for " "VAR model.")
 
 
 def get_default_lightgbm_parameter_search_space() -> List[Dict[str, Any]]:

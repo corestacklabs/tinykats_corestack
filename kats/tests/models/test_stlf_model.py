@@ -8,18 +8,18 @@ from datetime import timedelta
 from unittest import TestCase
 
 import pandas as pd
+from parameterized.parameterized import parameterized
+
 from kats.consts import TimeSeriesData
 from kats.data.utils import load_data
-from kats.models import (
-    linear_model,
-    prophet,
-    quadratic_model,
-    simple_heuristic_model,
-    theta,
-)
-from kats.models.stlf import STLFModel, STLFParams
+from kats.models import linear_model
+from kats.models import prophet
+from kats.models import quadratic_model
+from kats.models import simple_heuristic_model
+from kats.models import theta
+from kats.models.stlf import STLFModel
+from kats.models.stlf import STLFParams
 from kats.utils.simulator import Simulator
-from parameterized.parameterized import parameterized
 
 
 def load_data_std_cols(path: str) -> pd.DataFrame:
@@ -34,9 +34,7 @@ METHODS = ["theta", "prophet", "linear", "quadratic", "simple"]
 class testSTLFModel(TestCase):
     def setUp(self) -> None:
 
-        sim = Simulator(
-            n=3 * 144, freq="10T", start=pd.to_datetime("2021-01-01")
-        )  # 3 days of data
+        sim = Simulator(n=3 * 144, freq="10T", start=pd.to_datetime("2021-01-01"))  # 3 days of data
         sim.add_trend(magnitude=1)
         sim.add_seasonality(magnitude=50, period=timedelta(days=1))
         sim.add_noise(magnitude=0)
@@ -49,9 +47,7 @@ class testSTLFModel(TestCase):
                 "ts": TimeSeriesData(load_data_std_cols("peyton_manning.csv")),
             },
             "multi": {
-                "ts": TimeSeriesData(
-                    load_data("multivariate_anomaly_simulated_data.csv")
-                ),
+                "ts": TimeSeriesData(load_data("multivariate_anomaly_simulated_data.csv")),
             },
             "dens_ds_10min": {
                 "ts": TimeSeriesData(dense_dates_10min_df),
@@ -117,9 +113,7 @@ class testSTLFModel(TestCase):
 
     # pyre-fixme[56]
     @parameterized.expand([("daily", m) for m in METHODS])
-    def test_fit_forecast_no_default_params(
-        self, dataset: str, method: str, steps: int = 5
-    ) -> None:
+    def test_fit_forecast_no_default_params(self, dataset: str, method: str, steps: int = 5) -> None:
         ts = self.TEST_DATA[dataset]["ts"]
         if method == "prophet":
             method_params = prophet.ProphetParams(seasonality_mode="multiplicative")
@@ -144,8 +138,7 @@ class testSTLFModel(TestCase):
 
     # pyre-fixme[56]
     @parameterized.expand(
-        [("daily", m, "additive") for m in METHODS]
-        + [("daily", m, "multiplicative") for m in METHODS]
+        [("daily", m, "additive") for m in METHODS] + [("daily", m, "multiplicative") for m in METHODS]
     )
     def test_fit_forecast_decomposition_parameter(
         self, dataset: str, method: str, decomposition_method: str, steps: int = 5
@@ -187,9 +180,7 @@ class testSTLFModel(TestCase):
 
     # pyre-fixme[56]
     @parameterized.expand([("dens_ds_10min", m) for m in METHODS])
-    def test_fit_forecast_minute(
-        self, dataset: str, method: str, steps: int = 144
-    ) -> None:
+    def test_fit_forecast_minute(self, dataset: str, method: str, steps: int = 144) -> None:
 
         ts = self.TEST_DATA[dataset]["ts"]
         params = STLFParams(m=144, method=method, decomposition="additive")
@@ -201,9 +192,7 @@ class testSTLFModel(TestCase):
         # check whether the values are close and shapes are correct
         truth = truth.value.values
         self.assertTrue((truth - pred["fcst"]).max() < 4)  # check actual vs true
-        self.assertTrue(
-            all(pred["fcst_upper"] >= pred["fcst_lower"])
-        )  # check upper > lower bounds
+        self.assertTrue(all(pred["fcst_upper"] >= pred["fcst_lower"]))  # check upper > lower bounds
 
 
 if __name__ == "__main__":

@@ -8,17 +8,17 @@ from unittest import TestCase
 
 import numpy as np
 import pandas as pd
+
 from kats.consts import TimeSeriesData
 from kats.models import prophet
-from kats.models.reconciliation.base_models import BaseTHModel, GetAggregateTS
+from kats.models.reconciliation.base_models import BaseTHModel
+from kats.models.reconciliation.base_models import GetAggregateTS
 from kats.models.reconciliation.thm import TemporalHierarchicalModel
 
 
 def generate_ts(st: str = "2018-05-06", et: str = "2021-05-06") -> TimeSeriesData:
     time = pd.date_range(st, et, freq="D")
-    ts = TimeSeriesData(
-        pd.DataFrame({"time": time, "y": np.random.uniform(0, 1, len(time))})
-    )
+    ts = TimeSeriesData(pd.DataFrame({"time": time, "y": np.random.uniform(0, 1, len(time))}))
     return ts
 
 
@@ -38,9 +38,7 @@ class testBaseTHModel(TestCase):
         self.assertRaises(ValueError, BaseTHModel, level=-0.5)
         self.assertRaises(ValueError, BaseTHModel, level=1)
         self.assertRaises(ValueError, BaseTHModel, level=1, model_name="prophet")
-        self.assertRaises(
-            ValueError, BaseTHModel, level=1, model_params=prophet.ProphetParams()
-        )
+        self.assertRaises(ValueError, BaseTHModel, level=1, model_params=prophet.ProphetParams())
 
 
 class testGetAggregateTS(TestCase):

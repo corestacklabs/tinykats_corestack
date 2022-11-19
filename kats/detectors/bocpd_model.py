@@ -9,15 +9,19 @@ algorithm as a DetectorModel, to provide a common interface.
 """
 
 import json
-from typing import Any, Optional
+from typing import Any
+from typing import Optional
 
 import numpy as np
 import pandas as pd
-from kats.consts import TimeSeriesData
-from kats.detectors.bocpd import BOCPDetector, BOCPDModelType
-from kats.detectors.detector import DetectorModel
-from kats.detectors.detector_consts import AnomalyResponse, ConfidenceBand
 from statsmodels.tsa.holtwinters import ExponentialSmoothing
+
+from kats.consts import TimeSeriesData
+from kats.detectors.bocpd import BOCPDetector
+from kats.detectors.bocpd import BOCPDModelType
+from kats.detectors.detector import DetectorModel
+from kats.detectors.detector_consts import AnomalyResponse
+from kats.detectors.detector_consts import ConfidenceBand
 
 
 class BocpdDetectorModel(DetectorModel):
@@ -148,12 +152,8 @@ class BocpdDetectorModel(DetectorModel):
 
         # construct the object
         N = len(data)
-        default_ts = TimeSeriesData(
-            time=data.time, value=pd.Series(N * [0.0], copy=False)
-        )
-        score_ts = TimeSeriesData(
-            time=data.time, value=pd.Series(change_prob, copy=False)
-        )
+        default_ts = TimeSeriesData(time=data.time, value=pd.Series(N * [0.0], copy=False))
+        score_ts = TimeSeriesData(time=data.time, value=pd.Series(change_prob, copy=False))
 
         self.response = AnomalyResponse(
             scores=score_ts,
@@ -213,21 +213,15 @@ class BocpdTrendDetectorModel(DetectorModel):
         beta: float = 0.1,
         gamma: float = 0.1,
     ) -> TimeSeriesData:
-        exp_smooth = ExponentialSmoothing(
-            endog=data_ts.value, trend="add", seasonal="add", seasonal_periods=m
-        )
-        fit1 = exp_smooth.fit(
-            smoothing_level=alpha, smoothing_slope=beta, smoothing_seasonal=gamma
-        )
+        exp_smooth = ExponentialSmoothing(endog=data_ts.value, trend="add", seasonal="add", seasonal_periods=m)
+        fit1 = exp_smooth.fit(smoothing_level=alpha, smoothing_slope=beta, smoothing_seasonal=gamma)
 
         level_arr = fit1.level
         trend_arr = fit1.slope
         fit_arr = [x + y for x, y in zip(level_arr, trend_arr)]
         fit_diff = np.diff(fit_arr)
         fit_diff = np.concatenate(([fit_diff[0]], fit_diff))
-        trend_ts = TimeSeriesData(
-            time=data_ts.time, value=pd.Series(fit_diff, copy=False)
-        )
+        trend_ts = TimeSeriesData(time=data_ts.time, value=pd.Series(fit_diff, copy=False))
         return trend_ts
 
     def fit_predict(
@@ -250,9 +244,7 @@ class BocpdTrendDetectorModel(DetectorModel):
         """
         predict is not implemented
         """
-        raise NotImplementedError(
-            "predict is not implemented, call fit_predict() instead"
-        )
+        raise NotImplementedError("predict is not implemented, call fit_predict() instead")
 
     def fit(
         self,

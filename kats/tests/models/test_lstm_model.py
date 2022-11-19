@@ -10,29 +10,62 @@ from unittest import TestCase
 import numpy as np
 import pandas as pd
 import torch
+from parameterized import parameterized
+
 from kats.compat.pandas import assert_frame_equal
 from kats.consts import TimeSeriesData
-from kats.data.utils import load_air_passengers, load_data
-from kats.models.lstm import LSTMModel, LSTMParams
+from kats.data.utils import load_air_passengers
+from kats.data.utils import load_data
+from kats.models.lstm import LSTMModel
+from kats.models.lstm import LSTMParams
 from kats.tests.models.test_models_dummy_data import (
     AIR_FCST_15_LSTM_PARAM_1_MODEL_1_MONTHLY,
+)
+from kats.tests.models.test_models_dummy_data import (
     AIR_FCST_15_LSTM_PARAM_1_MODEL_2_MONTHLY,
+)
+from kats.tests.models.test_models_dummy_data import (
     AIR_FCST_15_LSTM_PARAM_2_MODEL_1_MONTHLY,
+)
+from kats.tests.models.test_models_dummy_data import (
     AIR_FCST_15_LSTM_PARAM_2_MODEL_2_MONTHLY,
+)
+from kats.tests.models.test_models_dummy_data import (
     AIR_FCST_30_LSTM_PARAM_1_MODEL_1_MONTHLY,
+)
+from kats.tests.models.test_models_dummy_data import (
     AIR_FCST_30_LSTM_PARAM_1_MODEL_2_MONTHLY,
+)
+from kats.tests.models.test_models_dummy_data import (
     AIR_FCST_30_LSTM_PARAM_2_MODEL_1_MONTHLY,
+)
+from kats.tests.models.test_models_dummy_data import (
     AIR_FCST_30_LSTM_PARAM_2_MODEL_2_MONTHLY,
+)
+from kats.tests.models.test_models_dummy_data import (
     PT_FCST_15_LSTM_PARAM_1_MODEL_1_DAILY,
+)
+from kats.tests.models.test_models_dummy_data import (
     PT_FCST_15_LSTM_PARAM_1_MODEL_2_DAILY,
+)
+from kats.tests.models.test_models_dummy_data import (
     PT_FCST_15_LSTM_PARAM_2_MODEL_1_DAILY,
+)
+from kats.tests.models.test_models_dummy_data import (
     PT_FCST_15_LSTM_PARAM_2_MODEL_2_DAILY,
+)
+from kats.tests.models.test_models_dummy_data import (
     PT_FCST_30_LSTM_PARAM_1_MODEL_1_DAILY,
+)
+from kats.tests.models.test_models_dummy_data import (
     PT_FCST_30_LSTM_PARAM_1_MODEL_2_DAILY,
+)
+from kats.tests.models.test_models_dummy_data import (
     PT_FCST_30_LSTM_PARAM_2_MODEL_1_DAILY,
+)
+from kats.tests.models.test_models_dummy_data import (
     PT_FCST_30_LSTM_PARAM_2_MODEL_2_DAILY,
 )
-from parameterized import parameterized
 
 # pyre-fixme[5]: Global expression must be annotated.
 AIR_TS = load_air_passengers()
@@ -248,30 +281,22 @@ class LSTMModelTest(TestCase):
         params: LSTMParams,
         model_params: Dict[str, int],
     ) -> None:
-        with self.assertRaises(
-            (ValueError, np.linalg.LinAlgError, NotImplementedError)
-        ):
+        with self.assertRaises((ValueError, np.linalg.LinAlgError, NotImplementedError)):
             m = LSTMModel(data=ts, params=params)
             m.fit(**model_params)
 
     def test_exec_plot(self) -> None:
-        m = LSTMModel(
-            data=TEST_DATA["monthly"]["ts"], params=TEST_DATA["monthly"]["p2"]
-        )
+        m = LSTMModel(data=TEST_DATA["monthly"]["ts"], params=TEST_DATA["monthly"]["p2"])
         m.fit(**TEST_DATA["monthly"]["m1"])
         _ = m.predict(steps=STEPS_1)
         m.plot()
 
     def test_name(self) -> None:
-        m = LSTMModel(
-            data=TEST_DATA["monthly"]["ts"], params=TEST_DATA["monthly"]["p2"]
-        )
+        m = LSTMModel(data=TEST_DATA["monthly"]["ts"], params=TEST_DATA["monthly"]["p2"])
         self.assertEqual(m.__str__(), "LSTM")
 
     def test_search_space(self) -> None:
-        m = LSTMModel(
-            data=TEST_DATA["monthly"]["ts"], params=TEST_DATA["monthly"]["p2"]
-        )
+        m = LSTMModel(data=TEST_DATA["monthly"]["ts"], params=TEST_DATA["monthly"]["p2"])
         self.assertEqual(
             m.get_parameter_search_space(),
             [

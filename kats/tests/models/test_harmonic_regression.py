@@ -8,14 +8,12 @@ from unittest import TestCase
 
 import numpy as np
 import pandas as pd
-from kats.consts import TimeSeriesData
-from kats.data.utils import load_data
-from kats.models.harmonic_regression import (
-    HarmonicRegressionModel,
-    HarmonicRegressionParams,
-)
 from parameterized import parameterized
 
+from kats.consts import TimeSeriesData
+from kats.data.utils import load_data
+from kats.models.harmonic_regression import HarmonicRegressionModel
+from kats.models.harmonic_regression import HarmonicRegressionParams
 
 TEST_DATA = {
     "default": {
@@ -27,9 +25,7 @@ TEST_DATA = {
         ),
         "params": HarmonicRegressionParams(24, 3),
     },
-    "multivariate": {
-        "ts": TimeSeriesData(load_data("multivariate_anomaly_simulated_data.csv"))
-    },
+    "multivariate": {"ts": TimeSeriesData(load_data("multivariate_anomaly_simulated_data.csv"))},
 }
 
 
@@ -115,9 +111,7 @@ class testHarmonicRegression(TestCase):
             3,
         )
         harms_sum = np.sum([1, 1, 1, 1, 1, 1] * harms, axis=1)
-        data = TimeSeriesData(
-            pd.DataFrame({"time": TEST_DATA["default"]["ts"], "values": harms_sum})
-        )
+        data = TimeSeriesData(pd.DataFrame({"time": TEST_DATA["default"]["ts"], "values": harms_sum}))
         # pyre-fixme[6]: Expected `HarmonicRegressionParams` for 2nd positional only parameter to call `HarmonicRegressionModel.__init__`
         hrm = HarmonicRegressionModel(data, TEST_DATA["default"]["params"])
 

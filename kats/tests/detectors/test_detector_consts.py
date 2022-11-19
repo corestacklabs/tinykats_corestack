@@ -3,22 +3,22 @@
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
 
-from datetime import datetime, timedelta
+from datetime import datetime
+from datetime import timedelta
 from operator import attrgetter
 from typing import cast
 from unittest import TestCase
 
 import numpy as np
 import pandas as pd
-from kats.consts import TimeSeriesData
-from kats.detectors.detector_consts import (
-    AnomalyResponse,
-    ChangePointInterval,
-    ConfidenceBand,
-    PercentageChange,
-    SingleSpike,
-)
 from parameterized.parameterized import parameterized
+
+from kats.consts import TimeSeriesData
+from kats.detectors.detector_consts import AnomalyResponse
+from kats.detectors.detector_consts import ChangePointInterval
+from kats.detectors.detector_consts import ConfidenceBand
+from kats.detectors.detector_consts import PercentageChange
+from kats.detectors.detector_consts import SingleSpike
 
 
 class SingleSpikeTest(TestCase):
@@ -40,30 +40,21 @@ class UnivariateChangePointIntervalTest(TestCase):
 
         self.current_length = 10
 
-        current_seq = [
-            self.previous_seq[10] + timedelta(days=x)
-            for x in range(self.current_length)
-        ]
+        current_seq = [self.previous_seq[10] + timedelta(days=x) for x in range(self.current_length)]
         self.previous_values = np.random.randn(len(self.previous_seq))
         current_values = np.random.randn(len(current_seq))
 
         # add a very large value to detect spikes
         current_values[0] = 100.0
 
-        previous = TimeSeriesData(
-            pd.DataFrame({"time": self.previous_seq, "value": self.previous_values})
-        )
+        previous = TimeSeriesData(pd.DataFrame({"time": self.previous_seq, "value": self.previous_values}))
 
-        current = TimeSeriesData(
-            pd.DataFrame({"time": current_seq, "value": current_values})
-        )
+        current = TimeSeriesData(pd.DataFrame({"time": current_seq, "value": current_values}))
         self.current_mean = np.mean(current_values)
         self.current_variance = np.var(current_values, ddof=1)
 
         previous_extend = TimeSeriesData(
-            pd.DataFrame(
-                {"time": self.previous_seq[9:], "value": self.previous_values[9:]}
-            )
+            pd.DataFrame({"time": self.previous_seq[9:], "value": self.previous_values[9:]})
         )
 
         prev_start = self.previous_seq[0]
@@ -94,9 +85,7 @@ class UnivariateChangePointIntervalTest(TestCase):
 
     def test_start_end_date(self) -> None:
         # tests whether data is clipped property to start and end dates
-        np.testing.assert_array_equal(
-            self.previous_values[0:9], self.previous_int_test.data
-        )
+        np.testing.assert_array_equal(self.previous_values[0:9], self.previous_int_test.data)
 
     def test_interval_seq_length(self) -> None:
         self.assertEqual(len(self.previous_int), len(self.previous_seq))
@@ -115,9 +104,7 @@ class UnivariateChangePointIntervalTest(TestCase):
     )
     # check all the properties
     def test_properties(self, attribute: str, initial_object: str) -> None:
-        self.assertEqual(
-            attrgetter(attribute)(self.current_int), attrgetter(initial_object)(self)
-        )
+        self.assertEqual(attrgetter(attribute)(self.current_int), attrgetter(initial_object)(self))
 
     def test_length(self) -> None:
         self.assertEqual(len(self.current_int), self.current_length)
@@ -145,24 +132,13 @@ class MultivariateChangePointIntervalTest(TestCase):
 
         self.current_length = 10
 
-        current_seq = [
-            self.previous_seq[10] + timedelta(days=x)
-            for x in range(self.current_length)
-        ]
+        current_seq = [self.previous_seq[10] + timedelta(days=x) for x in range(self.current_length)]
 
         self.num_seq = 5
-        self.previous_values = [
-            np.random.randn(len(self.previous_seq)) for _ in range(self.num_seq)
-        ]
-        current_values = [
-            np.random.randn(len(current_seq)) for _ in range(self.num_seq)
-        ]
-        self.current_values_mean = [
-            np.mean(current_values[i]) for i in range(self.num_seq)
-        ]
-        self.current_values_variance = [
-            np.var(current_values[i]) for i in range(self.num_seq)
-        ]
+        self.previous_values = [np.random.randn(len(self.previous_seq)) for _ in range(self.num_seq)]
+        current_values = [np.random.randn(len(current_seq)) for _ in range(self.num_seq)]
+        self.current_values_mean = [np.mean(current_values[i]) for i in range(self.num_seq)]
+        self.current_values_variance = [np.var(current_values[i]) for i in range(self.num_seq)]
 
         # add a very large value to detect spikes
         for i in range(self.num_seq):
@@ -172,10 +148,7 @@ class MultivariateChangePointIntervalTest(TestCase):
             pd.DataFrame(
                 {
                     **{"time": self.previous_seq},
-                    **{
-                        f"value_{i}": self.previous_values[i]
-                        for i in range(self.num_seq)
-                    },
+                    **{f"value_{i}": self.previous_values[i] for i in range(self.num_seq)},
                 }
             )
         )
@@ -193,10 +166,7 @@ class MultivariateChangePointIntervalTest(TestCase):
             pd.DataFrame(
                 {
                     **{"time": self.previous_seq[9:]},
-                    **{
-                        f"value_{i}": self.previous_values[i][9:]
-                        for i in range(self.num_seq)
-                    },
+                    **{f"value_{i}": self.previous_values[i][9:] for i in range(self.num_seq)},
                 }
             )
         )
@@ -282,9 +252,7 @@ class MultivariateChangePointIntervalTest(TestCase):
     )
     def check_current_int_properties(self, attribute: str, initial_object: str) -> None:
         # check all the properties
-        self.assertEqual(
-            attrgetter(attribute)(self.current_int), attrgetter(initial_object)(self)
-        )
+        self.assertEqual(attrgetter(attribute)(self.current_int), attrgetter(initial_object)(self))
 
     # pyre-fixme[56]: Pyre was not able to infer the type of the decorator
     #  `parameterized.parameterized.parameterized.expand([["mean_val",
@@ -304,13 +272,9 @@ class MultivariateChangePointIntervalTest(TestCase):
     # pyre-fixme[56]: Pyre was not able to infer the type of the decorator
     #  `parameterized.parameterized.parameterized.expand([["current_int",
     #  "current_length"], ["spike_array", "num_seq"]])`.
-    @parameterized.expand(
-        [["current_int", "current_length"], ["spike_array", "num_seq"]]
-    )
+    @parameterized.expand([["current_int", "current_length"], ["spike_array", "num_seq"]])
     def check_length(self, attribute: str, initial_object: str) -> None:
-        self.assertEqual(
-            len(attrgetter(attribute)(self)), attrgetter(initial_object)(self)
-        )
+        self.assertEqual(len(attrgetter(attribute)(self)), attrgetter(initial_object)(self))
 
     def check_spike_array_value(self) -> None:
         for i in range(self.num_seq):
@@ -335,34 +299,22 @@ class UnivariatePercentageChangeTest(TestCase):
 
         current_length = 31
         # offset one to make the new interval start one day after the previous one ends
-        current_seq = [
-            previous_seq[-1] + timedelta(days=(x + 1)) for x in range(current_length)
-        ]
+        current_seq = [previous_seq[-1] + timedelta(days=(x + 1)) for x in range(current_length)]
         previous_values = 1.0 + 0.25 * np.random.randn(len(previous_seq))
         current_values = 10.0 + 0.25 * np.random.randn(len(current_seq))
 
-        previous = TimeSeriesData(
-            pd.DataFrame({"time": previous_seq, "value": previous_values})
-        )
+        previous = TimeSeriesData(pd.DataFrame({"time": previous_seq, "value": previous_values}))
 
-        current = TimeSeriesData(
-            pd.DataFrame({"time": current_seq, "value": current_values})
-        )
+        current = TimeSeriesData(pd.DataFrame({"time": current_seq, "value": current_values}))
 
-        previous_int = ChangePointInterval(
-            previous_seq[0], (previous_seq[-1] + timedelta(days=1))
-        )
+        previous_int = ChangePointInterval(previous_seq[0], (previous_seq[-1] + timedelta(days=1)))
         previous_int.data = previous
 
-        current_int = ChangePointInterval(
-            current_seq[0], (current_seq[-1] + timedelta(days=1))
-        )
+        current_int = ChangePointInterval(current_seq[0], (current_seq[-1] + timedelta(days=1)))
         current_int.data = current
         current_int.previous_interval = previous_int
 
-        self.perc_change_1 = PercentageChange(
-            current=current_int, previous=previous_int
-        )
+        self.perc_change_1 = PercentageChange(current=current_int, previous=previous_int)
 
         previous_mean = np.mean(previous_values)
         current_mean = np.mean(current_values)
@@ -372,9 +324,7 @@ class UnivariatePercentageChangeTest(TestCase):
 
         # test a detector with false stat sig
         second_values = 10.005 + 0.25 * np.random.randn(len(previous_seq))
-        second = TimeSeriesData(
-            pd.DataFrame({"time": previous_seq, "value": second_values})
-        )
+        second = TimeSeriesData(pd.DataFrame({"time": previous_seq, "value": second_values}))
 
         second_int = ChangePointInterval(previous_seq[0], previous_seq[-1])
         second_int.data = second
@@ -387,9 +337,7 @@ class UnivariatePercentageChangeTest(TestCase):
 
         current_int_2.data = current
 
-        self.perc_change_3 = PercentageChange(
-            current=current_int_2, previous=previous_int
-        )
+        self.perc_change_3 = PercentageChange(current=current_int_2, previous=previous_int)
 
     # pyre-fixme[56]: Pyre was not able to infer the type of the decorator
     #  `parameterized.parameterized.parameterized.expand([["perc_change_1", True],
@@ -444,24 +392,12 @@ class MultivariatePercentageChangeTest(TestCase):
 
         current_length = 31
         # offset one to make the new interval start one day after the previous one ends
-        current_seq = [
-            previous_seq[-1] + timedelta(days=(x + 1)) for x in range(current_length)
-        ]
+        current_seq = [previous_seq[-1] + timedelta(days=(x + 1)) for x in range(current_length)]
 
         self.num_seq = 5
 
-        previous_values = np.array(
-            [
-                1.0 + 0.0001 * np.random.randn(len(previous_seq))
-                for _ in range(self.num_seq)
-            ]
-        )
-        current_values = np.array(
-            [
-                10.0 + 0.0001 * np.random.randn(len(current_seq))
-                for _ in range(self.num_seq)
-            ]
-        )
+        previous_values = np.array([1.0 + 0.0001 * np.random.randn(len(previous_seq)) for _ in range(self.num_seq)])
+        current_values = np.array([10.0 + 0.0001 * np.random.randn(len(current_seq)) for _ in range(self.num_seq)])
 
         previous = TimeSeriesData(
             pd.DataFrame(
@@ -481,37 +417,22 @@ class MultivariatePercentageChangeTest(TestCase):
             )
         )
 
-        previous_int = ChangePointInterval(
-            previous_seq[0], previous_seq[-1] + timedelta(days=1)
-        )
+        previous_int = ChangePointInterval(previous_seq[0], previous_seq[-1] + timedelta(days=1))
         previous_int.data = previous
-        current_int = ChangePointInterval(
-            current_seq[0], current_seq[-1] + timedelta(days=1)
-        )
+        current_int = ChangePointInterval(current_seq[0], current_seq[-1] + timedelta(days=1))
         current_int.data = current
         current_int.previous_interval = previous_int
 
-        self.perc_change_1 = PercentageChange(
-            current=current_int, previous=previous_int
-        )
+        self.perc_change_1 = PercentageChange(current=current_int, previous=previous_int)
 
-        previous_mean = np.array(
-            [np.mean(previous_values[i]) for i in range(self.num_seq)]
-        )
-        current_mean = np.array(
-            [np.mean(current_values[i]) for i in range(self.num_seq)]
-        )
+        previous_mean = np.array([np.mean(previous_values[i]) for i in range(self.num_seq)])
+        current_mean = np.array([np.mean(current_values[i]) for i in range(self.num_seq)])
 
         # test the ratios
         self.ratio_val_1 = current_mean / previous_mean
 
         # test a detector with false stat sig
-        second_values = np.array(
-            [
-                10.005 + 0.25 * np.random.randn(len(previous_seq))
-                for _ in range(self.num_seq)
-            ]
-        )
+        second_values = np.array([10.005 + 0.25 * np.random.randn(len(previous_seq)) for _ in range(self.num_seq)])
 
         second = TimeSeriesData(
             pd.DataFrame(
@@ -528,12 +449,7 @@ class MultivariatePercentageChangeTest(TestCase):
         self.perc_change_2 = PercentageChange(current=current_int, previous=second_int)
 
         # test a detector with a negative spike
-        third_values = np.array(
-            [
-                1000.0 + 0.0001 * np.random.randn(len(previous_seq))
-                for _ in range(self.num_seq)
-            ]
-        )
+        third_values = np.array([1000.0 + 0.0001 * np.random.randn(len(previous_seq)) for _ in range(self.num_seq)])
 
         third = TimeSeriesData(
             pd.DataFrame(
@@ -555,9 +471,7 @@ class MultivariatePercentageChangeTest(TestCase):
 
         current_int_single_point.data = current
 
-        self.perc_change_single_point = PercentageChange(
-            current=current_int_single_point, previous=previous_int
-        )
+        self.perc_change_single_point = PercentageChange(current=current_int_single_point, previous=previous_int)
 
     # pyre-fixme[56]: Pyre was not able to infer the type of the decorator
     #  `parameterized.parameterized.parameterized.expand([["perc_change_1", True],
@@ -588,9 +502,7 @@ class MultivariatePercentageChangeTest(TestCase):
         ]
     )
     def test_stat_sig(self, obj: str, ans: bool) -> None:
-        self.assertListEqual(
-            (attrgetter(obj)(self).stat_sig).tolist(), [ans] * self.num_seq
-        )
+        self.assertListEqual((attrgetter(obj)(self).stat_sig).tolist(), [ans] * self.num_seq)
 
     # pyre-fixme[56]: Pyre was not able to infer the type of the decorator
     #  `parameterized.parameterized.parameterized.expand([["perc_change_1", True],
@@ -644,18 +556,12 @@ class TestUnivariateAnomalyResponse(TestCase):
         date_start = datetime.strptime(date_start_str, "%Y-%m-%d")
         previous_seq = [date_start + timedelta(days=x) for x in range(30)]
         self.score_ts = TimeSeriesData(
-            pd.DataFrame(
-                {"time": previous_seq, "value": np.random.randn(len(previous_seq))}
-            )
+            pd.DataFrame({"time": previous_seq, "value": np.random.randn(len(previous_seq))})
         )
         upper_values = 1.0 + np.random.randn(len(previous_seq))
-        upper_ts = TimeSeriesData(
-            pd.DataFrame({"time": previous_seq, "value": upper_values})
-        )
+        upper_ts = TimeSeriesData(pd.DataFrame({"time": previous_seq, "value": upper_values}))
 
-        lower_ts = TimeSeriesData(
-            pd.DataFrame({"time": previous_seq, "value": (upper_values - 0.1)})
-        )
+        lower_ts = TimeSeriesData(pd.DataFrame({"time": previous_seq, "value": (upper_values - 0.1)}))
 
         self.conf_band = ConfidenceBand(upper=upper_ts, lower=lower_ts)
 
@@ -677,9 +583,7 @@ class TestUnivariateAnomalyResponse(TestCase):
             )
         )
 
-        self.stat_sig_ts = TimeSeriesData(
-            pd.DataFrame({"time": previous_seq, "value": np.ones(len(previous_seq))})
-        )
+        self.stat_sig_ts = TimeSeriesData(pd.DataFrame({"time": previous_seq, "value": np.ones(len(previous_seq))}))
 
         self.response = AnomalyResponse(
             scores=self.score_ts,
@@ -755,9 +659,7 @@ class TestUnivariateAnomalyResponse(TestCase):
             ["stat_sig_ts", "stat_sig_ts"],
         ]
     )
-    def test_update_one_point_forward(
-        self, attribute: str, initial_object: str
-    ) -> None:
+    def test_update_one_point_forward(self, attribute: str, initial_object: str) -> None:
         self.assertEqual(
             attrgetter(attribute)(self.response).value[0],
             attrgetter(initial_object)(self).value[1],
@@ -776,9 +678,7 @@ class TestUnivariateAnomalyResponse(TestCase):
     )
     def test_last_point(self, attribute: str, new_value: float) -> None:
         # assert that a new point has been added to the end
-        self.assertEqual(
-            attrgetter(attribute)(self.response).value.values[-1], new_value
-        )
+        self.assertEqual(attrgetter(attribute)(self.response).value.values[-1], new_value)
 
     def test_get_last_n_values(self) -> None:
         n_val = 10
@@ -786,9 +686,7 @@ class TestUnivariateAnomalyResponse(TestCase):
 
         # assert that we return the last N values
         score_list = self.response.scores.value.values.tolist()
-        self.assertEqual(
-            response_last_n.scores.value.values.tolist(), score_list[-n_val:]
-        )
+        self.assertEqual(response_last_n.scores.value.values.tolist(), score_list[-n_val:])
 
 
 class TestMultivariateAnomalyResponse(TestCase):
@@ -807,17 +705,12 @@ class TestMultivariateAnomalyResponse(TestCase):
             pd.DataFrame(
                 {
                     **{"time": previous_seq},
-                    **{
-                        f"value_{i}": np.random.randn(len(previous_seq))
-                        for i in range(self.num_seq)
-                    },
+                    **{f"value_{i}": np.random.randn(len(previous_seq)) for i in range(self.num_seq)},
                 }
             )
         )
 
-        upper_values = [
-            1.0 + np.random.randn(len(previous_seq)) for _ in range(self.num_seq)
-        ]
+        upper_values = [1.0 + np.random.randn(len(previous_seq)) for _ in range(self.num_seq)]
 
         upper_ts = TimeSeriesData(
             pd.DataFrame(
@@ -832,9 +725,7 @@ class TestMultivariateAnomalyResponse(TestCase):
             pd.DataFrame(
                 {
                     **{"time": previous_seq},
-                    **{
-                        f"value_{i}": upper_values[i] - 0.1 for i in range(self.num_seq)
-                    },
+                    **{f"value_{i}": upper_values[i] - 0.1 for i in range(self.num_seq)},
                 }
             )
         )
@@ -845,10 +736,7 @@ class TestMultivariateAnomalyResponse(TestCase):
             pd.DataFrame(
                 {
                     **{"time": previous_seq},
-                    **{
-                        f"value_{i}": 10.0 + 0.25 * np.random.randn(len(previous_seq))
-                        for i in range(self.num_seq)
-                    },
+                    **{f"value_{i}": 10.0 + 0.25 * np.random.randn(len(previous_seq)) for i in range(self.num_seq)},
                 }
             )
         )
@@ -857,10 +745,7 @@ class TestMultivariateAnomalyResponse(TestCase):
             pd.DataFrame(
                 {
                     **{"time": previous_seq},
-                    **{
-                        f"value_{i}": 10.0 + 0.25 * np.random.randn(len(previous_seq))
-                        for i in range(self.num_seq)
-                    },
+                    **{f"value_{i}": 10.0 + 0.25 * np.random.randn(len(previous_seq)) for i in range(self.num_seq)},
                 }
             )
         )
@@ -869,10 +754,7 @@ class TestMultivariateAnomalyResponse(TestCase):
             pd.DataFrame(
                 {
                     **{"time": previous_seq},
-                    **{
-                        f"value_{i}": np.ones(len(previous_seq))
-                        for i in range(self.num_seq)
-                    },
+                    **{f"value_{i}": np.ones(len(previous_seq)) for i in range(self.num_seq)},
                 }
             )
         )
@@ -934,9 +816,7 @@ class TestMultivariateAnomalyResponse(TestCase):
             ["stat_sig_ts", "stat_sig_ts"],
         ]
     )
-    def test_update_one_point_forward(
-        self, attribute: str, initial_object: str
-    ) -> None:
+    def test_update_one_point_forward(self, attribute: str, initial_object: str) -> None:
         self.assertEqual(
             attrgetter(attribute)(self.response).value.iloc[0].tolist(),
             attrgetter(initial_object)(self).value.iloc[1].tolist(),
@@ -985,6 +865,4 @@ class TestMultivariateAnomalyResponse(TestCase):
 
         # assert that we return the last N values
         score_list = self.response.scores.value.values.tolist()
-        self.assertEqual(
-            response_last_n.scores.value.values.tolist(), score_list[-n_val:]
-        )
+        self.assertEqual(response_last_n.scores.value.values.tolist(), score_list[-n_val:])

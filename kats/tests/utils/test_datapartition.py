@@ -4,19 +4,21 @@
 # LICENSE file in the root directory of this source tree.
 
 
-from typing import Any, Dict, List, NamedTuple, Union
+from typing import Any
+from typing import Dict
+from typing import List
+from typing import NamedTuple
+from typing import Union
 from unittest import TestCase
 
 import numpy as np
 import pandas as pd
-from kats.consts import TimeSeriesData
-from kats.utils.datapartition import (
-    RollingOriginDataParition,
-    SimpleDataPartition,
-    SimpleTimestampDataPartition,
-)
 from parameterized.parameterized import parameterized
 
+from kats.consts import TimeSeriesData
+from kats.utils.datapartition import RollingOriginDataParition
+from kats.utils.datapartition import SimpleDataPartition
+from kats.utils.datapartition import SimpleTimestampDataPartition
 
 DataPartition = Union[
     List[TimeSeriesData],
@@ -30,9 +32,7 @@ class TrainTestData(NamedTuple):
     test: DataPartition
 
 
-DF: pd.DataFrame = pd.DataFrame(
-    {"time": pd.date_range("2021-05-06", periods=10), "value": np.arange(10)}
-)
+DF: pd.DataFrame = pd.DataFrame({"time": pd.date_range("2021-05-06", periods=10), "value": np.arange(10)})
 TS: TimeSeriesData = TimeSeriesData(DF)
 TS_DICT: Dict[Union[int, str], TimeSeriesData] = {0: TS, 1: TS}
 TS_LIST: List[TimeSeriesData] = [TS, TS]
@@ -48,11 +48,7 @@ RAW_SDP_RES: List[List[TrainTestData]] = [
 
 RAW_STDP_RES: List[List[TrainTestData]] = [
     [TrainTestData(train=TS[:5], test=TS[7:])],
-    [
-        TrainTestData(
-            train={0: TimeSeriesData(), 1: TimeSeriesData()}, test={0: TS, 1: TS}
-        )
-    ],
+    [TrainTestData(train={0: TimeSeriesData(), 1: TimeSeriesData()}, test={0: TS, 1: TS})],
     [TrainTestData(train=[TimeSeriesData(), TimeSeriesData()], test=[TS[7:], TS[7:]])],
 ]
 
@@ -113,9 +109,7 @@ class TestSimpleTimestampDataPartition(TestCase):
             ),
         ]
     )
-    def test_split(
-        self, params: Dict[str, Any], data: DataPartition, truth: List[TrainTestData]
-    ) -> None:
+    def test_split(self, params: Dict[str, Any], data: DataPartition, truth: List[TrainTestData]) -> None:
         stdp = SimpleTimestampDataPartition(**params)
         res = stdp.split(data)
         self.assertTrue(res == truth)
@@ -167,9 +161,7 @@ class TestRollingOriginDataParition(TestCase):
             ),
         ]
     )
-    def test_split(
-        self, params: Dict[str, Any], data: DataPartition, truth: List[TrainTestData]
-    ) -> None:
+    def test_split(self, params: Dict[str, Any], data: DataPartition, truth: List[TrainTestData]) -> None:
         rodp = RollingOriginDataParition(**params)
         res = rodp.split(data)
         self.assertTrue(res == truth)

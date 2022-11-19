@@ -6,7 +6,8 @@
 # from typing import Dict
 import unittest
 
-from kats.compat import compat, statsmodels
+from kats.compat import compat
+from kats.compat import statsmodels
 
 
 class TestStatsmodels(unittest.TestCase):

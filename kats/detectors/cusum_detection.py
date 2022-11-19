@@ -40,15 +40,24 @@ this use case.
 """
 
 import logging
-from dataclasses import asdict, dataclass
-from typing import Any, Dict, List, Optional, Sequence, Tuple, Union
+from dataclasses import asdict
+from dataclasses import dataclass
+from typing import Any
+from typing import Dict
+from typing import List
+from typing import Optional
+from typing import Sequence
+from typing import Tuple
+from typing import Union
 
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from kats.consts import TimeSeriesChangePoint, TimeSeriesData
-from kats.detectors.detector import Detector
 from scipy.stats import chi2  # @manual
+
+from kats.consts import TimeSeriesChangePoint
+from kats.consts import TimeSeriesData
+from kats.detectors.detector import Detector
 
 pd.options.plotting.matplotlib.register_converters = True
 
@@ -342,10 +351,7 @@ class CUSUMDetector(Detector):
         Calculate the log likelihood ratio
         """
         scale = np.sqrt(
-            (
-                np.sum((ts[: (changepoint + 1)] - mu0) ** 2)
-                + np.sum((ts[(changepoint + 1) :] - mu1) ** 2)
-            )
+            (np.sum((ts[: (changepoint + 1)] - mu0) ** 2) + np.sum((ts[(changepoint + 1) :] - mu1) ** 2))
             / (len(ts) - 2)
         )
         mu_tilde, sigma_tilde = np.mean(ts), np.std(ts)
@@ -359,9 +365,7 @@ class CUSUMDetector(Detector):
         )
         return llr
 
-    def _log_llr(
-        self, x: np.ndarray, mu0: float, sigma0: float, mu1: float, sigma1: float
-    ) -> float:
+    def _log_llr(self, x: np.ndarray, mu0: float, sigma0: float, mu1: float, sigma1: float) -> float:
         """Helper function to calculate log likelihood ratio.
 
         This function calculate the log likelihood ratio of two Gaussian
@@ -378,10 +382,7 @@ class CUSUMDetector(Detector):
             the value of log likelihood ratio.
         """
 
-        return np.sum(
-            np.log(sigma1 / sigma0)
-            + 0.5 * (((x - mu1) / sigma1) ** 2 - ((x - mu0) / sigma0) ** 2)
-        )
+        return np.sum(np.log(sigma1 / sigma0) + 0.5 * (((x - mu1) / sigma1) ** 2 - ((x - mu0) / sigma0) ** 2))
 
     def _magnitude_compare(self, ts: np.ndarray) -> float:
         """
@@ -398,9 +399,7 @@ class CUSUMDetector(Detector):
         days = (time.max() - time.min()).days
 
         # get interest window magnitude
-        mag_int = self._get_time_series_magnitude(
-            ts[interest_window[0] : interest_window[1]]
-        )
+        mag_int = self._get_time_series_magnitude(ts[interest_window[0] : interest_window[1]])
 
         comparable_mag = 0
 
@@ -465,20 +464,12 @@ class CUSUMDetector(Detector):
         delta_std_ratio = kwargs.get("delta_std_ratio", defaultArgs.delta_std_ratio)
         min_abs_change = kwargs.get("min_abs_change", defaultArgs.min_abs_change)
         start_point = kwargs.get("start_point", defaultArgs.start_point)
-        change_directions = kwargs.get(
-            "change_directions", defaultArgs.change_directions
-        )
+        change_directions = kwargs.get("change_directions", defaultArgs.change_directions)
         interest_window = kwargs.get("interest_window", defaultArgs.interest_window)
-        magnitude_quantile = kwargs.get(
-            "magnitude_quantile", defaultArgs.magnitude_quantile
-        )
+        magnitude_quantile = kwargs.get("magnitude_quantile", defaultArgs.magnitude_quantile)
         magnitude_ratio = kwargs.get("magnitude_ratio", defaultArgs.magnitude_ratio)
-        magnitude_comparable_day = kwargs.get(
-            "magnitude_comparable_day", defaultArgs.magnitude_comparable_day
-        )
-        return_all_changepoints = kwargs.get(
-            "return_all_changepoints", defaultArgs.return_all_changepoints
-        )
+        magnitude_comparable_day = kwargs.get("magnitude_comparable_day", defaultArgs.magnitude_comparable_day)
+        return_all_changepoints = kwargs.get("return_all_changepoints", defaultArgs.return_all_changepoints)
 
         self.interest_window = interest_window
         self.magnitude_quantile = magnitude_quantile
@@ -494,10 +485,7 @@ class CUSUMDetector(Detector):
 
         for change_direction in change_directions:
             if change_direction not in {"increase", "decrease"}:
-                raise ValueError(
-                    "Change direction must be 'increase' or 'decrease.' "
-                    f"Got {change_direction}"
-                )
+                raise ValueError("Change direction must be 'increase' or 'decrease.' " f"Got {change_direction}")
 
             change_meta = self._get_change_point(
                 ts,
@@ -519,42 +507,24 @@ class CUSUMDetector(Detector):
             if np.min(ts) >= 0:
                 if magnitude_quantile and interest_window:
                     change_ts = ts if change_direction == "increase" else -ts
-                    mag_change = (
-                        self._magnitude_compare(change_ts) >= magnitude_comparable_day
-                    )
+                    mag_change = self._magnitude_compare(change_ts) >= magnitude_comparable_day
                 else:
                     mag_change = True
             else:
                 mag_change = True
                 if magnitude_quantile:
-                    _log.warning(
-                        (
-                            "The minimal value is less than 0. Cannot perform "
-                            "magnitude comparison."
-                        )
-                    )
+                    _log.warning(("The minimal value is less than 0. Cannot perform " "magnitude comparison."))
 
             if_significant = llr > chi2.ppf(1 - threshold, 2)
             if_significant_int = change_meta.llr_int > chi2.ppf(1 - threshold, 2)
             if change_direction == "increase":
-                larger_than_min_abs_change = (
-                    change_meta.mu0 + min_abs_change < change_meta.mu1
-                )
+                larger_than_min_abs_change = change_meta.mu0 + min_abs_change < change_meta.mu1
             else:
-                larger_than_min_abs_change = (
-                    change_meta.mu0 > change_meta.mu1 + min_abs_change
-                )
-            larger_than_std = (
-                np.abs(change_meta.delta)
-                > np.std(ts[: change_meta.changepoint]) * delta_std_ratio
-            )
+                larger_than_min_abs_change = change_meta.mu0 > change_meta.mu1 + min_abs_change
+            larger_than_std = np.abs(change_meta.delta) > np.std(ts[: change_meta.changepoint]) * delta_std_ratio
 
             change_meta.regression_detected = (
-                if_significant
-                and if_significant_int
-                and larger_than_min_abs_change
-                and larger_than_std
-                and mag_change
+                if_significant and if_significant_int and larger_than_min_abs_change and larger_than_std and mag_change
             )
             changes_meta[change_direction] = asdict(change_meta)
 
@@ -598,9 +568,7 @@ class CUSUMDetector(Detector):
 
         return converted
 
-    def plot(
-        self, change_points: Sequence[CUSUMChangePoint], **kwargs: Any
-    ) -> plt.Axes:
+    def plot(self, change_points: Sequence[CUSUMChangePoint], **kwargs: Any) -> plt.Axes:
         """Plot detection results from CUSUM.
 
         Args:
@@ -672,9 +640,7 @@ class MultiCUSUMDetector(CUSUMDetector):
 
         # TODO: Add support for interest windows
 
-        return_all_changepoints = kwargs.get(
-            "return_all_changepoints", defaultArgs.return_all_changepoints
-        )
+        return_all_changepoints = kwargs.get("return_all_changepoints", defaultArgs.return_all_changepoints)
 
         # Use array to store the data
         ts = self.data.value.to_numpy()
@@ -814,9 +780,7 @@ class MultiCUSUMDetector(CUSUMDetector):
             )
 
             cusum_ts = np.cumsum(si_values)
-            next_changepoint = max(
-                1, min(changepoint_func(cusum_ts), len(cusum_ts) - 2)
-            )
+            next_changepoint = max(1, min(changepoint_func(cusum_ts), len(cusum_ts) - 2))
 
             if next_changepoint == changepoint:
                 break
@@ -866,9 +830,7 @@ class VectorizedCUSUMDetector(CUSUMDetector):
     changes_meta_list: Optional[List[Dict[str, Dict[str, Any]]]] = None
 
     def __init__(self, data: TimeSeriesData) -> None:
-        super(VectorizedCUSUMDetector, self).__init__(
-            data=data, is_multivariate=False, is_vectorized=True
-        )
+        super(VectorizedCUSUMDetector, self).__init__(data=data, is_multivariate=False, is_vectorized=True)
 
     def detector(self, **kwargs: Any) -> Sequence[CUSUMChangePoint]:
         msg = "VectorizedCUSUMDetector is in beta and please use detector_()"
@@ -912,20 +874,12 @@ class VectorizedCUSUMDetector(CUSUMDetector):
         max_iter = kwargs.get("max_iter", defaultArgs.max_iter)
         delta_std_ratio = kwargs.get("delta_std_ratio", defaultArgs.delta_std_ratio)
         min_abs_change = kwargs.get("min_abs_change", defaultArgs.min_abs_change)
-        change_directions = kwargs.get(
-            "change_directions", defaultArgs.change_directions
-        )
+        change_directions = kwargs.get("change_directions", defaultArgs.change_directions)
         interest_window = kwargs.get("interest_window", defaultArgs.interest_window)
-        magnitude_quantile = kwargs.get(
-            "magnitude_quantile", defaultArgs.magnitude_quantile
-        )
+        magnitude_quantile = kwargs.get("magnitude_quantile", defaultArgs.magnitude_quantile)
         magnitude_ratio = kwargs.get("magnitude_ratio", defaultArgs.magnitude_ratio)
-        magnitude_comparable_day = kwargs.get(
-            "magnitude_comparable_day", defaultArgs.magnitude_comparable_day
-        )
-        return_all_changepoints = kwargs.get(
-            "return_all_changepoints", defaultArgs.return_all_changepoints
-        )
+        magnitude_comparable_day = kwargs.get("magnitude_comparable_day", defaultArgs.magnitude_comparable_day)
+        return_all_changepoints = kwargs.get("return_all_changepoints", defaultArgs.return_all_changepoints)
         self.interest_window = interest_window
         self.magnitude_quantile = magnitude_quantile
         self.magnitude_ratio = magnitude_ratio
@@ -943,10 +897,7 @@ class VectorizedCUSUMDetector(CUSUMDetector):
         change_meta_all = {}
         for change_direction in change_directions:
             if change_direction not in {"increase", "decrease"}:
-                raise ValueError(
-                    "Change direction must be 'increase' or 'decrease.' "
-                    f"Got {change_direction}"
-                )
+                raise ValueError("Change direction must be 'increase' or 'decrease.' " f"Got {change_direction}")
 
             change_meta_all[change_direction] = asdict(
                 self._get_change_point_multiple_ts(
@@ -967,8 +918,7 @@ class VectorizedCUSUMDetector(CUSUMDetector):
                     continue
                 change_meta = {
                     k: change_meta_[k][col_idx]
-                    if isinstance(change_meta_[k], np.ndarray)
-                    or isinstance(change_meta_[k], list)
+                    if isinstance(change_meta_[k], np.ndarray) or isinstance(change_meta_[k], list)
                     else change_meta_[k]
                     for k in change_meta_
                 }
@@ -986,35 +936,22 @@ class VectorizedCUSUMDetector(CUSUMDetector):
                 if np.min(ts) >= 0:
                     if magnitude_quantile and interest_window:
                         change_ts = ts if change_direction == "increase" else -ts
-                        mag_change = (
-                            self._magnitude_compare(change_ts)
-                            >= magnitude_comparable_day
-                        )
+                        mag_change = self._magnitude_compare(change_ts) >= magnitude_comparable_day
                     else:
                         mag_change = True
                 else:
                     mag_change = True
                     if magnitude_quantile:
-                        _log.warning(
-                            (
-                                "The minimal value is less than 0. Cannot perform "
-                                "magnitude comparison."
-                            )
-                        )
+                        _log.warning(("The minimal value is less than 0. Cannot perform " "magnitude comparison."))
 
                 if_significant = llr > chi2.ppf(1 - threshold, 2)
                 if_significant_int = change_meta["llr_int"] > chi2.ppf(1 - threshold, 2)
                 if change_direction == "increase":
-                    larger_than_min_abs_change = (
-                        change_meta["mu0"] + min_abs_change < change_meta["mu1"]
-                    )
+                    larger_than_min_abs_change = change_meta["mu0"] + min_abs_change < change_meta["mu1"]
                 else:
-                    larger_than_min_abs_change = (
-                        change_meta["mu0"] > change_meta["mu1"] + min_abs_change
-                    )
+                    larger_than_min_abs_change = change_meta["mu0"] > change_meta["mu1"] + min_abs_change
                 larger_than_std = (
-                    np.abs(change_meta["delta"])
-                    > np.std(ts[: change_meta["changepoint"]]) * delta_std_ratio
+                    np.abs(change_meta["delta"]) > np.std(ts[: change_meta["changepoint"]]) * delta_std_ratio
                 )
 
                 change_meta["regression_detected"] = (
@@ -1027,9 +964,7 @@ class VectorizedCUSUMDetector(CUSUMDetector):
 
                 changes_meta[change_direction] = change_meta
             changes_meta_list.append(changes_meta)
-            ret.append(
-                self._convert_cusum_changepoints(changes_meta, return_all_changepoints)
-            )
+            ret.append(self._convert_cusum_changepoints(changes_meta, return_all_changepoints))
         self.changes_meta_list = changes_meta_list
         return ret
 
@@ -1081,19 +1016,13 @@ class VectorizedCUSUMDetector(CUSUMDetector):
             for i, c in enumerate(changepoint):
                 mask[: (c + 1), i] = True
             n += 1
-            mu0 = np.divide(
-                np.sum(np.multiply(ts_int, mask), axis=0), np.sum(mask, axis=0)
-            )
-            mu1 = np.divide(
-                np.sum(np.multiply(ts_int, ~mask), axis=0), np.sum(~mask, axis=0)
-            )
+            mu0 = np.divide(np.sum(np.multiply(ts_int, mask), axis=0), np.sum(mask, axis=0))
+            mu1 = np.divide(np.sum(np.multiply(ts_int, ~mask), axis=0), np.sum(~mask, axis=0))
             mean = (mu0 + mu1) / 2
             # here is where cusum is happening
             tmp = ts_int - np.tile(mean, (n_pts, 1))
             cusum_ts = np.cumsum(tmp, axis=0)
-            next_changepoint = np.maximum(
-                np.minimum(changepoint_func(cusum_ts, axis=0), n_pts - 2), 1
-            )
+            next_changepoint = np.maximum(np.minimum(changepoint_func(cusum_ts, axis=0), n_pts - 2), 1)
             stable_changepoint = np.equal(changepoint, next_changepoint)
             if all(stable_changepoint):
                 break
@@ -1104,9 +1033,7 @@ class VectorizedCUSUMDetector(CUSUMDetector):
         for i, c in enumerate(changepoint):
             mask[: (c + 1), i] = True
         mu0 = np.divide(np.sum(np.multiply(ts_int, mask), axis=0), np.sum(mask, axis=0))
-        mu1 = np.divide(
-            np.sum(np.multiply(ts_int, ~mask), axis=0), np.sum(~mask, axis=0)
-        )
+        mu1 = np.divide(np.sum(np.multiply(ts_int, ~mask), axis=0), np.sum(~mask, axis=0))
 
         # llr in interest window
         if interest_window is None:
@@ -1118,9 +1045,7 @@ class VectorizedCUSUMDetector(CUSUMDetector):
             pval_int = []
             delta_int = []
             for col_idx in np.arange(n_ts):
-                _llr_int = self._get_llr(
-                    ts_int[:, col_idx], mu0[col_idx], mu1[col_idx], changepoint[col_idx]
-                )
+                _llr_int = self._get_llr(ts_int[:, col_idx], mu0[col_idx], mu1[col_idx], changepoint[col_idx])
                 _pval_int = 1 - chi2.cdf(_llr_int, 2)
                 _delta_int = mu1[col_idx] - mu0[col_idx]
                 llr_int.append(_llr_int)

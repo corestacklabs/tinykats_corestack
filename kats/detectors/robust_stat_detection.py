@@ -4,14 +4,19 @@
 # LICENSE file in the root directory of this source tree.
 
 import logging
-from typing import Any, Optional, Sequence
+from typing import Any
+from typing import Optional
+from typing import Sequence
 
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from kats.consts import TimeSeriesChangePoint, TimeSeriesData
+from scipy.stats import norm  # @manual
+from scipy.stats import zscore
+
+from kats.consts import TimeSeriesChangePoint
+from kats.consts import TimeSeriesData
 from kats.detectors.detector import Detector
-from scipy.stats import norm, zscore  # @manual
 
 
 class RobustStatChangePoint(TimeSeriesChangePoint):
@@ -40,9 +45,7 @@ class RobustStatDetector(Detector):
     def __init__(self, data: TimeSeriesData) -> None:
         super(RobustStatDetector, self).__init__(data=data)
         if not self.data.is_univariate():
-            msg = "Only support univariate time series, but get {type}.".format(
-                type=type(self.data.value)
-            )
+            msg = "Only support univariate time series, but get {type}.".format(type=type(self.data.value))
             logging.error(msg)
             raise ValueError(msg)
         self.zscore: Optional[np.ndarray] = None
@@ -99,9 +102,7 @@ class RobustStatDetector(Detector):
 
         return change_points
 
-    def plot(
-        self, change_points: Sequence[RobustStatChangePoint], **kwargs: Any
-    ) -> plt.Axes:
+    def plot(self, change_points: Sequence[RobustStatChangePoint], **kwargs: Any) -> plt.Axes:
         time_col_name = self.data.time.name
         val_col_name = self.data.value.name
 

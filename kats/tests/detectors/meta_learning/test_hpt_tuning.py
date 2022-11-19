@@ -3,18 +3,17 @@
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
 
-from typing import Dict, List
+from typing import Dict
+from typing import List
 from unittest import TestCase
 
 import numpy as np
-
 import pandas as pd
+
 from kats.detectors.cusum_model import CUSUMDetectorModel
-from kats.detectors.meta_learning.hpt_tuning import (
-    metadata_detect_reader,
-    MetaDetectHptSelect,
-    NNParams,
-)
+from kats.detectors.meta_learning.hpt_tuning import MetaDetectHptSelect
+from kats.detectors.meta_learning.hpt_tuning import NNParams
+from kats.detectors.meta_learning.hpt_tuning import metadata_detect_reader
 from kats.detectors.threshold_detector import StaticThresholdModel
 
 BASE_MODELS = ["cusum", "static"]
@@ -87,9 +86,7 @@ class TestMetaDetectHptSelect(TestCase):
         datax = self.meta_data_cusum["data_x"]
         datay = self.meta_data_cusum["data_y"]
 
-        mdhs = MetaDetectHptSelect(
-            data_x=datax, data_y=datay, detector_model=CUSUMDetectorModel
-        )
+        mdhs = MetaDetectHptSelect(data_x=datax, data_y=datay, detector_model=CUSUMDetectorModel)
 
         const_params_dict = mdhs.const_params_dict
         self.assertEqual(len(const_params_dict), 1)
@@ -116,9 +113,7 @@ class TestMetaDetectHptSelect(TestCase):
         datax = self.meta_data_static["data_x"]
         datay = self.meta_data_static["data_y"]
 
-        mdhs = MetaDetectHptSelect(
-            data_x=datax, data_y=datay, detector_model=StaticThresholdModel
-        )
+        mdhs = MetaDetectHptSelect(data_x=datax, data_y=datay, detector_model=StaticThresholdModel)
         const_params_dict = mdhs.const_params_dict
         self.assertEqual(len(const_params_dict), 0)
 
@@ -142,9 +137,7 @@ class TestMetaDetectHptSelect(TestCase):
         datax = self.meta_data_cusum["data_x"]
         datay = self.meta_data_cusum["data_y"]
 
-        mdhs = MetaDetectHptSelect(
-            data_x=datax, data_y=datay, detector_model=CUSUMDetectorModel
-        )
+        mdhs = MetaDetectHptSelect(data_x=datax, data_y=datay, detector_model=CUSUMDetectorModel)
 
         # provide constant params "historical_window"
         with self.assertRaises(ValueError):

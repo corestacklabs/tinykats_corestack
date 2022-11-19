@@ -6,9 +6,10 @@
 from typing import Optional
 
 import numpy as np
-from kats.compat import compat
-from sklearn.metrics import mean_squared_error as mse, mean_squared_log_error as msle
+from sklearn.metrics import mean_squared_error as mse
+from sklearn.metrics import mean_squared_log_error as msle
 
+from kats.compat import compat
 
 version: compat.Version = compat.Version("sklearn")
 
@@ -38,9 +39,7 @@ def mean_squared_log_error(
     squared: bool = True,
 ) -> float:
     if version <= "0.24":
-        result = msle(
-            y_true, y_pred, sample_weight=sample_weight, multioutput=multioutput
-        )
+        result = msle(y_true, y_pred, sample_weight=sample_weight, multioutput=multioutput)
         if not squared:
             result = np.sqrt(result)
     else:

@@ -9,17 +9,26 @@
 # between the forecast variable `y` (observed time series) and a single
 # predictor variable `x` (time).
 
-from __future__ import absolute_import, division, print_function, unicode_literals
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+from __future__ import unicode_literals
 
 import logging
-from typing import Any, Dict, List, Optional, Union
+from typing import Any
+from typing import Dict
+from typing import List
+from typing import Optional
+from typing import Union
 
 import numpy as np
 import pandas as pd
 import statsmodels.api as sm
-from kats.consts import Params, TimeSeriesData
-from kats.models.model import Model
 from statsmodels.sandbox.regression.predstd import wls_prediction_std
+
+from kats.consts import Params
+from kats.consts import TimeSeriesData
+from kats.models.model import Model
 
 
 class LinearModelParams(Params):
@@ -34,9 +43,7 @@ class LinearModelParams(Params):
     def __init__(self, alpha: float = 0.05) -> None:
         super().__init__()
         self.alpha = alpha
-        logging.debug(
-            "Initialized LinearModel parameters. " "alpha:{alpha}".format(alpha=alpha)
-        )
+        logging.debug("Initialized LinearModel parameters. " "alpha:{alpha}".format(alpha=alpha))
 
     def validate_params(self) -> None:
         """Validate Linear Model Parameters
@@ -61,9 +68,7 @@ class LinearModel(Model[LinearModelParams]):
         super().__init__(data, params)
         # pyre-fixme[16]: `Optional` has no attribute `value`.
         if not isinstance(self.data.value, pd.Series):
-            msg = "Only support univariate time series, but get {type}.".format(
-                type=type(self.data.value)
-            )
+            msg = "Only support univariate time series, but get {type}.".format(type=type(self.data.value))
             logging.error(msg)
             raise ValueError(msg)
         self.model: Optional[sm.OLS] = None
@@ -79,10 +84,7 @@ class LinearModel(Model[LinearModelParams]):
 
     def fit(self) -> None:
         """fit Linear Model."""
-        logging.debug(
-            "Call fit() with parameters: "
-            "alpha:{alpha}".format(alpha=self.params.alpha)
-        )
+        logging.debug("Call fit() with parameters: " "alpha:{alpha}".format(alpha=self.params.alpha))
 
         # prepare X and y for linear model
         _X = list(range(self.past_length))
@@ -93,9 +95,7 @@ class LinearModel(Model[LinearModelParams]):
         self.model = lm.fit()
 
     # pyre-fixme[15]: `predict` overrides method defined in `Model` inconsistently.
-    def predict(
-        self, steps: int, include_history: bool = False, *args: Any, **kwargs: Any
-    ) -> pd.DataFrame:
+    def predict(self, steps: int, include_history: bool = False, *args: Any, **kwargs: Any) -> pd.DataFrame:
         """predict with fitted linear model.
 
         Args:
@@ -107,8 +107,7 @@ class LinearModel(Model[LinearModelParams]):
                 `time`, `fcst`, `fcst_lower`, and `fcst_upper`
         """
         logging.debug(
-            "Call predict() with parameters. "
-            "steps:{steps}, kwargs:{kwargs}".format(steps=steps, kwargs=kwargs)
+            "Call predict() with parameters. " "steps:{steps}, kwargs:{kwargs}".format(steps=steps, kwargs=kwargs)
         )
         # pyre-fixme[16]: `Optional` has no attribute `time`.
         self.freq = kwargs.get("freq", pd.infer_freq(self.data.time))

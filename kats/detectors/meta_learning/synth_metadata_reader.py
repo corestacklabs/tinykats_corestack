@@ -10,7 +10,10 @@ This module reads synthetic data from daiquery and preprocess it as data_x=featu
 import io
 import os
 import pkgutil
-from typing import Any, Dict, Optional, Set
+from typing import Any
+from typing import Dict
+from typing import Optional
+from typing import Set
 
 import pandas as pd
 
@@ -53,13 +56,7 @@ class SynthMetadataReader:
                 .map(lambda d: {k: float(v) for k, v in d.items()})
                 .apply(pd.Series)  # expend dict to columns
             )
-            algorithm_names = (
-                rawdata.hpt_res.map(eval)
-                .map(lambda kv: list(kv.keys()))
-                .explode()
-                .unique()
-                .tolist()
-            )
+            algorithm_names = rawdata.hpt_res.map(eval).map(lambda kv: list(kv.keys())).explode().unique().tolist()
 
             metadata["data_y"] = {}
             for a in algorithm_names:
@@ -68,9 +65,7 @@ class SynthMetadataReader:
                     .map(lambda kv: kv[a][0])
                     .map(
                         lambda kv: {
-                            k: v
-                            if k not in self.PARAMS_TO_SCALE_DOWN
-                            else v / SynthMetadataReader.NUM_SECS_IN_DAY
+                            k: v if k not in self.PARAMS_TO_SCALE_DOWN else v / SynthMetadataReader.NUM_SECS_IN_DAY
                             for k, v in kv.items()
                         }
                     )

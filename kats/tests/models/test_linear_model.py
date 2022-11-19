@@ -5,25 +5,27 @@
 
 
 import unittest
-from typing import cast, Dict, Union
+from typing import Dict
+from typing import Union
+from typing import cast
 from unittest import TestCase
 
 import pandas as pd
+from parameterized.parameterized import parameterized
+
 from kats.compat.pandas import assert_frame_equal
 from kats.consts import TimeSeriesData
 from kats.data.utils import load_data
-from kats.models.linear_model import LinearModel, LinearModelParams
-from kats.tests.models.test_models_dummy_data import (
-    AIR_FCST_LINEAR_95,
-    AIR_FCST_LINEAR_99,
-    PEYTON_FCST_LINEAR_95,
-    PEYTON_FCST_LINEAR_99,
-    PEYTON_FCST_LINEAR_INVALID_NEG_ONE,
-    PEYTON_FCST_LINEAR_INVALID_ZERO,
-    PEYTON_FCST_LINEAR_NAN,
-    PEYTON_INPUT_NAN,
-)
-from parameterized.parameterized import parameterized
+from kats.models.linear_model import LinearModel
+from kats.models.linear_model import LinearModelParams
+from kats.tests.models.test_models_dummy_data import AIR_FCST_LINEAR_95
+from kats.tests.models.test_models_dummy_data import AIR_FCST_LINEAR_99
+from kats.tests.models.test_models_dummy_data import PEYTON_FCST_LINEAR_95
+from kats.tests.models.test_models_dummy_data import PEYTON_FCST_LINEAR_99
+from kats.tests.models.test_models_dummy_data import PEYTON_FCST_LINEAR_INVALID_NEG_ONE
+from kats.tests.models.test_models_dummy_data import PEYTON_FCST_LINEAR_INVALID_ZERO
+from kats.tests.models.test_models_dummy_data import PEYTON_FCST_LINEAR_NAN
+from kats.tests.models.test_models_dummy_data import PEYTON_INPUT_NAN
 
 TEST_DATA: Dict[
     str,
@@ -125,9 +127,7 @@ class LinearModelTest(TestCase):
             ],
         ]
     )
-    def test_invalid_params(
-        self, ts: TimeSeriesData, invalid_param: float, freq: str, truth: pd.DataFrame
-    ) -> None:
+    def test_invalid_params(self, ts: TimeSeriesData, invalid_param: float, freq: str, truth: pd.DataFrame) -> None:
         # Set up params
         params = LinearModelParams(alpha=invalid_param)
         # Fit forecast
@@ -151,15 +151,11 @@ class LinearModelTest(TestCase):
         m.plot()
 
     def test_name(self) -> None:
-        m = LinearModel(
-            cast(TimeSeriesData, TEST_DATA["daily"]["ts"]), LinearModelParams()
-        )
+        m = LinearModel(cast(TimeSeriesData, TEST_DATA["daily"]["ts"]), LinearModelParams())
         self.assertEqual(m.__str__(), "Linear Model")
 
     def test_search_space(self) -> None:
-        m = LinearModel(
-            cast(TimeSeriesData, TEST_DATA["daily"]["ts"]), LinearModelParams()
-        )
+        m = LinearModel(cast(TimeSeriesData, TEST_DATA["daily"]["ts"]), LinearModelParams())
         self.assertEqual(
             m.get_parameter_search_space(),
             [

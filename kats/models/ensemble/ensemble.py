@@ -10,21 +10,24 @@ and STL-based ensembling method. This is the parent class for all ensemble model
 """
 
 import logging
-from multiprocessing import cpu_count, Pool
-from typing import Dict, List, Optional, Type
+from multiprocessing import Pool
+from multiprocessing import cpu_count
+from typing import Dict
+from typing import List
+from typing import Optional
+from typing import Type
 
 import pandas as pd
-from kats.consts import Params, TimeSeriesData
-from kats.models import (
-    arima,
-    holtwinters,
-    linear_model,
-    prophet,
-    quadratic_model,
-    sarima,
-)
-from kats.models.model import Model
 
+from kats.consts import Params
+from kats.consts import TimeSeriesData
+from kats.models import arima
+from kats.models import holtwinters
+from kats.models import linear_model
+from kats.models import prophet
+from kats.models import quadratic_model
+from kats.models import sarima
+from kats.models.model import Model
 
 BASE_MODELS = {
     "arima": arima.ARIMAModel,
@@ -53,9 +56,7 @@ class BaseModelParams(Params):
         logging.debug(
             "Initialized Base Model parameters: "
             "Model name:{model_name},"
-            "model_params:{model_params}".format(
-                model_name=model_name, model_params=model_params
-            )
+            "model_params:{model_params}".format(model_name=model_name, model_params=model_params)
         )
 
     def validate_params(self) -> None:
@@ -85,9 +86,7 @@ class BaseEnsemble(Model):
 
         # pyre-fixme[16]: `Optional` has no attribute `value`.
         if not isinstance(self.data.value, pd.Series):
-            msg = "Only support univariate time series, but get {type}.".format(
-                type=type(self.data.value)
-            )
+            msg = "Only support univariate time series, but get {type}.".format(type=type(self.data.value))
             logging.error(msg)
             raise ValueError(msg)
 

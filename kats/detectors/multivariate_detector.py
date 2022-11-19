@@ -8,17 +8,19 @@
 This module implements the multivariate Outlier Detection algorithm as a Detector Model.
 """
 import json
-from typing import Any, Optional
+from typing import Any
+from typing import Optional
 
 import numpy as np
 import pandas as pd
-from kats.consts import Params, TimeSeriesData
+
+from kats.consts import Params
+from kats.consts import TimeSeriesData
 from kats.detectors.detector import DetectorModel
-from kats.detectors.detector_consts import AnomalyResponse, ConfidenceBand
-from kats.detectors.outlier import (
-    MultivariateAnomalyDetector,
-    MultivariateAnomalyDetectorType,
-)
+from kats.detectors.detector_consts import AnomalyResponse
+from kats.detectors.detector_consts import ConfidenceBand
+from kats.detectors.outlier import MultivariateAnomalyDetector
+from kats.detectors.outlier import MultivariateAnomalyDetectorType
 from kats.models.var import VARParams
 
 
@@ -134,9 +136,7 @@ class MultivariateAnomalyDetectorModel(DetectorModel):
         output_scores_df = output_scores_df[output_scores_df.index >= data.time.min()]
 
         zeros = np.zeros(shape=(data.time.shape[0], output_scores_df.shape[1]))
-        padding = np.empty(
-            shape=[len(data) - output_scores_df.shape[0], output_scores_df.shape[1]]
-        )
+        padding = np.empty(shape=[len(data) - output_scores_df.shape[0], output_scores_df.shape[1]])
         padding[:] = np.NaN
         padding = pd.DataFrame(padding, columns=output_scores_df.columns, copy=False)
         # all fields other than scores are left as TimeSeriesData with all zero values
@@ -150,16 +150,10 @@ class MultivariateAnomalyDetectorModel(DetectorModel):
                 ),
             ),
             confidence_band=ConfidenceBand(
-                upper=TimeSeriesData(
-                    time=data.time, value=pd.DataFrame(zeros, copy=False)
-                ),
-                lower=TimeSeriesData(
-                    time=data.time, value=pd.DataFrame(zeros, copy=False)
-                ),
+                upper=TimeSeriesData(time=data.time, value=pd.DataFrame(zeros, copy=False)),
+                lower=TimeSeriesData(time=data.time, value=pd.DataFrame(zeros, copy=False)),
             ),
-            predicted_ts=TimeSeriesData(
-                time=data.time, value=pd.DataFrame(zeros).iloc[:, :-2]
-            ),
+            predicted_ts=TimeSeriesData(time=data.time, value=pd.DataFrame(zeros).iloc[:, :-2]),
             anomaly_magnitude_ts=TimeSeriesData(
                 time=data.time,
                 value=pd.concat(

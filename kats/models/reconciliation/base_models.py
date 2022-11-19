@@ -8,19 +8,18 @@ This module contains 1) the BaseTHModel class for storing information of base mo
 and 2) the GetAggregateTS class for aggregating base time series to higher levels.
 """
 
-from typing import Dict, List, Optional
+from typing import Dict
+from typing import List
+from typing import Optional
 
 from kats.consts import TimeSeriesData
-from kats.models import (
-    arima,
-    holtwinters,
-    linear_model,
-    prophet,
-    quadratic_model,
-    sarima,
-    theta,
-)
-
+from kats.models import arima
+from kats.models import holtwinters
+from kats.models import linear_model
+from kats.models import prophet
+from kats.models import quadratic_model
+from kats.models import sarima
+from kats.models import theta
 
 BASE_MODELS = {
     "arima": arima.ARIMAModel,
@@ -65,9 +64,7 @@ class BaseTHModel:
             logging.error(msg)
             raise ValueError(msg)
 
-        if (residuals is None or residuals.size == 0) or (
-            fcsts is None or fcsts.size == 0
-        ):
+        if (residuals is None or residuals.size == 0) or (fcsts is None or fcsts.size == 0):
             # when residuals or fcsts are missing
             if (not model_name) or (not model_params):
                 msg = "model_name and model_params are needed when residuals or fcsts is missing."

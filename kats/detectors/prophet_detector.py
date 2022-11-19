@@ -10,15 +10,22 @@ as a Detector Model.
 
 import logging
 from enum import Enum
-from typing import Any, Dict, Optional, Union
+from typing import Any
+from typing import Dict
+from typing import Optional
+from typing import Union
 
 import numpy as np
 import pandas as pd
 from fbprophet import Prophet
-from fbprophet.serialize import model_from_json, model_to_json
-from kats.consts import DEFAULT_VALUE_NAME, TimeSeriesData
+from fbprophet.serialize import model_from_json
+from fbprophet.serialize import model_to_json
+
+from kats.consts import DEFAULT_VALUE_NAME
+from kats.consts import TimeSeriesData
 from kats.detectors.detector import DetectorModel
-from kats.detectors.detector_consts import AnomalyResponse, ConfidenceBand
+from kats.detectors.detector_consts import AnomalyResponse
+from kats.detectors.detector_consts import ConfidenceBand
 from kats.models.prophet import predict
 
 PROPHET_TIME_COLUMN = "ds"
@@ -61,9 +68,7 @@ def deviation_from_predicted_val(
     ci_threshold: Optional[float] = None,
     uncertainty_samples: Optional[float] = None,
 ) -> Union[pd.Series, pd.DataFrame]:
-    return (data.value - predict_df[PROPHET_YHAT_COLUMN]) / predict_df[
-        PROPHET_YHAT_COLUMN
-    ].abs()
+    return (data.value - predict_df[PROPHET_YHAT_COLUMN]) / predict_df[PROPHET_YHAT_COLUMN].abs()
 
 
 def z_score(
@@ -90,14 +95,10 @@ def z_score(
     lower_std = np.maximum(actual_lower_std, MIN_STDEV)
 
     upper_score = (
-        (data.value > predict_df[PROPHET_YHAT_COLUMN])
-        * (data.value - predict_df[PROPHET_YHAT_COLUMN])
-        / upper_std
+        (data.value > predict_df[PROPHET_YHAT_COLUMN]) * (data.value - predict_df[PROPHET_YHAT_COLUMN]) / upper_std
     )
     lower_score = (
-        (data.value < predict_df[PROPHET_YHAT_COLUMN])
-        * (data.value - predict_df[PROPHET_YHAT_COLUMN])
-        / lower_std
+        (data.value < predict_df[PROPHET_YHAT_COLUMN]) * (data.value - predict_df[PROPHET_YHAT_COLUMN]) / lower_std
     )
 
     return upper_score + lower_score
@@ -113,9 +114,7 @@ SCORE_FUNC_DICT: Dict[str, Any] = {
     ProphetScoreFunction.z_score.value: z_score,
 }
 
-DEFAULT_SCORE_FUNCTION: ProphetScoreFunction = (
-    ProphetScoreFunction.deviation_from_predicted_val
-)
+DEFAULT_SCORE_FUNCTION: ProphetScoreFunction = ProphetScoreFunction.deviation_from_predicted_val
 STR_TO_SCORE_FUNC: Dict[str, ProphetScoreFunction] = {  # Used for param tuning
     "deviation_from_predicted_val": ProphetScoreFunction.deviation_from_predicted_val,
     "z_score": ProphetScoreFunction.z_score,
@@ -285,24 +284,16 @@ class ProphetDetectorModel(DetectorModel):
         time_df = pd.DataFrame({PROPHET_TIME_COLUMN: data.time}, copy=False)
         model.uncertainty_samples = self.uncertainty_samples
         predict_df = predict(model, time_df, self.vectorize)
-        zeros_ts = TimeSeriesData(
-            time=data.time, value=pd.Series(np.zeros(len(data)), copy=False)
-        )
-        predicted_ts = TimeSeriesData(
-            time=data.time, value=predict_df[PROPHET_YHAT_COLUMN]
-        )
+        zeros_ts = TimeSeriesData(time=data.time, value=pd.Series(np.zeros(len(data)), copy=False))
+        predicted_ts = TimeSeriesData(time=data.time, value=predict_df[PROPHET_YHAT_COLUMN])
 
         # If not using z-score, set confidence band equal to prediction
         if model.uncertainty_samples == 0:
             confidence_band = ConfidenceBand(upper=predicted_ts, lower=predicted_ts)
         else:
             confidence_band = ConfidenceBand(
-                upper=TimeSeriesData(
-                    time=data.time, value=predict_df[PROPHET_YHAT_UPPER_COLUMN]
-                ),
-                lower=TimeSeriesData(
-                    time=data.time, value=predict_df[PROPHET_YHAT_LOWER_COLUMN]
-                ),
+                upper=TimeSeriesData(time=data.time, value=predict_df[PROPHET_YHAT_UPPER_COLUMN]),
+                lower=TimeSeriesData(time=data.time, value=predict_df[PROPHET_YHAT_LOWER_COLUMN]),
             )
 
         response = AnomalyResponse(
@@ -337,16 +328,14 @@ class ProphetDetectorModel(DetectorModel):
 
         ts_dates_df = pd.DataFrame({PROPHET_TIME_COLUMN: ts_df.iloc[:, 0]})
 
-        model = Prophet(
-            interval_width=outlier_ci_threshold, uncertainty_samples=uncertainty_samples
-        )
+        model = Prophet(interval_width=outlier_ci_threshold, uncertainty_samples=uncertainty_samples)
         model_pass1 = model.fit(ts_df)
 
         forecast = predict(model_pass1, ts_dates_df, vectorize)
 
-        is_outlier = (
-            ts_df[PROPHET_VALUE_COLUMN] < forecast[PROPHET_YHAT_LOWER_COLUMN]
-        ) | (ts_df[PROPHET_VALUE_COLUMN] > forecast[PROPHET_YHAT_UPPER_COLUMN])
+        is_outlier = (ts_df[PROPHET_VALUE_COLUMN] < forecast[PROPHET_YHAT_LOWER_COLUMN]) | (
+            ts_df[PROPHET_VALUE_COLUMN] > forecast[PROPHET_YHAT_UPPER_COLUMN]
+        )
 
         ts_df = ts_df[~is_outlier]
 
@@ -409,9 +398,7 @@ class ProphetTrendDetectorModel(DetectorModel):
         self.model = model
 
         output_ts = self._zeros_ts(ts_p)
-        output_ts.value.loc[model.changepoints.index.values] = np.abs(
-            np.nanmean(model.params["delta"], axis=0)
-        )
+        output_ts.value.loc[model.changepoints.index.values] = np.abs(np.nanmean(model.params["delta"], axis=0))
 
         return AnomalyResponse(
             scores=output_ts,
@@ -435,6 +422,4 @@ class ProphetTrendDetectorModel(DetectorModel):
         historical_data: Optional[TimeSeriesData],
         **kwargs: Any,
     ) -> AnomalyResponse:
-        raise NotImplementedError(
-            "predict is not implemented, call fit_predict() instead"
-        )
+        raise NotImplementedError("predict is not implemented, call fit_predict() instead")

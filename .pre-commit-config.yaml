@@ -1,0 +1,42 @@
+default_language_version:
+  python: python3.9
+
+default_stages: [commit, push]
+
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v2.5.0
+    hooks:
+      - id: check-added-large-files
+      - id: trailing-whitespace
+  - repo: https://github.com/pycqa/isort
+    rev: 5.10.1
+    hooks:
+      - id : isort
+        entry: poetry run isort --settings-path pyproject.toml
+        types: [python]
+        name: isort (python)
+  - repo: local
+    hooks:
+      - id: black
+        name: black
+        entry: poetry run black --config pyproject.toml
+        types: [python]
+        language: system
+  - repo: local
+    hooks:
+    - id: update-requirements
+      name: update-requirements
+      description: 'Generate requirements.txt file from poetry.lock'
+      entry: poetry
+      args: [export, --without-hashes, --format, requirements.txt, --output, requirements.txt]
+      language: system
+      pass_filenames: false
+  # - repo: local
+  #   hooks:
+  #     - id: pylint
+  #       name: pylint
+  #       entry: pylint
+  #       language: python
+  #       types: [python]
+

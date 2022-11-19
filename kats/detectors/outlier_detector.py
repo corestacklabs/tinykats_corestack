@@ -8,13 +8,16 @@
 This module implements the univariate Outlier Detection algorithm as a Detector Model.
 """
 import json
-from typing import Any, Optional
+from typing import Any
+from typing import Optional
 
 import numpy as np
 import pandas as pd
+
 from kats.consts import TimeSeriesData
 from kats.detectors.detector import DetectorModel
-from kats.detectors.detector_consts import AnomalyResponse, ConfidenceBand
+from kats.detectors.detector_consts import AnomalyResponse
+from kats.detectors.detector_consts import ConfidenceBand
 from kats.detectors.outlier import OutlierDetector
 
 
@@ -84,9 +87,7 @@ class OutlierDetectorModel(DetectorModel):
             historical_data.extend(data)
             total_data = historical_data
 
-        self.model = OutlierDetector(
-            data=total_data, decomp=self.decomp, iqr_mult=self.iqr_mult
-        )
+        self.model = OutlierDetector(data=total_data, decomp=self.decomp, iqr_mult=self.iqr_mult)
         self.model.detector()
 
     def predict(

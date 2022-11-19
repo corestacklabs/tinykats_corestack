@@ -4,14 +4,20 @@
 # LICENSE file in the root directory of this source tree.
 
 import logging
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any
+from typing import Dict
+from typing import List
+from typing import Optional
+from typing import Tuple
+from typing import Union
 
 import numpy as np
 import pandas as pd
 import torch
+from torch import Tensor
+
 from kats.consts import TimeSeriesData
 from kats.models.globalmodel.utils import GMParam
-from torch import Tensor
 
 """
 This module provides two Classes for data processing for global models: :class:`GMDataLoader` and :class:`GMBatch`.
@@ -39,17 +45,13 @@ class GMDataLoader:
         # pyre-fixme[2]: Parameter annotation cannot contain `Any`.
         dataset: Union[Dict[Any, TimeSeriesData], List[TimeSeriesData]],
         # pyre-fixme[2]: Parameter annotation cannot contain `Any`.
-        test_dataset: Union[
-            None, Dict[Any, TimeSeriesData], List[TimeSeriesData]
-        ] = None,
+        test_dataset: Union[None, Dict[Any, TimeSeriesData], List[TimeSeriesData]] = None,
         magnitude: float = 5.0,
     ) -> None:
         keys, lengths = self._valid_dataset(dataset)
         if test_dataset is not None:
             test_keys, test_lengths = self._valid_dataset(test_dataset)
-            if len(keys) != len(test_keys) or len(
-                set(keys).intersection(test_keys)
-            ) != len(keys):
+            if len(keys) != len(test_keys) or len(set(keys).intersection(test_keys)) != len(keys):
                 msg = "The keys of dataset and test_dataset are not the same."
                 raise ValueError(msg)
             # pyre-fixme[4]: Attribute must be annotated.
@@ -110,9 +112,7 @@ class GMDataLoader:
             orders = np.argsort(new_length)
         else:
             # add some randomness to test TSs with the same length.
-            new_test_lengths = (
-                self.test_lengths + np.random.uniform(0, 1, self.num) * self.magnitude
-            )
+            new_test_lengths = self.test_lengths + np.random.uniform(0, 1, self.num) * self.magnitude
             # first sort according to lengths of train TSs, then sort according to lengths of test TSs.
             orders = np.lexsort((new_test_lengths, self.lengths))
         return orders
@@ -199,9 +199,7 @@ class GMBatch:
         # pyre-fixme[2]: Parameter annotation cannot contain `Any`.
         train_TSs: Union[List[TimeSeriesData], Dict[Any, TimeSeriesData]],
         # pyre-fixme[2]: Parameter annotation cannot contain `Any`.
-        valid_TSs: Optional[
-            Union[List[TimeSeriesData], Dict[Any, TimeSeriesData]]
-        ] = None,
+        valid_TSs: Optional[Union[List[TimeSeriesData], Dict[Any, TimeSeriesData]]] = None,
         mode: str = "train",
     ) -> None:
 
@@ -211,9 +209,7 @@ class GMBatch:
             raise ValueError(msg)
 
         train = {idx: train_TSs[idx] for idx in batch_ids}
-        valid = (
-            None if valid_TSs is None else {idx: valid_TSs[idx] for idx in batch_ids}
-        )
+        valid = None if valid_TSs is None else {idx: valid_TSs[idx] for idx in batch_ids}
 
         # pyre-fixme[4]: Attribute must be annotated.
         self.train = train
@@ -261,12 +257,8 @@ class GMBatch:
         if params.model_type == "rnn" and params.seasonality > 1:
             init_seasonality = self._get_seasonality(train_x, params.seasonality)
             # bound initial seasonalities
-            init_seasonality[
-                init_seasonality < params.init_seasonality[0]
-            ] = params.init_seasonality[0]
-            init_seasonality[
-                init_seasonality > params.init_seasonality[1]
-            ] = params.init_seasonality[1]
+            init_seasonality[init_seasonality < params.init_seasonality[0]] = params.init_seasonality[0]
+            init_seasonality[init_seasonality > params.init_seasonality[1]] = params.init_seasonality[1]
             # pyre-fixme[4]: Attribute must be annotated.
             self.init_seasonality = torch.tensor(init_seasonality, dtype=tdtype)
         else:
@@ -286,15 +278,9 @@ class GMBatch:
         # pyre-fixme[4]: Attribute must be annotated.
         self.gmfeature = params.gmfeature
         # pyre-fixme[4]: Attribute must be annotated.
-        self.base_features = (
-            params.gmfeature.get_base_features(x, time)
-            if params.gmfeature is not None
-            else None
-        )
+        self.base_features = params.gmfeature.get_base_features(x, time) if params.gmfeature is not None else None
         # pyre-fixme[4]: Attribute must be annotated.
-        self.x_array = (
-            x  # storing a np.ndarray copy of x for on-the-fly feature computing
-        )
+        self.x_array = x  # storing a np.ndarray copy of x for on-the-fly feature computing
         # pyre-fixme[4]: Attribute must be annotated.
         self.x = torch.tensor(x, dtype=tdtype)
         # pyre-fixme[4]: Attribute must be annotated.
@@ -346,9 +332,7 @@ class GMBatch:
 
         # training mode
         if self.training:
-            train_basic_length = (
-                input_window + min_training_step_num * min_training_step_length
-            )
+            train_basic_length = input_window + min_training_step_num * min_training_step_length
             # calculate minimum length of a training TS
             if params.model_type == "rnn":
                 basic_length = train_basic_length + fcst_window
@@ -356,14 +340,10 @@ class GMBatch:
                 self.training_encoder_step_num = np.min(
                     [
                         int(params.fcst_step_num * 2),
-                        np.random.randint(
-                            1, max(2, (max_length - train_basic_length) // fcst_window)
-                        ),
+                        np.random.randint(1, max(2, (max_length - train_basic_length) // fcst_window)),
                     ]
                 )
-                basic_length = (
-                    train_basic_length + fcst_window * self.training_encoder_step_num
-                )
+                basic_length = train_basic_length + fcst_window * self.training_encoder_step_num
             if basic_length > max_length:
                 msg = f"TSs for batching are too short! (i.e., the length of the longest TS are recommended be at least {basic_length})."
                 logging.warning(msg)
@@ -372,11 +352,7 @@ class GMBatch:
 
             max_eligible_step_num = eligible_length // min_training_step_length
 
-            reduced_length = (
-                basic_length
-                + np.random.randint(0, max_eligible_step_num + 1)
-                * min_training_step_length
-            )
+            reduced_length = basic_length + np.random.randint(0, max_eligible_step_num + 1) * min_training_step_length
 
             train_indices = list(
                 np.arange(
@@ -389,13 +365,9 @@ class GMBatch:
             if valid is not None:
                 if params.model_type == "rnn":
                     max_valid_length = np.max([len(valid[t]) for t in valid])
-                    last_valid_index = reduced_length + np.min(
-                        [max_valid_length, fcst_window * validation_step_num]
-                    )
+                    last_valid_index = reduced_length + np.min([max_valid_length, fcst_window * validation_step_num])
                 else:
-                    last_valid_index = (
-                        reduced_length + self.training_encoder_step_num * fcst_window
-                    )
+                    last_valid_index = reduced_length + self.training_encoder_step_num * fcst_window
                     self.test_encoder_step_num = self.training_encoder_step_num
                 valid_indices = list(
                     np.arange(
@@ -411,9 +383,7 @@ class GMBatch:
         # testing mode
         else:
             min_warming_up_step_num = params.min_warming_up_step_num
-            basic_length = (
-                input_window + min_warming_up_step_num * min_training_step_length
-            )
+            basic_length = input_window + min_warming_up_step_num * min_training_step_length
             # we use all possible data for testing
             reduced_length = np.max(
                 (
@@ -421,15 +391,9 @@ class GMBatch:
                     max_length - (max_length - input_window) % min_training_step_length,
                 )
             )
-            train_indices = list(
-                np.arange(input_window, reduced_length, min_training_step_length)
-            )
+            train_indices = list(np.arange(input_window, reduced_length, min_training_step_length))
             reduced_valid_length = fcst_window * params.fcst_step_num
-            valid_indices = list(
-                np.arange(
-                    reduced_length, reduced_length + reduced_valid_length, fcst_window
-                )
-            )
+            valid_indices = list(np.arange(reduced_length, reduced_length + reduced_valid_length, fcst_window))
 
         return reduced_length, reduced_valid_length, train_indices, valid_indices
 
@@ -442,13 +406,7 @@ class GMBatch:
         params: GMParam,
         reduced_length: int,
         reduced_valid_length: int,
-    ) -> Tuple[
-        np.ndarray,
-        np.ndarray,
-        np.ndarray,
-        Optional[np.ndarray],
-        Optional[np.ndarray],
-    ]:
+    ) -> Tuple[np.ndarray, np.ndarray, np.ndarray, Optional[np.ndarray], Optional[np.ndarray],]:
 
         """
 
@@ -498,23 +456,13 @@ class GMBatch:
             train_val = train_ts.value.values.copy()
             train_timestamp = train_ts.time.values
             # calculate offset_val for uplifting negative value
-            min_val = (
-                train_ts.min
-                if valid is None
-                else np.min([train_ts.min, valid[idx].min])
-            )
+            min_val = train_ts.min if valid is None else np.min([train_ts.min, valid[idx].min])
             if min_val <= 0:
-                max_val = (
-                    train_ts.max
-                    if valid is None
-                    else np.max([train_ts.max, valid[idx].max])
-                )
+                max_val = train_ts.max if valid is None else np.max([train_ts.max, valid[idx].max])
                 if min_val == max_val:  # receives a constant TS
                     offset_val = 1.0 - min_val
                 else:
-                    offset_val = (max_val - uplifting_ratio * min_val) / (
-                        uplifting_ratio - 1
-                    )
+                    offset_val = (max_val - uplifting_ratio * min_val) / (uplifting_ratio - 1)
             else:
                 offset_val = 0.0
 
@@ -568,9 +516,7 @@ class GMBatch:
                     valid_time.append(valid_timestamp[:reduced_valid_length])
                 valid_x.append(tmp_valid_x)
 
-            elif (
-                not self.training
-            ):  # prepare testing data for testing mode when valid is None
+            elif not self.training:  # prepare testing data for testing mode when valid is None
                 valid_x.append(np.full(reduced_valid_length, np.nan))
                 valid_time.append(
                     pd.date_range(

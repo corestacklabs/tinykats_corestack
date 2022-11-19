@@ -6,14 +6,18 @@
 import ast
 import logging
 import math
-from typing import Any, Dict, List, Optional, Set, Union
+from typing import Any
+from typing import Dict
+from typing import List
+from typing import Optional
+from typing import Set
+from typing import Union
 
 import pandas as pd
 
 from kats.consts import TimeSeriesData
 from kats.models.metalearner.metalearner_modelselect import MetaLearnModelSelect
 from kats.tsfeatures.tsfeatures import TsFeatures
-
 
 NUM_SECS_IN_DAY: int = 3600 * 24
 PARAMS_TO_SCALE_DOWN = {"historical_window", "scan_window"}
@@ -174,9 +178,7 @@ class MetaDetectModelSelect(object):
         if self.results is None:
             self.results = self.train()
 
-        summary = pd.DataFrame(
-            [self.results["fit_error"], self.results["pred_error"]], copy=False
-        )
+        summary = pd.DataFrame([self.results["fit_error"], self.results["pred_error"]], copy=False)
         summary["type"] = ["fit_error", "pred_error"]
         summary["error_metric"] = "Inverted F-score"
         return summary
@@ -200,8 +202,7 @@ class MetaDetectModelSelect(object):
         """
         # extract features from the dataframe
         feature_list = [
-            change_str_to_dict(self.metadata_df["features"].iloc[i])
-            for i in range(len(self.metadata_df.features))
+            change_str_to_dict(self.metadata_df["features"].iloc[i]) for i in range(len(self.metadata_df.features))
         ]
 
         # pyre-fixme[6]
@@ -223,10 +224,7 @@ class MetaDetectModelSelect(object):
         Extract features from the dataframe
         eval_df has one columns: features -> dict
         """
-        feature_list = [
-            change_str_to_dict(eval_df["features"].iloc[i])
-            for i in range(len(eval_df.features))
-        ]
+        feature_list = [change_str_to_dict(eval_df["features"].iloc[i]) for i in range(len(eval_df.features))]
 
         # pyre-fixme[6]
         feature_list = [change_dtype(x) for x in feature_list]

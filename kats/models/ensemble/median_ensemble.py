@@ -11,9 +11,12 @@ model, we take the median from each time point as the final results
 """
 
 import logging
-from typing import cast, List, Optional
+from typing import List
+from typing import Optional
+from typing import cast
 
 import pandas as pd
+
 from kats.consts import TimeSeriesData
 from kats.models.ensemble import ensemble
 from kats.models.ensemble.ensemble import EnsembleParams
@@ -37,9 +40,7 @@ class MedianEnsembleModel(ensemble.BaseEnsemble):
         self.data = data
         self.params = params
         if not isinstance(self.data.value, pd.Series):
-            msg = "Only support univariate time series, but get {type}.".format(
-                type=type(self.data.value)
-            )
+            msg = "Only support univariate time series, but get {type}.".format(type=type(self.data.value))
             logging.error(msg)
             raise ValueError(msg)
 
@@ -57,8 +58,7 @@ class MedianEnsembleModel(ensemble.BaseEnsemble):
         """
 
         logging.debug(
-            "Call predict() with parameters. "
-            "steps:{steps}, kwargs:{kwargs}".format(steps=steps, kwargs=kwargs)
+            "Call predict() with parameters. " "steps:{steps}, kwargs:{kwargs}".format(steps=steps, kwargs=kwargs)
         )
         # Keep freq in the parameters passed to _predict_all()
         self.freq = freq = kwargs.get("freq", "D")
@@ -79,9 +79,7 @@ class MedianEnsembleModel(ensemble.BaseEnsemble):
         dates = dates[dates != last_date]
         self.fcst_dates = dates.to_pydatetime()
         self.dates = dates[dates != last_date]
-        self.fcst_df = fcst_df = pd.DataFrame(
-            {"time": self.dates, "fcst": self.fcst}, copy=False
-        )
+        self.fcst_df = fcst_df = pd.DataFrame({"time": self.dates, "fcst": self.fcst}, copy=False)
 
         logging.debug("Return forecast data: {fcst_df}".format(fcst_df=self.fcst_df))
         return fcst_df

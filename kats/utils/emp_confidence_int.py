@@ -12,15 +12,19 @@ the time horizon, under the assumption that longer horizon has larger S.E.
 """
 
 import logging
-from typing import List, Optional, Tuple, Type
+from typing import List
+from typing import Optional
+from typing import Tuple
+from typing import Type
 
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from kats.consts import Params, TimeSeriesData
-from kats.utils.backtesters import BackTesterRollingWindow
 from scipy import stats
 
+from kats.consts import Params
+from kats.consts import TimeSeriesData
+from kats.utils.backtesters import BackTesterRollingWindow
 
 FigSize = Tuple[int, int]
 
@@ -144,9 +148,7 @@ class EmpConfidenceInt:
 
         logging.info("Run backtesting.")
         backtester.run_backtest()
-        self.SE = (
-            pd.DataFrame(backtester.raw_errors, copy=False).transpose().std(axis=1)
-        )
+        self.SE = pd.DataFrame(backtester.raw_errors, copy=False).transpose().std(axis=1)
 
     def get_lr(self) -> None:
         """Fit linear regression model

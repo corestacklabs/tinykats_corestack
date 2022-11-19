@@ -7,6 +7,7 @@ from unittest import TestCase
 
 import numpy as np
 import pandas as pd
+
 from kats.detectors.meta_learning.metalearning_detection_model import (
     MetaDetectModelSelect,
 )
@@ -49,13 +50,9 @@ class MetaDetectModelSelectTest(TestCase):
 
         self.assertRaises(ValueError, MetaDetectModelSelect, generate_meta_data(20))
 
-        self.assertRaises(
-            ValueError, MetaDetectModelSelect, generate_meta_data(40)[["hpt_res"]]
-        )
+        self.assertRaises(ValueError, MetaDetectModelSelect, generate_meta_data(40)[["hpt_res"]])
 
-        self.assertRaises(
-            ValueError, MetaDetectModelSelect, generate_meta_data(40)[["features"]]
-        )
+        self.assertRaises(ValueError, MetaDetectModelSelect, generate_meta_data(40)[["features"]])
 
         self.assertRaises(
             ValueError,

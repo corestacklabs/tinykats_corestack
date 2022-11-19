@@ -11,10 +11,10 @@ except ImportError:
     # Python < 3.8
     import importlib_metadata as metadata
 
-from typing import Callable, Union
+from typing import Callable
+from typing import Union
 
 from packaging import version as pv
-
 
 V = Union[str, "Version", pv.Version, pv.LegacyVersion]
 

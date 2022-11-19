@@ -18,12 +18,14 @@ purposes. We currently support the following data sets:
 8. multivariate anomaly simulated data
 """
 
-from typing import List, Tuple
+from typing import List
+from typing import Tuple
 
 import numpy as np
 import pandas as pd
-from kats.consts import TimeSeriesData
 from scipy.special import expit  # @manual
+
+from kats.consts import TimeSeriesData
 
 
 def gen_no_trend_data_ndim(time: pd.Series, ndim: int = 1) -> TimeSeriesData:
@@ -55,9 +57,7 @@ def gen_trend_data_ndim(
     data = (
         (initial + trend * ix + trend_change * (ix - t_change) * expit((ix - t_change)))
         * (1 - seasonality * (ix % 7 >= 5))
-        * np.array(
-            [np.cumprod(1 + noise[i] * np.random.randn(n_days)) for i in range(ndim)]
-        )
+        * np.array([np.cumprod(1 + noise[i] * np.random.randn(n_days)) for i in range(ndim)])
     )
 
     trend_data = pd.DataFrame(data.T)

@@ -11,18 +11,25 @@ The predictability of a time series is determined by whether the forecasting err
 
 import ast
 import logging
-from typing import Any, Dict, List, Optional, Union
+from typing import Any
+from typing import Dict
+from typing import List
+from typing import Optional
+from typing import Union
 
 import joblib
 import numpy as np
 import pandas as pd
-from kats.consts import TimeSeriesData
-from kats.tsfeatures.tsfeatures import TsFeatures
-from sklearn.ensemble import GradientBoostingClassifier, RandomForestClassifier
-from sklearn.metrics import precision_recall_curve, precision_recall_fscore_support
+from sklearn.ensemble import GradientBoostingClassifier
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import precision_recall_curve
+from sklearn.metrics import precision_recall_fscore_support
 from sklearn.model_selection import train_test_split
 from sklearn.naive_bayes import GaussianNB
 from sklearn.neighbors import KNeighborsClassifier
+
+from kats.consts import TimeSeriesData
+from kats.tsfeatures.tsfeatures import TsFeatures
 
 
 class MetaLearnPredictability:
@@ -160,9 +167,7 @@ class MetaLearnPredictability:
 
         self.rescale = True
         features = (self.features.values - self.features_mean) / self.features_std
-        self.features = pd.DataFrame(
-            features, columns=self.features.columns, copy=False
-        )
+        self.features = pd.DataFrame(features, columns=self.features.columns, copy=False)
 
     def train(
         self,
@@ -210,9 +215,7 @@ class MetaLearnPredictability:
         )
 
         if test_size > 0 and test_size < (1 - valid_size):
-            x_train, x_test, y_train, y_test = train_test_split(
-                x_train, y_train, test_size=int(n * test_size)
-            )
+            x_train, x_test, y_train, y_test = train_test_split(x_train, y_train, test_size=int(n * test_size))
         elif test_size == 0:
             x_train, y_train = self.features, self.labels
             x_test, y_test = None, None
@@ -236,9 +239,7 @@ class MetaLearnPredictability:
         pred_valid = clf.predict_proba(x_valid)[:, 1]
         p, r, threshold = precision_recall_curve(y_valid, pred_valid)
         try:
-            clf_threshold = threshold[np.where(p == np.max(p[r >= recall_threshold]))][
-                -1
-            ]
+            clf_threshold = threshold[np.where(p == np.max(p[r >= recall_threshold]))][-1]
         except Exception as e:
             msg = f"Fail to get a proper threshold for recall {recall_threshold}, use 0.5 as threshold instead. Exception message is: {e}"
             logging.warning(msg)
@@ -293,9 +294,7 @@ class MetaLearnPredictability:
         ans = True if self.pred_by_feature([x])[0] == 1 else False
         return ans
 
-    def pred_by_feature(
-        self, source_x: Union[np.ndarray, List[np.ndarray], pd.DataFrame]
-    ) -> np.ndarray:
+    def pred_by_feature(self, source_x: Union[np.ndarray, List[np.ndarray], pd.DataFrame]) -> np.ndarray:
         """Predict whether a list of time series are predicable or not given their time series features.
         Args:
             source_x: the time series features of the time series that one wants to predict, can be a np.ndarray, a list of np.ndarray or a pd.DataFrame.

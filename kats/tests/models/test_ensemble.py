@@ -10,22 +10,24 @@ from unittest import TestCase
 
 import numpy as np
 import pandas as pd
+from parameterized.parameterized import parameterized
+
 from kats.consts import TimeSeriesData
-from kats.data.utils import load_air_passengers, load_data
-from kats.models import (
-    arima,
-    holtwinters,
-    linear_model,
-    prophet,
-    quadratic_model,
-    sarima,
-    theta,
-)
-from kats.models.ensemble.ensemble import BaseEnsemble, BaseModelParams, EnsembleParams
+from kats.data.utils import load_air_passengers
+from kats.data.utils import load_data
+from kats.models import arima
+from kats.models import holtwinters
+from kats.models import linear_model
+from kats.models import prophet
+from kats.models import quadratic_model
+from kats.models import sarima
+from kats.models import theta
+from kats.models.ensemble.ensemble import BaseEnsemble
+from kats.models.ensemble.ensemble import BaseModelParams
+from kats.models.ensemble.ensemble import EnsembleParams
 from kats.models.ensemble.kats_ensemble import KatsEnsemble
 from kats.models.ensemble.median_ensemble import MedianEnsembleModel
 from kats.models.ensemble.weighted_avg_ensemble import WeightedAvgEnsemble
-from parameterized.parameterized import parameterized
 
 np.random.seed(123321)
 DATA_dummy = pd.DataFrame(
@@ -40,12 +42,8 @@ TSData_dummy = TimeSeriesData(DATA_dummy)
 ALL_ERRORS = ["mape", "smape", "mae", "mase", "mse", "rmse"]
 
 
-def get_fake_preds(
-    ts_data: TimeSeriesData, fcst_periods: int, fcst_freq: str
-) -> pd.DataFrame:
-    time = pd.date_range(
-        start=ts_data.time.iloc[-1], periods=fcst_periods + 1, freq=fcst_freq
-    )[1:]
+def get_fake_preds(ts_data: TimeSeriesData, fcst_periods: int, fcst_freq: str) -> pd.DataFrame:
+    time = pd.date_range(start=ts_data.time.iloc[-1], periods=fcst_periods + 1, freq=fcst_freq)[1:]
     fcst = np.random.uniform(0, 100, len(time))
     return pd.DataFrame(
         {
@@ -73,9 +71,7 @@ class testBaseEnsemble(TestCase):
     # pyre-fixme[56]: Pyre was not able to infer the type of the decorator
     #  `parameterized.parameterized.parameterized.expand([["TSData", 30, "MS"],
     #  ["TSData_daily", 30, "D"], ["TSData_dummy", 30, "D"]])`.
-    @parameterized.expand(
-        [["TSData", 30, "MS"], ["TSData_daily", 30, "D"], ["TSData_dummy", 30, "D"]]
-    )
+    @parameterized.expand([["TSData", 30, "MS"], ["TSData_daily", 30, "D"], ["TSData_dummy", 30, "D"]])
     # pyre-fixme[2]: Parameter must be annotated.
     def test_fit_forecast(self, ts_data_name, steps: int, freq: str) -> None:
         ts_data = getattr(self, ts_data_name)
@@ -122,9 +118,7 @@ class testBaseEnsemble(TestCase):
             m._predict_all(steps=steps, freq=freq)
 
             # now predict should have been called
-            mock_fit_model.return_value.predict.assert_called_with(
-                steps, freq=f"{freq}"
-            )
+            mock_fit_model.return_value.predict.assert_called_with(steps, freq=f"{freq}")
 
             self.assertEqual(m.__str__(), "Ensemble")
 
@@ -194,15 +188,11 @@ class testMedianEnsemble(TestCase):
     # pyre-fixme[56]: Pyre was not able to infer the type of the decorator
     #  `parameterized.parameterized.parameterized.expand([["TSData", 30, "MS"],
     #  ["TSData_daily", 30, "D"], ["TSData_dummy", 30, "D"]])`.
-    @parameterized.expand(
-        [["TSData", 30, "MS"], ["TSData_daily", 30, "D"], ["TSData_dummy", 30, "D"]]
-    )
+    @parameterized.expand([["TSData", 30, "MS"], ["TSData_daily", 30, "D"], ["TSData_dummy", 30, "D"]])
     # pyre-fixme[2]: Parameter must be annotated.
     def test_fit_forecast(self, ts_data_name, steps: int, freq: str) -> None:
         ts_data = getattr(self, ts_data_name)
-        preds = get_fake_preds(ts_data, fcst_periods=steps, fcst_freq=freq)[
-            ["time", "fcst"]
-        ]
+        preds = get_fake_preds(ts_data, fcst_periods=steps, fcst_freq=freq)[["time", "fcst"]]
         params = EnsembleParams(
             [
                 BaseModelParams("arima", arima.ARIMAParams(p=1, d=1, q=1)),
@@ -244,9 +234,7 @@ class testMedianEnsemble(TestCase):
 
             # now run predict on the ensemble model
             m.predict(steps=steps, freq=freq)
-            mock_fit_model.return_value.predict.assert_called_with(
-                steps, freq=f"{freq}"
-            )
+            mock_fit_model.return_value.predict.assert_called_with(steps, freq=f"{freq}")
             m.plot()
 
             # test __str__ method
@@ -285,15 +273,11 @@ class testWeightedAvgEnsemble(TestCase):
     # pyre-fixme[56]: Pyre was not able to infer the type of the decorator
     #  `parameterized.parameterized.parameterized.expand([["TSData", 30, "MS"],
     #  ["TSData_daily", 30, "D"], ["TSData_dummy", 30, "D"]])`.
-    @parameterized.expand(
-        [["TSData", 30, "MS"], ["TSData_daily", 30, "D"], ["TSData_dummy", 30, "D"]]
-    )
+    @parameterized.expand([["TSData", 30, "MS"], ["TSData_daily", 30, "D"], ["TSData_dummy", 30, "D"]])
     # pyre-fixme[2]: Parameter must be annotated.
     def test_fit_forecast(self, ts_data_name, steps: int, freq: str) -> None:
         ts_data = getattr(self, ts_data_name)
-        preds = get_fake_preds(ts_data, fcst_periods=steps, fcst_freq=freq)[
-            ["time", "fcst"]
-        ]
+        preds = get_fake_preds(ts_data, fcst_periods=steps, fcst_freq=freq)[["time", "fcst"]]
         params = EnsembleParams(
             [
                 BaseModelParams("arima", arima.ARIMAParams(p=1, d=1, q=1)),
@@ -329,12 +313,8 @@ class testWeightedAvgEnsemble(TestCase):
             m.fit()
             mock_pooled.assert_called()
 
-            with mock.patch(
-                "kats.models.ensemble.weighted_avg_ensemble.Pool"
-            ) as mock_weighted_pooled:
-                mock_backtest = (
-                    mock_weighted_pooled.return_value.apply_async.return_value.get
-                )
+            with mock.patch("kats.models.ensemble.weighted_avg_ensemble.Pool") as mock_weighted_pooled:
+                mock_backtest = mock_weighted_pooled.return_value.apply_async.return_value.get
                 # the backtester should just return a random number here
                 mock_backtest.return_value = np.random.rand()
                 m.predict(steps=steps, freq=freq)
@@ -369,9 +349,7 @@ class testKatsEnsemble(TestCase):
     # pyre-fixme[56]: Pyre was not able to infer the type of the decorator
     #  `parameterized.parameterized.parameterized.expand([["TSData", 30, "MS"],
     #  ["TSData", 30, "D"], ["TSData_dummy", 30, "D"]])`.
-    @parameterized.expand(
-        [["TSData", 30, "MS"], ["TSData", 30, "D"], ["TSData_dummy", 30, "D"]]
-    )
+    @parameterized.expand([["TSData", 30, "MS"], ["TSData", 30, "D"], ["TSData_dummy", 30, "D"]])
     # pyre-fixme[2]: Parameter must be annotated.
     def test_fit_median_forecast(self, ts_data_name, steps: int, freq: str) -> None:
         ts_data = getattr(self, ts_data_name)
@@ -426,9 +404,7 @@ class testKatsEnsemble(TestCase):
     # pyre-fixme[56]: Pyre was not able to infer the type of the decorator
     #  `parameterized.parameterized.parameterized.expand([["TSData", 30, "MS"],
     #  ["TSData", 30, "D"], ["TSData_dummy", 30, "D"]])`.
-    @parameterized.expand(
-        [["TSData", 30, "MS"], ["TSData", 30, "D"], ["TSData_dummy", 30, "D"]]
-    )
+    @parameterized.expand([["TSData", 30, "MS"], ["TSData", 30, "D"], ["TSData_dummy", 30, "D"]])
     def test_fit_weightedavg_forecast(
         self,
         # pyre-fixme[2]: Parameter must be annotated.
@@ -473,9 +449,7 @@ class testKatsEnsemble(TestCase):
             with mock.patch("multiprocessing.managers.SyncManager.Pool") as mock_pooled:
                 mock_fit_model = mock_pooled.return_value.apply_async.return_value.get
                 mock_fit_model.return_value.predict = mock.MagicMock(return_value=preds)
-                mock_fit_model.return_value.__add__ = mock.MagicMock(
-                    return_value=np.random.rand()
-                )
+                mock_fit_model.return_value.__add__ = mock.MagicMock(return_value=np.random.rand())
                 # fit the model
                 m.fit()
                 mock_pooled.assert_called()
@@ -483,9 +457,7 @@ class testKatsEnsemble(TestCase):
                 # no predictions should be made yet
                 mock_fit_model.return_value.predict.assert_not_called()
                 # backtesting should be done after calling fit
-                mock_fit_model.return_value.__add__.assert_called_with(
-                    sys.float_info.epsilon
-                )
+                mock_fit_model.return_value.__add__.assert_called_with(sys.float_info.epsilon)
 
                 # now run predict on the ensemble model
                 m.predict(steps=steps)
@@ -504,9 +476,7 @@ class testKatsEnsemble(TestCase):
                 mock_pooled.assert_called()
 
                 # backtesting should be done after calling fit
-                mock_fit_model.return_value.__add__.assert_called_with(
-                    sys.float_info.epsilon
-                )
+                mock_fit_model.return_value.__add__.assert_called_with(sys.float_info.epsilon)
 
                 # now run predict on the ensemble model
                 # m.predict(steps=steps)

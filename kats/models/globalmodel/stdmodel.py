@@ -10,20 +10,25 @@ import time
 from copy import copy
 from multiprocessing import cpu_count
 from multiprocessing.dummy import Pool
-
-from typing import cast, Dict, List, Optional, Tuple, Union
+from typing import Dict
+from typing import List
+from typing import Optional
+from typing import Tuple
+from typing import Union
+from typing import cast
 
 import numpy as np
 import pandas as pd
+from statsmodels.tsa.tsatools import freq_to_period
 
-from kats.consts import Params, TimeSeriesData
+from kats.consts import Params
+from kats.consts import TimeSeriesData
 from kats.models.globalmodel.ensemble import GMEnsemble
 from kats.models.globalmodel.model import GMModel
 from kats.models.globalmodel.utils import GMParam
-
-from kats.models.prophet import ProphetModel, ProphetParams
+from kats.models.prophet import ProphetModel
+from kats.models.prophet import ProphetParams
 from kats.utils.decomposition import TimeSeriesDecomposition
-from statsmodels.tsa.tsatools import freq_to_period
 
 
 class STDGlobalModel:
@@ -131,15 +136,11 @@ class STDGlobalModel:
                 period = 7
         return period
 
-    def _decompose(
-        self, ts: TimeSeriesData
-    ) -> Tuple[Union[ProphetModel, np.ndarray], Dict[str, TimeSeriesData]]:
+    def _decompose(self, ts: TimeSeriesData) -> Tuple[Union[ProphetModel, np.ndarray], Dict[str, TimeSeriesData]]:
         """Decompose time series into trend, seasonality."""
         if self.decomposition_model == "prophet":
             if self.decomposition_params is None:
-                self.decomposition_params = ProphetParams(
-                    seasonality_mode=self.decomposition
-                )
+                self.decomposition_params = ProphetParams(seasonality_mode=self.decomposition)
 
             time_col_name = ts.time_col_name
 
@@ -164,22 +165,16 @@ class STDGlobalModel:
                         decomp_res[[time_col_name, "trend"]],
                         time_col_name=time_col_name,
                     ),
-                    "seasonal": TimeSeriesData(
-                        decomp_res[[time_col_name, tag]], time_col_name=time_col_name
-                    ),
+                    "seasonal": TimeSeriesData(decomp_res[[time_col_name, tag]], time_col_name=time_col_name),
                     # "res": TimeSeriesData(decomp_res[[time_col_name, "res"]], time_col_name = time_col_name),
                 },
             )
         else:
-            tsd = TimeSeriesDecomposition(
-                ts, decomposition=self.decomposition, method=self.decomposition_model
-            )
+            tsd = TimeSeriesDecomposition(ts, decomposition=self.decomposition, method=self.decomposition_model)
             decomp = tsd.decomposer()
             return (decomp["seasonal"].value.values, decomp)
 
-    def _deseasonal(
-        self, ts: TimeSeriesData
-    ) -> Tuple[Union[ProphetModel, np.ndarray], TimeSeriesData]:
+    def _deseasonal(self, ts: TimeSeriesData) -> Tuple[Union[ProphetModel, np.ndarray], TimeSeriesData]:
         tsd_model, tsd_res = self._decompose(ts)
         if self.fit_trend:
             return tsd_model, tsd_res["trend"]
@@ -190,9 +185,7 @@ class STDGlobalModel:
             new_ts.value = self.deseasonal_operator(ts.value, tsd_res["seasonal"].value)
             return tsd_model, new_ts
 
-    def _predict_seasonality(
-        self, steps: int, tsd_model: Union[ProphetModel, np.ndarray]
-    ) -> np.ndarray:
+    def _predict_seasonality(self, steps: int, tsd_model: Union[ProphetModel, np.ndarray]) -> np.ndarray:
 
         """Predict the future seasonality.
 
@@ -241,9 +234,7 @@ class STDGlobalModel:
 
     def predict(
         self,
-        test_TSs: Union[
-            TimeSeriesData, List[TimeSeriesData], Dict[Union[str, int], TimeSeriesData]
-        ],
+        test_TSs: Union[TimeSeriesData, List[TimeSeriesData], Dict[Union[str, int], TimeSeriesData]],
         steps: int,
     ) -> Dict[Union[str, int], pd.DataFrame]:
         """Generate forecasts using the seasonality-trend decomposite global model.
@@ -264,16 +255,12 @@ class STDGlobalModel:
         t0 = time.time()
         if self.multi:
             pool = Pool(self.max_core)
-            prepared_TSs = pool.starmap(
-                self._prepare_ts, [(key, test_TSs[key], steps) for key in keys]
-            )
+            prepared_TSs = pool.starmap(self._prepare_ts, [(key, test_TSs[key], steps) for key in keys])
             pool.close()
             pool.join()
         else:
             prepared_TSs = [self._prepare_ts(key, test_TSs[key], steps) for key in keys]
-        logging.info(
-            f"Successfully preparing all timeseries with time = {time.time()-t0}"
-        )
+        logging.info(f"Successfully preparing all timeseries with time = {time.time()-t0}")
 
         # generate fcsts using GM
         # pyre-fixme Undefined attribute [16]: Item `None` of `typing.Union[None, GMEnsemble, GMModel]` has no attribute `predict`.
@@ -281,14 +268,9 @@ class STDGlobalModel:
 
         if self.multi:
             pool = Pool(self.max_core)
-            fcsts = pool.starmap(
-                self._reseasonal, [(t[0], gm_fcsts[t[0]], t[2]) for t in prepared_TSs]
-            )
+            fcsts = pool.starmap(self._reseasonal, [(t[0], gm_fcsts[t[0]], t[2]) for t in prepared_TSs])
             pool.close()
             pool.join()
         else:
-            fcsts = [
-                self._reseasonal(t[0], cast(pd.DataFrame, gm_fcsts[t[0]]), t[2])
-                for t in prepared_TSs
-            ]
+            fcsts = [self._reseasonal(t[0], cast(pd.DataFrame, gm_fcsts[t[0]]), t[2]) for t in prepared_TSs]
         return {t[0]: t[1] for t in fcsts}

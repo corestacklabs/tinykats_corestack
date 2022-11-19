@@ -11,29 +11,35 @@ the Bayesian Online Changepoint Detection algorithm.
 
 import logging
 import math
-from abc import ABC, abstractmethod
-from dataclasses import dataclass, field
+from abc import ABC
+from abc import abstractmethod
+from dataclasses import dataclass
+from dataclasses import field
 from enum import Enum
-from typing import (
-    Any,
-    Callable,
-    cast,
-    Dict,
-    List,
-    Optional,
-    Sequence,
-    Tuple,
-    Type,
-    Union,
-)
+from typing import Any
+from typing import Callable
+from typing import Dict
+from typing import List
+from typing import Optional
+from typing import Sequence
+from typing import Tuple
+from typing import Type
+from typing import Union
+from typing import cast
 
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from kats.consts import SearchMethodEnum, TimeSeriesChangePoint, TimeSeriesData
-from kats.detectors.detector import Detector
 from scipy.special import logsumexp  # @manual
-from scipy.stats import invgamma, linregress, nbinom, norm  # @manual
+from scipy.stats import invgamma  # @manual
+from scipy.stats import linregress
+from scipy.stats import nbinom
+from scipy.stats import norm
+
+from kats.consts import SearchMethodEnum
+from kats.consts import TimeSeriesChangePoint
+from kats.consts import TimeSeriesData
+from kats.detectors.detector import Detector
 
 try:
     import kats.utils.time_series_parameter_tuning as tpt
@@ -45,12 +51,8 @@ except ImportError:
 _MIN_POINTS = 10
 _LOG_SQRT2PI: float = 0.5 * np.log(2 * np.pi)
 
-SupportedModelParameterType = Union[
-    "NormalKnownParameters", "TrendChangeParameters", "PoissonModelParameters"
-]
-SupportedModelType = Union[
-    "_BayesianLinReg", "_NormalKnownPrec", "_PoissonProcessModel"
-]
+SupportedModelParameterType = Union["NormalKnownParameters", "TrendChangeParameters", "PoissonModelParameters"]
+SupportedModelType = Union["_BayesianLinReg", "_NormalKnownPrec", "_PoissonProcessModel"]
 
 # from np.typing import ArrayLike
 # The current version of numpy doesn't support typing but future ones do
@@ -379,9 +381,7 @@ class BOCPDetector(Detector):
         ), f"Expected parameter type {self.parameter_type[model]}, but got {model_parameters}"
 
         if choose_priors:
-            changepoint_prior, model_parameters = self._choose_priors(
-                model, model_parameters
-            )
+            changepoint_prior, model_parameters = self._choose_priors(model, model_parameters)
 
         if getattr(model_parameters, "data", 0) is None:
             model_parameters.data = self.data
@@ -408,9 +408,7 @@ class BOCPDetector(Detector):
         underlying_model.setup()
 
         logging.debug(f"Creating detector with lag {lag} and debug option {debug}.")
-        bocpd = _BayesOnlineChangePoint(
-            data=self.data, lag=lag, debug=debug, agg_cp=agg_cp
-        )
+        bocpd = _BayesOnlineChangePoint(data=self.data, lag=lag, debug=debug, agg_cp=agg_cp)
 
         logging.debug(
             f"Running .detector() with model {underlying_model}, threshold {threshold}, changepoint prior {changepoint_prior}."
@@ -430,9 +428,7 @@ class BOCPDetector(Detector):
             self.change_prob[ts_name] = change_probs
             self._run_length_prob[ts_name] = detector_results["run_length_prob"]
 
-            logging.debug(
-                f"Obtained {len(change_indices)} change points from underlying model in ts={ts_name}."
-            )
+            logging.debug(f"Obtained {len(change_indices)} change points from underlying model in ts={ts_name}.")
 
             for cp_index in change_indices:
                 cp_time = self.data.time.values[cp_index]
@@ -480,9 +476,7 @@ class BOCPDetector(Detector):
 
             _, ax = plt.subplots()
             axs.append(ax)
-            logging.info(
-                f"Plotting {len(ts_changepoints)} change points for {ts_name}."
-            )
+            logging.info(f"Plotting {len(ts_changepoints)} change points for {ts_name}.")
             ax.plot(data_df[time_col_name], data_df[ts_name])
 
             changepoint_annotated = False
@@ -528,9 +522,7 @@ class BOCPDetector(Detector):
         elif search_method == "gridsearch":
             search_N, SearchMethod = 1, SearchMethodEnum.GRID_SEARCH
         else:
-            raise Exception(
-                f"Search method has to be in random or gridsearch but it is {search_method}!"
-            )
+            raise Exception(f"Search method has to be in random or gridsearch but it is {search_method}!")
 
         # construct the custom parameters for the HPT library
         custom_parameters = [
@@ -556,9 +548,7 @@ class BOCPDetector(Detector):
         )
 
         for _ in range(search_N):
-            ts_tuner.generate_evaluate_new_parameter_values(
-                evaluation_function=eval_fn, arm_count=4
-            )
+            ts_tuner.generate_evaluate_new_parameter_values(evaluation_function=eval_fn, arm_count=4)
 
         scores_df = ts_tuner.list_parameter_value_scores()
 
@@ -758,9 +748,7 @@ class _BayesOnlineChangePoint(Detector):
             self.P = 1
             self._ts_slice = 0
             data_df = self.data.to_dataframe()
-            self._ts_names = [
-                x for x in data_df.columns if x != self.data.time_col_name
-            ]
+            self._ts_names = [x for x in data_df.columns if x != self.data.time_col_name]
 
             self.data_values = np.expand_dims(data.value.values, axis=1)
 
@@ -876,18 +864,14 @@ class _BayesOnlineChangePoint(Detector):
             # step 5 of paper
             # this is elementwise multiplication of pred and message
             log_change_point_prob = np.logaddexp.reduce(
-                pred_arr
-                + message[self.T + m_ptr : self.T, self._ts_slice]
-                + log_cp_prior,
+                pred_arr + message[self.T + m_ptr : self.T, self._ts_slice] + log_cp_prior,
                 axis=0,
             )
 
             # step 4
             # log_growth_prob = pred_arr + message + np.log(1.0 - changepoint_prior)
             message[self.T + m_ptr : self.T, self._ts_slice] = (
-                pred_arr
-                + message[self.T + m_ptr : self.T, self._ts_slice]
-                + log_om_cp_prior
+                pred_arr + message[self.T + m_ptr : self.T, self._ts_slice] + log_om_cp_prior
             )
 
             # P(r_t, x_1:t)
@@ -932,9 +916,7 @@ class _BayesOnlineChangePoint(Detector):
 
             # step 7
             # log_posterior = log_joint_prob - log_evidence
-            log_posterior = (
-                message[self.T + m_ptr : self.T, self._ts_slice] - log_evidence
-            )
+            log_posterior = message[self.T + m_ptr : self.T, self._ts_slice] - log_evidence
             rt_posterior[i, 0 : (i + 1), self._ts_slice] = np.exp(log_posterior)
 
             # step 8
@@ -1017,15 +999,9 @@ class _BayesOnlineChangePoint(Detector):
                 assert pred_mean_arr is not None and pred_std_arr is not None
                 x_debug = list(range(lag + 1, self.T))
                 y_debug_mean = pred_mean_arr[lag + 1 : self.T, lag, ts_ix]
-                y_debug_uv = (
-                    pred_mean_arr[lag + 1 : self.T, lag, ts_ix]
-                    + pred_std_arr[lag + 1 : self.T, lag, ts_ix]
-                )
+                y_debug_uv = pred_mean_arr[lag + 1 : self.T, lag, ts_ix] + pred_std_arr[lag + 1 : self.T, lag, ts_ix]
 
-                y_debug_lv = (
-                    pred_mean_arr[lag + 1 : self.T, lag, ts_ix]
-                    - pred_std_arr[lag + 1 : self.T, lag, ts_ix]
-                )
+                y_debug_lv = pred_mean_arr[lag + 1 : self.T, lag, ts_ix] - pred_std_arr[lag + 1 : self.T, lag, ts_ix]
 
                 ax1.plot(x_debug, y_debug_mean, "k-")
                 ax1.plot(x_debug, y_debug_uv, "k--")
@@ -1074,9 +1050,7 @@ class _BayesOnlineChangePoint(Detector):
         for t, t_name in enumerate(self._ts_names):
             if not self.agg_cp:
                 # till lag, prob = 0, so prepend array with zeros
-                change_prob = np.hstack(
-                    (rt_posterior[lag : self.T, lag, t], np.zeros(lag))
-                )
+                change_prob = np.hstack((rt_posterior[lag : self.T, lag, t], np.zeros(lag)))
                 # handle the fact that the first point is not a changepoint
                 change_prob[0] = 0.0
             else:
@@ -1240,23 +1214,15 @@ class _NormalKnownPrec(_PredictiveModel):
             check_data(data)
             self._find_empirical_prior(data)
 
-        if (
-            self.lambda_0 is not None
-            and self.lambda_val is not None
-            and self.mu_0 is not None
-        ):
+        if self.lambda_0 is not None and self.lambda_val is not None and self.mu_0 is not None:
             # We set these here to avoid recomputing the linear expression
             # throughout + avoid unnecessarily zeroing the memory etc.
             self._mean_arr: np.ndarray = np.repeat(
                 np.expand_dims(self.mu_0 * self.lambda_0, axis=0), self._maxT, axis=0
             )
-            self._prec_arr: np.ndarray = np.repeat(
-                np.expand_dims(self.lambda_0, axis=0), self._maxT, axis=0
-            )
+            self._prec_arr: np.ndarray = np.repeat(np.expand_dims(self.lambda_0, axis=0), self._maxT, axis=0)
         else:
-            raise ValueError(
-                "Priors for NormalKnownPrec should not be None if not empirically set"
-            )
+            raise ValueError("Priors for NormalKnownPrec should not be None if not empirically set")
 
     def setup(self) -> None:
         # everything is already set up in __init__!
@@ -1290,9 +1256,7 @@ class _NormalKnownPrec(_PredictiveModel):
         if data.is_univariate():
             self.lambda_val = self.parameters.known_prec_multiplier / var_arr.mean()
         else:
-            self.lambda_val = (
-                self.parameters.known_prec_multiplier / var_arr.mean().values
-            )
+            self.lambda_val = self.parameters.known_prec_multiplier / var_arr.mean().values
 
         logging.debug("Empirical Prior: mu_0:", self.mu_0)
         logging.debug("Empirical Prior: lambda_0:", self.lambda_0)
@@ -1373,16 +1337,13 @@ class _NormalKnownPrec(_PredictiveModel):
         self._prec_arr[self._maxT + self._ptr : self._maxT] += self.lambda_val
 
         # update the numerator of the mean array
-        self._mean_arr_num[self._maxT + self._ptr : self._maxT] += x * cast(
-            float, self.lambda_val
-        )
+        self._mean_arr_num[self._maxT + self._ptr : self._maxT] += x * cast(float, self.lambda_val)
 
         # This is now handled by initializing the array with this value.
         # self._prec_arr[self._ptr] = self.lambda_0 + 1. * self.lambda_val
 
         self._std_arr[self._maxT + self._ptr : self._maxT] = np.sqrt(
-            1.0 / self._prec_arr[self._maxT + self._ptr : self._maxT]
-            + 1.0 / cast(float, self.lambda_val)
+            1.0 / self._prec_arr[self._maxT + self._ptr : self._maxT] + 1.0 / cast(float, self.lambda_val)
         )
 
         # This is now handled by initializing the array with self.mu_0 * self.lambda_0
@@ -1487,25 +1448,20 @@ class _BayesianLinReg(_PredictiveModel):
 
                 # Compute basic linear regression
                 slope, intercept, r_value, p_value, std_err = linregress(time, vals)
-                self.mu_prior = mu_prior = np.array(
-                    [intercept, slope]
-                )  # Set up mu_prior
+                self.mu_prior = mu_prior = np.array([intercept, slope])  # Set up mu_prior
 
                 if readjust_sigma_prior:
                     logging.info("Readjusting the prior for Inv-Gamma for sigma^2.")
                     # these values are the mean/variance of sigma^2: Inv-Gamma(*,*)
-                    sigma_squared_distribution_mean = (
-                        _BayesianLinReg._residual_variance(time, vals, intercept, slope)
+                    sigma_squared_distribution_mean = _BayesianLinReg._residual_variance(time, vals, intercept, slope)
+                    sigma_squared_distribution_variance = (
+                        1000  # TODO: we don't really know what the variance of sigma^2: Inv-Gamma(a, b) should be
                     )
-                    sigma_squared_distribution_variance = 1000  # TODO: we don't really know what the variance of sigma^2: Inv-Gamma(a, b) should be
 
                     # The following values are computed from https://reference.wolfram.com/language/ref/InverseGammaDistribution.html
                     # We want to match the mean of Inv-Gamma(a, b) to the sigma^2 mean (called mu), and variances together too (called var).
                     # We obtain mu = b / (a-1) and var = b^2 / ((a-2) * (a-1)^2) and then we simply solve for a and b.
-                    self.a_0 = 2.0 + (
-                        sigma_squared_distribution_mean
-                        / sigma_squared_distribution_variance
-                    )
+                    self.a_0 = 2.0 + (sigma_squared_distribution_mean / sigma_squared_distribution_variance)
                     self.b_0 = sigma_squared_distribution_mean * (self.a_0 - 1)
             else:
                 self.mu_prior = mu_prior = np.zeros(2)
@@ -1518,9 +1474,7 @@ class _BayesianLinReg(_PredictiveModel):
 
         if plot_regression_prior:
             intercept, slope = tuple(mu_prior)
-            _BayesianLinReg._plot_regression(
-                self.all_time, self.all_vals, intercept, slope
-            )
+            _BayesianLinReg._plot_regression(self.all_time, self.all_vals, intercept, slope)
 
     @staticmethod
     def _plot_regression(
@@ -1534,9 +1488,7 @@ class _BayesianLinReg(_PredictiveModel):
         plt.show()
 
     @staticmethod
-    def _residual_variance(
-        x: np.ndarray, y: np.ndarray, intercept: float, slope: float
-    ) -> float:
+    def _residual_variance(x: np.ndarray, y: np.ndarray, intercept: float, slope: float) -> float:
         n = len(x)
         assert n == len(y)
 
@@ -1558,9 +1510,7 @@ class _BayesianLinReg(_PredictiveModel):
         sample_sigma_squared = cast(np.ndarray, invgamma.rvs(a_n, scale=b_n, size=1))
 
         # Sample a beta value from Normal(mu_n, sigma^2 * inv(lambda_n))
-        assert (
-            len(mu_n.shape) == 1
-        ), f"Expected 1 dimensional mu_n, but got {mu_n.shape}"
+        assert len(mu_n.shape) == 1, f"Expected 1 dimensional mu_n, but got {mu_n.shape}"
 
         all_beta_samples = np.random.multivariate_normal(
             mu_n, sample_sigma_squared * np.linalg.inv(lambda_n), size=num_samples
@@ -1573,9 +1523,7 @@ class _BayesianLinReg(_PredictiveModel):
         beta: np.ndarray, sigma_squared: np.ndarray, x: np.ndarray, val: float
     ) -> Tuple[float, np.ndarray]:
         prediction = np.matmul(beta, x)
-        bayesian_likelihoods = norm.pdf(
-            val, loc=prediction, scale=np.sqrt(sigma_squared)
-        )
+        bayesian_likelihoods = norm.pdf(val, loc=prediction, scale=np.sqrt(sigma_squared))
 
         return bayesian_likelihoods, prediction
 
@@ -1592,9 +1540,7 @@ class _BayesianLinReg(_PredictiveModel):
         (
             all_sample_betas,
             sample_sigma_squared,
-        ) = _BayesianLinReg._sample_bayesian_linreg(
-            mu_n, lambda_n, a_n, b_n, num_samples
-        )
+        ) = _BayesianLinReg._sample_bayesian_linreg(mu_n, lambda_n, a_n, b_n, num_samples)
 
         bayesian_likelihoods, prediction = _BayesianLinReg._compute_bayesian_likelihood(
             all_sample_betas, sample_sigma_squared, x, val
@@ -1639,9 +1585,7 @@ class _BayesianLinReg(_PredictiveModel):
             a_n = self.a_0 + t / 2
             mu_prior = self.mu_prior
             assert mu_prior is not None
-            mu_prec_prior = np.matmul(
-                np.matmul(mu_prior.transpose(), self.lambda_prior), self.mu_prior
-            )
+            mu_prec_prior = np.matmul(np.matmul(mu_prior.transpose(), self.lambda_prior), self.mu_prior)
             mu_prec_n = np.matmul(np.matmul(mu_n.transpose(), lambda_n), mu_n)
             b_n = self.b_0 + 1 / 2 * (yty + mu_prec_prior - mu_prec_n)
 
@@ -1666,9 +1610,7 @@ class _BayesianLinReg(_PredictiveModel):
                 indiv_likelihoods,
                 prediction,
                 var_pred,
-            ) = _BayesianLinReg._sample_likelihood(
-                mu_n, lambda_n, a_n, b_n, x_new, y, self.num_likelihood_samples
-            )
+            ) = _BayesianLinReg._sample_likelihood(mu_n, lambda_n, a_n, b_n, x_new, y, self.num_likelihood_samples)
 
             likelihoods = np.sum(indiv_likelihoods)
             likelihoods = max(likelihoods, self.min_sum_samples)
@@ -1766,14 +1708,10 @@ class _PoissonProcessModel(_PredictiveModel):
         parameters: Specifying all the priors.
     """
 
-    def __init__(
-        self, data: TimeSeriesData, parameters: PoissonModelParameters
-    ) -> None:
+    def __init__(self, data: TimeSeriesData, parameters: PoissonModelParameters) -> None:
         self.data = data
 
-        self.gamma_alpha: float = (
-            parameters.alpha_prior
-        )  # prior for rate lambda ~ Gamma(alpha, beta)
+        self.gamma_alpha: float = parameters.alpha_prior  # prior for rate lambda ~ Gamma(alpha, beta)
         self.gamma_beta: float = parameters.beta_prior
 
         self.parameters = parameters
@@ -1790,9 +1728,7 @@ class _PoissonProcessModel(_PredictiveModel):
         # everything is already set up in __init__!
         pass
 
-    def pred_prob(
-        self, t: int, x: float
-    ) -> np.ndarray:  # predict the probability that time t, we have value x
+    def pred_prob(self, t: int, x: float) -> np.ndarray:  # predict the probability that time t, we have value x
         """Predictive log probability of a new data point.
 
         Args:
@@ -1854,9 +1790,7 @@ class _PoissonProcessModel(_PredictiveModel):
         self._events.insert(0, x)
 
         num_events_before: float = 0.0
-        for t in range(
-            1, self._t + 1
-        ):  # t is the number of previous events we consider to adjust poisson rate
+        for t in range(1, self._t + 1):  # t is the number of previous events we consider to adjust poisson rate
             num_events_before += self._events[t - 1]
 
             # adjust our posterior distribution
@@ -1869,9 +1803,7 @@ class _PoissonProcessModel(_PredictiveModel):
             new_p.append(p)
 
             new_mean_arr.append(nbinom.mean(n, p))  # the mean is n * (1-p) / p
-            new_std_arr.append(
-                nbinom.std(n, p)
-            )  # the std deviation is np.sqrt(n * (1-p)) / p
+            new_std_arr.append(nbinom.std(n, p))  # the std deviation is np.sqrt(n * (1-p)) / p
 
         self._n[self._t] = np.asarray(new_n)
         self._p[self._t] = np.asarray(new_p)

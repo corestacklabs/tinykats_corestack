@@ -8,25 +8,27 @@
 
 import logging
 from math import gcd
-from typing import Dict, List, Optional, Type
+from typing import Dict
+from typing import List
+from typing import Optional
+from typing import Type
 
 import numpy as np
 import pandas as pd
-from kats.consts import TimeSeriesData
-from kats.metrics import metrics
-from kats.models import (
-    arima,
-    holtwinters,
-    linear_model,
-    prophet,
-    quadratic_model,
-    sarima,
-    theta,
-)
-from kats.models.model import Model
-from kats.models.reconciliation.base_models import BaseTHModel, GetAggregateTS
 from sklearn.covariance import MinCovDet
 
+from kats.consts import TimeSeriesData
+from kats.metrics import metrics
+from kats.models import arima
+from kats.models import holtwinters
+from kats.models import linear_model
+from kats.models import prophet
+from kats.models import quadratic_model
+from kats.models import sarima
+from kats.models import theta
+from kats.models.model import Model
+from kats.models.reconciliation.base_models import BaseTHModel
+from kats.models.reconciliation.base_models import GetAggregateTS
 
 # pyre-fixme[24]: Generic type `Model` expects 1 type parameter.
 BASE_MODELS: Dict[str, Type[Model]] = {
@@ -73,10 +75,7 @@ class TemporalHierarchicalModel:
         self.data = data
         for basemodel in baseModels:
             if not isinstance(basemodel, BaseTHModel):
-                msg = (
-                    "Base model should be a BaseTHModel object but is "
-                    f"{type(basemodel)}."
-                )
+                msg = "Base model should be a BaseTHModel object but is " f"{type(basemodel)}."
                 raise _log_error(msg)
 
         levels = [bm.level for bm in baseModels]
@@ -216,10 +215,7 @@ class TemporalHierarchicalModel:
                     try:
                         vals = self._get_residuals(models[k])
                     except Exception as e:
-                        msg = (
-                            f"Failed to get residuals for level {k} with error "
-                            f"message {e}."
-                        )
+                        msg = f"Failed to get residuals for level {k} with error " f"message {e}."
                         raise _log_error(msg)
 
                     residuals[k] = vals
@@ -285,9 +281,7 @@ class TemporalHierarchicalModel:
             cov = np.cov(self._get_residual_matrix())
             # get correlation matrix
             sqrt = np.sqrt(np.diag(cov))
-            cor = (
-                (cov / sqrt).T
-            ) / sqrt  # due to symmetry, no need to transpose the matrix again.
+            cor = ((cov / sqrt).T) / sqrt  # due to symmetry, no need to transpose the matrix again.
             mask = ~np.eye(cor.shape[0], dtype=bool)
             cor = cor[mask]
             lam = np.var(cor) / np.sum(cor**2)
@@ -463,9 +457,7 @@ class TemporalHierarchicalModel:
         if freq is None:
             freq = self.data.infer_freq_robust()
         last_timestamp = self.data.time.max()
-        fcsts = self._predict(
-            steps, method=method, origin_fcst=origin_fcst, fcst_levels=fcst_levels
-        )
+        fcsts = self._predict(steps, method=method, origin_fcst=origin_fcst, fcst_levels=fcst_levels)
         ans = {}
         for elm in fcsts:
             tmp = {}

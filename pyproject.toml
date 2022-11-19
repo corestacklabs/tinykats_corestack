@@ -27,7 +27,26 @@ LunarCalendar = "0.0.9"
 ax-platform = "0.2.9"
 pytest = "7.2.0"
 parameterized = "^0.8.1"
+pymannkendall = "1.4.1"
+black = "^22.10.0"
+pre-commit = "^2.20.0"
+pylint = "^2.15.5"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.black]
+line-length = 119
+
+[tool.pylint]
+max-line-length = 119
+disable = ["wrong-import-position", "missing-module-docstring", "too-few-public-methods"]
+good-names = ["df", "id", "ex"]
+
+[tool.isort]
+force_single_line = true
+profile = "black"
+
+[tool.pytest.ini_options]
+pythonpath = ["."]

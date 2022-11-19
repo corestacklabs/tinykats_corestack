@@ -11,40 +11,46 @@ it re-seasonalizes the forecasted results with seasonal data to produce the fina
 forecasting results.
 """
 
-from __future__ import (
-    absolute_import,
-    annotations,
-    division,
-    print_function,
-    unicode_literals,
-)
+from __future__ import absolute_import
+from __future__ import annotations
+from __future__ import division
+from __future__ import print_function
+from __future__ import unicode_literals
 
 import logging
 import math
 import operator
 import operator as _operator
 from copy import copy
-from typing import Any, Callable, cast, Dict, List, Optional, Union
+from typing import Any
+from typing import Callable
+from typing import Dict
+from typing import List
+from typing import Optional
+from typing import Union
+from typing import cast
 
 import numpy as np
 import pandas as pd
-from kats.consts import Params, TimeSeriesData
-from kats.models import (
-    linear_model,
-    prophet,
-    quadratic_model,
-    simple_heuristic_model,
-    theta,
-)
-from kats.models.linear_model import LinearModel, LinearModelParams
+
+from kats.consts import Params
+from kats.consts import TimeSeriesData
+from kats.models import linear_model
+from kats.models import prophet
+from kats.models import quadratic_model
+from kats.models import simple_heuristic_model
+from kats.models import theta
+from kats.models.linear_model import LinearModel
+from kats.models.linear_model import LinearModelParams
 from kats.models.model import Model
-from kats.models.prophet import ProphetModel, ProphetParams
-from kats.models.quadratic_model import QuadraticModel, QuadraticModelParams
-from kats.models.simple_heuristic_model import (
-    SimpleHeuristicModel,
-    SimpleHeuristicModelParams,
-)
-from kats.models.theta import ThetaModel, ThetaParams
+from kats.models.prophet import ProphetModel
+from kats.models.prophet import ProphetParams
+from kats.models.quadratic_model import QuadraticModel
+from kats.models.quadratic_model import QuadraticModelParams
+from kats.models.simple_heuristic_model import SimpleHeuristicModel
+from kats.models.simple_heuristic_model import SimpleHeuristicModelParams
+from kats.models.theta import ThetaModel
+from kats.models.theta import ThetaParams
 from kats.utils.decomposition import TimeSeriesDecomposition
 from kats.utils.parameter_tuning_utils import get_default_stlf_parameter_search_space
 
@@ -159,11 +165,7 @@ class STLFModel(Model[STLFParams]):
     sea_data: Optional[TimeSeriesData] = None
     trend_data: Optional[TimeSeriesData] = None
     desea_data: Optional[TimeSeriesData] = None
-    model: Optional[
-        Union[
-            LinearModel, ProphetModel, QuadraticModel, SimpleHeuristicModel, ThetaModel
-        ]
-    ] = None
+    model: Optional[Union[LinearModel, ProphetModel, QuadraticModel, SimpleHeuristicModel, ThetaModel]] = None
     freq: Optional[str] = None
     alpha: Optional[float] = None
     y_fcst: Optional[Union[np.ndarray, pd.Series, pd.DataFrame]] = None
@@ -190,9 +192,7 @@ class STLFModel(Model[STLFParams]):
         super().__init__(data, params)
         # pyre-fixme[16]: `Optional` has no attribute `value`.
         if not isinstance(self.data.value, pd.Series):
-            msg = "Only support univariate time series, but get {type}.".format(
-                type=type(self.data.value)
-            )
+            msg = "Only support univariate time series, but get {type}.".format(type=type(self.data.value))
             logging.error(msg)
             raise ValueError(msg)
         self.n: int = self.data.value.shape[0]
@@ -245,9 +245,7 @@ class STLFModel(Model[STLFParams]):
         self.trend_data = copy(decomp["trend"])
         self.desea_data = desea_data = copy(self.data)
         # pyre-fixme[16]: `Optional` has no attribute `value`.
-        desea_data.value = self.deseasonal_operator(
-            desea_data.value, decomp["seasonal"].value
-        )
+        desea_data.value = self.deseasonal_operator(desea_data.value, decomp["seasonal"].value)
 
         return self
 
@@ -262,9 +260,7 @@ class STLFModel(Model[STLFParams]):
             The fitted STLF model object
         """
 
-        logging.debug(
-            "Call fit() with parameters. " "kwargs:{kwargs}".format(kwargs=kwargs)
-        )
+        logging.debug("Call fit() with parameters. " "kwargs:{kwargs}".format(kwargs=kwargs))
         self.deseasonalize()
         if self.params.method == "simple":
             data = self.trend_data
@@ -277,13 +273,9 @@ class STLFModel(Model[STLFParams]):
                 params=cast(ProphetParams, self.params.method_params),
             )
         elif self.params.method == "theta":
-            model = theta.ThetaModel(
-                data=data, params=cast(ThetaParams, self.params.method_params)
-            )
+            model = theta.ThetaModel(data=data, params=cast(ThetaParams, self.params.method_params))
         elif self.params.method == "linear":
-            model = linear_model.LinearModel(
-                data=data, params=cast(LinearModelParams, self.params.method_params)
-            )
+            model = linear_model.LinearModel(data=data, params=cast(LinearModelParams, self.params.method_params))
         elif self.params.method == "simple":
             model = simple_heuristic_model.SimpleHeuristicModel(
                 data=data,
@@ -299,9 +291,7 @@ class STLFModel(Model[STLFParams]):
         return self
 
     # pyre-fixme[15]: `predict` overrides method defined in `Model` inconsistently.
-    def predict(
-        self, steps: int, *args: Any, include_history: bool = False, **kwargs: Any
-    ) -> pd.DataFrame:
+    def predict(self, steps: int, *args: Any, include_history: bool = False, **kwargs: Any) -> pd.DataFrame:
         """predict with the fitted STLF model
 
         Args:
@@ -319,8 +309,7 @@ class STLFModel(Model[STLFParams]):
         assert decomp is not None
 
         logging.debug(
-            "Call predict() with parameters. "
-            "steps:{steps}, kwargs:{kwargs}".format(steps=steps, kwargs=kwargs)
+            "Call predict() with parameters. " "steps:{steps}, kwargs:{kwargs}".format(steps=steps, kwargs=kwargs)
         )
         self.include_history = include_history
         # pyre-fixme[16]: `Optional` has no attribute `time`.
@@ -338,16 +327,10 @@ class STLFModel(Model[STLFParams]):
 
         seasonality = decomp["seasonal"].value[-m:]
 
-        self.y_fcst = self.reseasonal_operator(
-            fcst.fcst, np.tile(seasonality, rep)[: fcst.shape[0]]
-        )
+        self.y_fcst = self.reseasonal_operator(fcst.fcst, np.tile(seasonality, rep)[: fcst.shape[0]])
         if ("fcst_lower" in fcst.columns) and ("fcst_upper" in fcst.columns):
-            self.fcst_lower = self.reseasonal_operator(
-                fcst.fcst_lower, np.tile(seasonality, rep)[: fcst.shape[0]]
-            )
-            self.fcst_upper = self.reseasonal_operator(
-                fcst.fcst_upper, np.tile(seasonality, rep)[: fcst.shape[0]]
-            )
+            self.fcst_lower = self.reseasonal_operator(fcst.fcst_lower, np.tile(seasonality, rep)[: fcst.shape[0]])
+            self.fcst_upper = self.reseasonal_operator(fcst.fcst_upper, np.tile(seasonality, rep)[: fcst.shape[0]])
         logging.info("Generated forecast data from STLF model.")
         logging.debug("Forecast data: {fcst}".format(fcst=self.y_fcst))
 

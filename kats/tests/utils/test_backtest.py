@@ -8,32 +8,33 @@
 import statistics
 import unittest
 import unittest.mock as mock
-from typing import Any, cast, Dict, List, Tuple
+from typing import Any
+from typing import Dict
+from typing import List
+from typing import Tuple
+from typing import cast
 
 import numpy as np
 import pandas as pd
+
 from kats.consts import TimeSeriesData
 from kats.data.utils import load_air_passengers
 from kats.metrics.metrics import core_metric
-from kats.tests.test_backtester_dummy_data import (
-    PROPHET_0_108_FCST_DUMMY_DATA,
-    PROPHET_0_72_FCST_DUMMY_DATA,
-    PROPHET_0_72_GAP_36_FCST_DUMMY_DATA,
-    PROPHET_0_90_FCST_DUMMY_DATA,
-    PROPHET_18_90_FCST_DUMMY_DATA,
-    PROPHET_36_108_FCST_DUMMY_DATA,
-    PROPHET_EMPTY_DUMMY_DATA,
-)
-from kats.utils.backtesters import (
-    _return_fold_offsets as return_fold_offsets,
-    BackTesterExpandingWindow,
-    BackTesterFixedWindow,
-    BacktesterResult,
-    BackTesterRollingWindow,
-    BackTesterSimple,
-    CrossValidation,
-    KatsSimpleBacktester,
-)
+from kats.tests.test_backtester_dummy_data import PROPHET_0_72_FCST_DUMMY_DATA
+from kats.tests.test_backtester_dummy_data import PROPHET_0_72_GAP_36_FCST_DUMMY_DATA
+from kats.tests.test_backtester_dummy_data import PROPHET_0_90_FCST_DUMMY_DATA
+from kats.tests.test_backtester_dummy_data import PROPHET_0_108_FCST_DUMMY_DATA
+from kats.tests.test_backtester_dummy_data import PROPHET_18_90_FCST_DUMMY_DATA
+from kats.tests.test_backtester_dummy_data import PROPHET_36_108_FCST_DUMMY_DATA
+from kats.tests.test_backtester_dummy_data import PROPHET_EMPTY_DUMMY_DATA
+from kats.utils.backtesters import BackTesterExpandingWindow
+from kats.utils.backtesters import BackTesterFixedWindow
+from kats.utils.backtesters import BacktesterResult
+from kats.utils.backtesters import BackTesterRollingWindow
+from kats.utils.backtesters import BackTesterSimple
+from kats.utils.backtesters import CrossValidation
+from kats.utils.backtesters import KatsSimpleBacktester
+from kats.utils.backtesters import _return_fold_offsets as return_fold_offsets
 from kats.utils.datapartition import SimpleDataPartition
 
 # Constants
@@ -51,9 +52,7 @@ FLOAT_ROUNDING_PARAM = 3  # Number of decimal places to round low floats to 0
 CV_NUM_FOLDS = 3  # Number of folds for cross validation
 
 
-def compute_errors(
-    train: np.ndarray, pred: np.ndarray, truth: np.ndarray
-) -> Dict[str, float]:
+def compute_errors(train: np.ndarray, pred: np.ndarray, truth: np.ndarray) -> Dict[str, float]:
     true_errors = {}
     for error in ALL_ERRORS:
         func = core_metric(error)
@@ -89,11 +88,7 @@ class SimpleBackTesterTest(unittest.TestCase):
         cls.test_data = TimeSeriesData(DATA.tail(TIMESTEPS))
 
     def prophet_predict_side_effect(self, *args: Any, **kwargs: Any) -> pd.DataFrame:
-        if (
-            len(kwargs) > 1
-            and kwargs["steps"] == TIMESTEPS
-            and kwargs["freq"] == FREQUENCY
-        ):
+        if len(kwargs) > 1 and kwargs["steps"] == TIMESTEPS and kwargs["freq"] == FREQUENCY:
             return PROPHET_0_108_FCST_DUMMY_DATA
         else:
             return PROPHET_EMPTY_DUMMY_DATA
@@ -243,19 +238,13 @@ class ExpandingWindowBackTesterTest(unittest.TestCase):
         self.assertEqual(self.model_class.call_count, 4)
         self.model_class.assert_has_calls(
             [
-                mock.call(
-                    data=TimeSeriesData(self.train_folds[0]), params=self.model_params
-                ),
+                mock.call(data=TimeSeriesData(self.train_folds[0]), params=self.model_params),
                 mock.call().fit(),
                 mock.call().predict(steps=TIMESTEPS, freq=FREQUENCY),
-                mock.call(
-                    data=TimeSeriesData(self.train_folds[1]), params=self.model_params
-                ),
+                mock.call(data=TimeSeriesData(self.train_folds[1]), params=self.model_params),
                 mock.call().fit(),
                 mock.call().predict(steps=TIMESTEPS, freq=FREQUENCY),
-                mock.call(
-                    data=TimeSeriesData(self.train_folds[2]), params=self.model_params
-                ),
+                mock.call(data=TimeSeriesData(self.train_folds[2]), params=self.model_params),
             ]
         )
 
@@ -277,9 +266,7 @@ class ExpandingWindowBackTesterTest(unittest.TestCase):
         for i in range(0, len(self.train_folds)):
             train_fold = self.train_folds[i]
             test_fold = self.test_folds[i]
-            temp_model = self.model_class(
-                data=TimeSeriesData(train_fold), params=self.model_params
-            )
+            temp_model = self.model_class(data=TimeSeriesData(train_fold), params=self.model_params)
             temp_model.fit()
 
             # Getting model predictions
@@ -445,19 +432,11 @@ class ExpandingWindowBackTesterTest(unittest.TestCase):
 
         train_folds = []
         test_folds = []
-        offsets = return_fold_offsets(
-            int(start_train_size), int(end_train_size), num_folds
-        )
+        offsets = return_fold_offsets(int(start_train_size), int(end_train_size), num_folds)
 
         for offset in offsets:
             train_folds.append(data.iloc[: int(start_train_size + offset)])
-            test_folds.append(
-                data.iloc[
-                    int(start_train_size + offset) : int(
-                        start_train_size + offset + test_size
-                    )
-                ]
-            )
+            test_folds.append(data.iloc[int(start_train_size + offset) : int(start_train_size + offset + test_size)])
         return train_folds, test_folds
 
 
@@ -513,19 +492,13 @@ class RollingWindowBackTesterTest(unittest.TestCase):
         self.assertEqual(self.model_class.call_count, 4)
         self.model_class.assert_has_calls(
             [
-                mock.call(
-                    data=TimeSeriesData(self.train_folds[0]), params=self.model_params
-                ),
+                mock.call(data=TimeSeriesData(self.train_folds[0]), params=self.model_params),
                 mock.call().fit(),
                 mock.call().predict(steps=TIMESTEPS, freq=FREQUENCY),
-                mock.call(
-                    data=TimeSeriesData(self.train_folds[1]), params=self.model_params
-                ),
+                mock.call(data=TimeSeriesData(self.train_folds[1]), params=self.model_params),
                 mock.call().fit(),
                 mock.call().predict(steps=TIMESTEPS, freq=FREQUENCY),
-                mock.call(
-                    data=TimeSeriesData(self.train_folds[2]), params=self.model_params
-                ),
+                mock.call(data=TimeSeriesData(self.train_folds[2]), params=self.model_params),
             ]
         )
 
@@ -547,9 +520,7 @@ class RollingWindowBackTesterTest(unittest.TestCase):
         for i in range(0, len(self.train_folds)):
             train_fold = self.train_folds[i]
             test_fold = self.test_folds[i]
-            temp_model = self.model_class(
-                data=TimeSeriesData(train_fold), params=self.model_params
-            )
+            temp_model = self.model_class(data=TimeSeriesData(train_fold), params=self.model_params)
             temp_model.fit()
 
             # Getting model predictions
@@ -619,19 +590,13 @@ class RollingWindowBackTesterTest(unittest.TestCase):
         Ground truth fold creation
         """
 
-        offsets = return_fold_offsets(
-            0, int(len(data) - train_size - test_size), num_folds
-        )
+        offsets = return_fold_offsets(0, int(len(data) - train_size - test_size), num_folds)
         train_folds = []
         test_folds = []
 
         for offset in offsets:
             train_folds.append(data.iloc[offset : int(offset + train_size)])
-            test_folds.append(
-                data.iloc[
-                    int(offset + train_size) : int(offset + train_size + test_size)
-                ]
-            )
+            test_folds.append(data.iloc[int(offset + train_size) : int(offset + train_size + test_size)])
         return train_folds, test_folds
 
 
@@ -649,11 +614,7 @@ class FixedWindowBackTesterTest(unittest.TestCase):
         cls.test_data = TimeSeriesData(DATA.tail(TIMESTEPS))
 
     def prophet_predict_side_effect(self, *args: Any, **kwargs: Any) -> pd.DataFrame:
-        if (
-            len(kwargs) > 1
-            and kwargs["steps"] == TIMESTEPS * 2
-            and kwargs["freq"] == FREQUENCY
-        ):
+        if len(kwargs) > 1 and kwargs["steps"] == TIMESTEPS * 2 and kwargs["freq"] == FREQUENCY:
             return PROPHET_0_72_GAP_36_FCST_DUMMY_DATA
         else:
             return PROPHET_EMPTY_DUMMY_DATA
@@ -1088,9 +1049,7 @@ class CrossValidationTest(unittest.TestCase):
             for i in range(0, num_folds):
                 end_train_range = int((i * window_size) + train_size)
                 train_folds.append(data.iloc[:end_train_range])
-                test_folds.append(
-                    data.iloc[end_train_range : end_train_range + int(test_size)]
-                )
+                test_folds.append(data.iloc[end_train_range : end_train_range + int(test_size)])
             return train_folds, test_folds
 
         fold_size = (len(data) - train_size - test_size) / (num_folds - 1)
@@ -1098,11 +1057,7 @@ class CrossValidationTest(unittest.TestCase):
         for i in range(0, num_folds):
             offset = int(i * fold_size)
             train_folds.append(data.iloc[offset : int(offset + train_size)])
-            test_folds.append(
-                data.iloc[
-                    int(offset + train_size) : int(offset + train_size + test_size)
-                ]
-            )
+            test_folds.append(data.iloc[int(offset + train_size) : int(offset + train_size + test_size)])
         return train_folds, test_folds
 
 
@@ -1110,9 +1065,7 @@ class KatsSimpleBacktesterTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:
         # Setting up data
-        cls.ts = TimeSeriesData(
-            time=pd.date_range("2022-05-06", periods=20), value=pd.Series(np.arange(20))
-        )
+        cls.ts = TimeSeriesData(time=pd.date_range("2022-05-06", periods=20), value=pd.Series(np.arange(20)))
 
     def side_effect(self, *args: Any, **kwargs: Any) -> pd.DataFrame:
         n = kwargs["steps"]

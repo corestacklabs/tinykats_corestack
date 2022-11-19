@@ -5,7 +5,8 @@
 
 # This file contains dummy data for the model unit tests
 
-from typing import Dict, List
+from typing import Dict
+from typing import List
 
 import numpy as np
 import pandas as pd
@@ -22880,12 +22881,7 @@ PEYTON_FCST_30_THETA_INCL_HIST_SM_11 = pd.DataFrame(
 
 AIR_FCST_15_THETA_SM_12 = pd.DataFrame(
     {
-        "time": {
-            t1: t2
-            for t1, t2 in zip(
-                range(144, 159), pd.date_range("1961-01-01", freq="MS", periods=15)
-            )
-        },
+        "time": {t1: t2 for t1, t2 in zip(range(144, 159), pd.date_range("1961-01-01", freq="MS", periods=15))},
         "fcst": {
             144: 448.2087900770604,
             145: 418.01704627454444,
@@ -22942,12 +22938,7 @@ AIR_FCST_15_THETA_SM_12 = pd.DataFrame(
 
 AIR_FCST_15_THETA_INCL_HIST_SM_12 = pd.DataFrame(
     {
-        "time": {
-            t1: t2
-            for t1, t2 in zip(
-                range(0, 159), pd.date_range("1949-01-01", freq="MS", periods=160)
-            )
-        },
+        "time": {t1: t2 for t1, t2 in zip(range(0, 159), pd.date_range("1949-01-01", freq="MS", periods=160))},
         "fcst": {
             0: 111.79670896456088,
             1: 119.78825978861222,

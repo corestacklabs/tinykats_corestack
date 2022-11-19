@@ -4,7 +4,13 @@
 # LICENSE file in the root directory of this source tree.
 
 import logging
-from typing import Any, cast, Dict, List, Optional, Tuple, Union
+from typing import Any
+from typing import Dict
+from typing import List
+from typing import Optional
+from typing import Tuple
+from typing import Union
+from typing import cast
 
 import pandas as pd
 
@@ -17,7 +23,9 @@ except ImportError:
     Prophet = Dict[str, Any]  # for Pyre
 
 import numpy as np
-from kats.consts import Params, TimeSeriesData
+
+from kats.consts import Params
+from kats.consts import TimeSeriesData
 from kats.models.model import Model
 from kats.utils.parameter_tuning_utils import get_default_prophet_parameter_search_space
 
@@ -151,9 +159,7 @@ class ProphetParams(Params):
         self.uncertainty_samples = uncertainty_samples
         self.cap = cap if cap is not None else False
         self.floor = floor if floor is not None else False
-        self.custom_seasonalities = (
-            [] if custom_seasonalities is None else custom_seasonalities
-        )
+        self.custom_seasonalities = [] if custom_seasonalities is None else custom_seasonalities
         self.extra_regressors = [] if extra_regressors is None else extra_regressors
         self._reqd_regressor_names: List[str] = []
         self._reqd_cap_floor_names: List[str] = []
@@ -196,9 +202,7 @@ class ProphetParams(Params):
         # If custom_seasonalities passed, ensure they contain the required keys.
         reqd_seasonality_keys = ["name", "period", "fourier_order"]
         if not all(
-            req_key in seasonality
-            for req_key in reqd_seasonality_keys
-            for seasonality in self.custom_seasonalities
+            req_key in seasonality for req_key in reqd_seasonality_keys for seasonality in self.custom_seasonalities
         ):
             msg = f"Custom seasonality dicts must contain the following keys:\n{reqd_seasonality_keys}"
             logging.error(msg)
@@ -216,9 +220,7 @@ class ProphetParams(Params):
             if not set(regressor.keys()).issubset(all_regressor_keys):
                 msg = f"Elements in `extra_regressor` should only contain keys in {all_regressor_keys} but receives {regressor.keys()}."
                 _error_msg(msg)
-        self._reqd_regressor_names = [
-            regressor["name"] for regressor in self.extra_regressors
-        ]
+        self._reqd_regressor_names = [regressor["name"] for regressor in self.extra_regressors]
         # check floor and cap
         if (self.cap is not False) and ("cap" not in self._reqd_cap_floor_names):
             self._reqd_cap_floor_names.append("cap")
@@ -293,16 +295,10 @@ class ProphetModel(Model[ProphetParams]):
         if not isinstance(self.params.floor, bool):
             df["floor"] = self.params.floor
 
-        col_names = (
-            self.params._reqd_regressor_names
-            + ["y", "ds"]
-            + self.params._reqd_cap_floor_names
-        )
+        col_names = self.params._reqd_regressor_names + ["y", "ds"] + self.params._reqd_cap_floor_names
         return df[col_names]
 
-    def _future_validation(
-        self, steps: int, future: Optional[pd.DataFrame]
-    ) -> pd.DataFrame:
+    def _future_validation(self, steps: int, future: Optional[pd.DataFrame]) -> pd.DataFrame:
         non_future = future is None
         if future is None:
             # pyre-fixme
@@ -313,9 +309,7 @@ class ProphetModel(Model[ProphetParams]):
             msg = "`future` should be specified and `future` should contain a column named 'ds' representing the timestamps."
             _error_msg(msg)
         if not set(self.params._reqd_regressor_names).issubset(future.columns):
-            msg = (
-                "`future` should be specified and `future` is missing some regressors!"
-            )
+            msg = "`future` should be specified and `future` is missing some regressors!"
             _error_msg(msg)
         if self.params.cap is True and ("cap" not in future.columns):
             msg = "`future` should be specified and `future` should contain a column named 'cap' representing future capacity."
@@ -332,11 +326,7 @@ class ProphetModel(Model[ProphetParams]):
                 future = future.merge(
                     # pyre-fixme
                     self.model.history,
-                    on=(
-                        ["ds"]
-                        + self.params._reqd_regressor_names
-                        + self.params._reqd_cap_floor_names
-                    ),
+                    on=(["ds"] + self.params._reqd_regressor_names + self.params._reqd_cap_floor_names),
                     how="outer",
                 )
             else:
@@ -490,9 +480,7 @@ class ProphetModel(Model[ProphetParams]):
 
 
 # From now on, the main logics are from github PR https://github.com/facebook/prophet/pull/2186 with some modifications.
-def predict_uncertainty(
-    prophet_model: Prophet, df: pd.DataFrame, vectorized: bool
-) -> pd.DataFrame:
+def predict_uncertainty(prophet_model: Prophet, df: pd.DataFrame, vectorized: bool) -> pd.DataFrame:
     """Prediction intervals for yhat and trend.
 
     Args:
@@ -511,12 +499,8 @@ def predict_uncertainty(
     series = {}
 
     for key in ["yhat", "trend"]:
-        series["{}_lower".format(key)] = prophet_model.percentile(
-            sim_values[key], lower_p, axis=0
-        )
-        series["{}_upper".format(key)] = prophet_model.percentile(
-            sim_values[key], upper_p, axis=0
-        )
+        series["{}_lower".format(key)] = prophet_model.percentile(sim_values[key], lower_p, axis=0)
+        series["{}_upper".format(key)] = prophet_model.percentile(sim_values[key], upper_p, axis=0)
 
     return pd.DataFrame(series)
 
@@ -540,9 +524,7 @@ def _sample_predictive_trend_vectorized(
     m0 = prophet_model.params["m"][iteration]
     k = prophet_model.params["k"][iteration]
     if prophet_model.growth == "linear":
-        expected = prophet_model.piecewise_linear(
-            df["t"].values, deltas, k, m0, prophet_model.changepoints_t
-        )
+        expected = prophet_model.piecewise_linear(df["t"].values, deltas, k, m0, prophet_model.changepoints_t)
     elif prophet_model.growth == "logistic":
         expected = prophet_model.piecewise_logistic(
             df["t"].values,
@@ -558,9 +540,9 @@ def _sample_predictive_trend_vectorized(
         raise NotImplementedError
 
     uncertainty = _sample_trend_uncertainty(prophet_model, n_samples, df, iteration)
-    return (
-        np.tile(expected, (n_samples, 1)) + uncertainty
-    ) * prophet_model.y_scale + np.tile(df["floor"].values, (n_samples, 1))
+    return (np.tile(expected, (n_samples, 1)) + uncertainty) * prophet_model.y_scale + np.tile(
+        df["floor"].values, (n_samples, 1)
+    )
 
 
 def _sample_trend_uncertainty(
@@ -602,17 +584,11 @@ def _sample_trend_uncertainty(
         k = prophet_model.params["k"][iteration]
         mean_delta = np.mean(np.abs(deltas)) + 1e-8
         if prophet_model.growth == "linear":
-            mat = _make_trend_shift_matrix(
-                mean_delta, change_likelihood, n_length, n_samples=n_samples
-            )
-            uncertainties = mat.cumsum(axis=1).cumsum(
-                axis=1
-            )  # from slope changes to actual values
+            mat = _make_trend_shift_matrix(mean_delta, change_likelihood, n_length, n_samples=n_samples)
+            uncertainties = mat.cumsum(axis=1).cumsum(axis=1)  # from slope changes to actual values
             uncertainties *= single_diff  # scaled by the actual meaning of the slope
         elif prophet_model.growth == "logistic":
-            mat = _make_trend_shift_matrix(
-                mean_delta, change_likelihood, n_length, n_samples=n_samples
-            )
+            mat = _make_trend_shift_matrix(mean_delta, change_likelihood, n_length, n_samples=n_samples)
             uncertainties = _logistic_uncertainty(
                 prophet_model=prophet_model,
                 mat=mat,
@@ -636,9 +612,7 @@ def _sample_trend_uncertainty(
     return uncertainties
 
 
-def _make_trend_shift_matrix(
-    mean_delta: float, likelihood: float, future_length: float, n_samples: int
-) -> np.ndarray:
+def _make_trend_shift_matrix(mean_delta: float, likelihood: float, future_length: float, n_samples: int) -> np.ndarray:
     """
     Creates a matrix of random trend shifts based on historical likelihood and size of shifts.
     Can be used for either linear or logistic trend shifts.
@@ -694,9 +668,7 @@ def predict(
         cols.append("floor")
     # Add in forecast components
     df2 = pd.concat((df[cols], intervals, seasonal_components), axis=1)
-    df2["yhat"] = (
-        df2["trend"] * (1 + df2["multiplicative_terms"]) + df2["additive_terms"]
-    )
+    df2["yhat"] = df2["trend"] * (1 + df2["multiplicative_terms"]) + df2["additive_terms"]
     return df2
 
 
@@ -716,14 +688,10 @@ def sample_model_vectorized(
     """
     # Get the seasonality and regressor components, which are deterministic per iteration
     beta = prophet_model.params["beta"][iteration]
-    Xb_a = (
-        np.matmul(seasonal_features.values, beta * s_a.values) * prophet_model.y_scale
-    )
+    Xb_a = np.matmul(seasonal_features.values, beta * s_a.values) * prophet_model.y_scale
     Xb_m = np.matmul(seasonal_features.values, beta * s_m.values)
     # Get the future trend, which is stochastic per iteration
-    trends = _sample_predictive_trend_vectorized(
-        prophet_model, df, n_samples, iteration
-    )
+    trends = _sample_predictive_trend_vectorized(prophet_model, df, n_samples, iteration)
 
     sigma = prophet_model.params["sigma_obs"][iteration]
     noise_terms = np.random.normal(0, sigma, trends.shape) * prophet_model.y_scale
@@ -731,9 +699,7 @@ def sample_model_vectorized(
     return {"yhat": trends * (1 + Xb_m) + Xb_a + noise_terms, "trend": trends}
 
 
-def sample_posterior_predictive(
-    prophet_model: Prophet, df: pd.DataFrame, vectorized: bool
-) -> Dict[str, np.ndarray]:
+def sample_posterior_predictive(prophet_model: Prophet, df: pd.DataFrame, vectorized: bool) -> Dict[str, np.ndarray]:
     """Generate posterior samples of a trained Prophet model.
 
     Args:
@@ -744,9 +710,7 @@ def sample_posterior_predictive(
         A dictionary with keys ("yhat", "trend") for posterior predictive samples for the "yhat" and "trend".
     """
     n_iterations = prophet_model.params["k"].shape[0]
-    samp_per_iter = max(
-        1, int(np.ceil(prophet_model.uncertainty_samples / float(n_iterations)))
-    )
+    samp_per_iter = max(1, int(np.ceil(prophet_model.uncertainty_samples / float(n_iterations))))
     # Generate seasonality features once so we can re-use them.
     (
         seasonal_features,

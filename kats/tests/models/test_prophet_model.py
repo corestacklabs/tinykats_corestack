@@ -6,42 +6,80 @@
 import builtins
 import sys
 import unittest
-from typing import Any, Callable, Dict, Mapping, Optional, Sequence
+from typing import Any
+from typing import Callable
+from typing import Dict
+from typing import Mapping
+from typing import Optional
+from typing import Sequence
 from unittest import TestCase
 from unittest.mock import patch
 
 import numpy as np
 import pandas as pd
-from kats.compat import pandas, statsmodels
-from kats.consts import TimeSeriesData
-from kats.data.utils import load_air_passengers, load_data
-from kats.models.prophet import ProphetModel, ProphetParams
-from kats.tests.models.test_models_dummy_data import (
-    AIR_FCST_15_PROPHET_LOGISTIC_CAP_SM_11,
-    AIR_FCST_15_PROPHET_LOGISTIC_CAP_SM_12,
-    AIR_FCST_30_PROPHET_CAP_AND_FLOOR_SM_11,
-    AIR_FCST_30_PROPHET_CAP_AND_FLOOR_SM_12,
-    AIR_FCST_30_PROPHET_CUSTOM_SEASONALITY_SM_11,
-    AIR_FCST_30_PROPHET_CUSTOM_SEASONALITY_SM_12,
-    AIR_FCST_30_PROPHET_INCL_HIST_SM_11,
-    AIR_FCST_30_PROPHET_INCL_HIST_SM_12,
-    AIR_FCST_30_PROPHET_SM_11,
-    AIR_FCST_30_PROPHET_SM_12,
-    NONSEASONAL_FCST_15_PROPHET_ARG_FUTURE_SM_11,
-    NONSEASONAL_FCST_15_PROPHET_ARG_FUTURE_SM_12,
-    NONSEASONAL_FUTURE_DF,
-    NONSEASONAL_INPUT,
-    PEYTON_FCST_15_PROPHET_INCL_HIST_SM_11,
-    PEYTON_FCST_15_PROPHET_INCL_HIST_SM_12,
-    PEYTON_FCST_30_PROPHET_CAP_AND_FLOOR_SM_11,
-    PEYTON_FCST_30_PROPHET_CAP_AND_FLOOR_SM_12,
-    PEYTON_FCST_30_PROPHET_CUSTOM_SEASONALITY_SM_11,
-    PEYTON_FCST_30_PROPHET_CUSTOM_SEASONALITY_SM_12,
-    PEYTON_FCST_30_PROPHET_DAILY_CAP_SM_11,
-    PEYTON_FCST_30_PROPHET_DAILY_CAP_SM_12,
-)
 from parameterized.parameterized import parameterized
 
+from kats.compat import pandas
+from kats.compat import statsmodels
+from kats.consts import TimeSeriesData
+from kats.data.utils import load_air_passengers
+from kats.data.utils import load_data
+from kats.models.prophet import ProphetModel
+from kats.models.prophet import ProphetParams
+from kats.tests.models.test_models_dummy_data import (
+    AIR_FCST_15_PROPHET_LOGISTIC_CAP_SM_11,
+)
+from kats.tests.models.test_models_dummy_data import (
+    AIR_FCST_15_PROPHET_LOGISTIC_CAP_SM_12,
+)
+from kats.tests.models.test_models_dummy_data import (
+    AIR_FCST_30_PROPHET_CAP_AND_FLOOR_SM_11,
+)
+from kats.tests.models.test_models_dummy_data import (
+    AIR_FCST_30_PROPHET_CAP_AND_FLOOR_SM_12,
+)
+from kats.tests.models.test_models_dummy_data import (
+    AIR_FCST_30_PROPHET_CUSTOM_SEASONALITY_SM_11,
+)
+from kats.tests.models.test_models_dummy_data import (
+    AIR_FCST_30_PROPHET_CUSTOM_SEASONALITY_SM_12,
+)
+from kats.tests.models.test_models_dummy_data import AIR_FCST_30_PROPHET_INCL_HIST_SM_11
+from kats.tests.models.test_models_dummy_data import AIR_FCST_30_PROPHET_INCL_HIST_SM_12
+from kats.tests.models.test_models_dummy_data import AIR_FCST_30_PROPHET_SM_11
+from kats.tests.models.test_models_dummy_data import AIR_FCST_30_PROPHET_SM_12
+from kats.tests.models.test_models_dummy_data import (
+    NONSEASONAL_FCST_15_PROPHET_ARG_FUTURE_SM_11,
+)
+from kats.tests.models.test_models_dummy_data import (
+    NONSEASONAL_FCST_15_PROPHET_ARG_FUTURE_SM_12,
+)
+from kats.tests.models.test_models_dummy_data import NONSEASONAL_FUTURE_DF
+from kats.tests.models.test_models_dummy_data import NONSEASONAL_INPUT
+from kats.tests.models.test_models_dummy_data import (
+    PEYTON_FCST_15_PROPHET_INCL_HIST_SM_11,
+)
+from kats.tests.models.test_models_dummy_data import (
+    PEYTON_FCST_15_PROPHET_INCL_HIST_SM_12,
+)
+from kats.tests.models.test_models_dummy_data import (
+    PEYTON_FCST_30_PROPHET_CAP_AND_FLOOR_SM_11,
+)
+from kats.tests.models.test_models_dummy_data import (
+    PEYTON_FCST_30_PROPHET_CAP_AND_FLOOR_SM_12,
+)
+from kats.tests.models.test_models_dummy_data import (
+    PEYTON_FCST_30_PROPHET_CUSTOM_SEASONALITY_SM_11,
+)
+from kats.tests.models.test_models_dummy_data import (
+    PEYTON_FCST_30_PROPHET_CUSTOM_SEASONALITY_SM_12,
+)
+from kats.tests.models.test_models_dummy_data import (
+    PEYTON_FCST_30_PROPHET_DAILY_CAP_SM_11,
+)
+from kats.tests.models.test_models_dummy_data import (
+    PEYTON_FCST_30_PROPHET_DAILY_CAP_SM_12,
+)
 
 TEST_DATA: Dict[str, Any] = {
     "nonseasonal": {
@@ -50,9 +88,7 @@ TEST_DATA: Dict[str, Any] = {
         "params": ProphetParams(),
     },
     "daily": {
-        "ts": TimeSeriesData(
-            load_data("peyton_manning.csv").set_axis(["time", "y"], axis=1)
-        ),
+        "ts": TimeSeriesData(load_data("peyton_manning.csv").set_axis(["time", "y"], axis=1)),
         "params": ProphetParams(),
         "params_cap_and_floor": ProphetParams(cap=1000, floor=10, growth="logistic"),
         "params_logistic_cap": ProphetParams(growth="logistic", cap=20),
@@ -69,9 +105,7 @@ TEST_DATA: Dict[str, Any] = {
     "monthly": {
         "ts": load_air_passengers(),
         "params": ProphetParams(),
-        "params_cap_and_floor": ProphetParams(
-            cap=1000.0, floor=10.0, growth="logistic"
-        ),
+        "params_cap_and_floor": ProphetParams(cap=1000.0, floor=10.0, growth="logistic"),
         "params_logistic_cap": ProphetParams(growth="logistic", cap=1000.0),
         "params_custom_seasonality": ProphetParams(
             custom_seasonalities=[
@@ -83,9 +117,7 @@ TEST_DATA: Dict[str, Any] = {
             ],
         ),
     },
-    "multivariate": {
-        "ts": TimeSeriesData(load_data("multivariate_anomaly_simulated_data.csv"))
-    },
+    "multivariate": {"ts": TimeSeriesData(load_data("multivariate_anomaly_simulated_data.csv"))},
 }
 
 
@@ -118,7 +150,8 @@ class ProphetModelTest(TestCase):
         del sys.modules["kats.models.prophet"]
 
         with self.mock_imports:
-            from kats.models.prophet import ProphetModel, ProphetParams
+            from kats.models.prophet import ProphetModel
+            from kats.models.prophet import ProphetParams
 
             self.assertRaises(RuntimeError, ProphetParams)
             self.assertRaises(
@@ -130,7 +163,8 @@ class ProphetModelTest(TestCase):
 
         # Restore the prophet module
         del sys.modules["kats.models.prophet"]
-        from kats.models.prophet import ProphetModel, ProphetParams
+        from kats.models.prophet import ProphetModel
+        from kats.models.prophet import ProphetParams
 
         # Confirm that the module has been properly reloaded -- should not
         # raise an exception anymore
@@ -198,11 +232,7 @@ class ProphetModelTest(TestCase):
                 "MS",
                 None,
                 None,
-                (
-                    AIR_FCST_30_PROPHET_SM_11
-                    if statsmodels.version < "0.12"
-                    else AIR_FCST_30_PROPHET_SM_12
-                ),
+                (AIR_FCST_30_PROPHET_SM_11 if statsmodels.version < "0.12" else AIR_FCST_30_PROPHET_SM_12),
             ],
             [
                 "monthly, cap and floor",
@@ -366,9 +396,7 @@ class ProphetModelTest(TestCase):
         m = ProphetModel(data=ts, params=params)
         m.fit()
         forecast_df = m.predict(steps=steps, include_history=include_history, **kwargs)
-        pandas.assert_frame_equal(
-            truth, forecast_df, check_exact=False, atol=0.5, rtol=0.5
-        )
+        pandas.assert_frame_equal(truth, forecast_df, check_exact=False, atol=0.5, rtol=0.5)
 
     def test_multivar(self) -> None:
         # Prophet model does not support multivariate time series data

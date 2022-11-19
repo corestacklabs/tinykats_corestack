@@ -5,17 +5,23 @@
 
 import inspect
 import unittest
-from typing import Any, cast, Dict, List
-from unittest import mock, TestCase
+from typing import Any
+from typing import Dict
+from typing import List
+from typing import cast
+from unittest import TestCase
+from unittest import mock
 
 import numpy as np
 import pandas as pd
+
 from kats.compat.pandas import assert_frame_equal
-from kats.consts import Params, TimeSeriesData
+from kats.consts import Params
+from kats.consts import TimeSeriesData
 from kats.data.utils import load_air_passengers
 from kats.models.model import Model
-from kats.utils.emp_confidence_int import BackTesterRollingWindow, EmpConfidenceInt
-
+from kats.utils.emp_confidence_int import BackTesterRollingWindow
+from kats.utils.emp_confidence_int import EmpConfidenceInt
 
 ALL_ERRORS = ["mape", "smape", "mae", "mase", "mse", "rmse"]
 
@@ -23,11 +29,7 @@ ALL_ERRORS = ["mape", "smape", "mae", "mase", "mse", "rmse"]
 # pyre-fixme[2]: Parameter must be annotated.
 def get_default_arguments(method) -> Dict[str, Any]:
     sig = inspect.signature(method)
-    return {
-        k: v.default
-        for k, v in sig.parameters.items()
-        if v.default is not inspect.Parameter.empty
-    }
+    return {k: v.default for k, v in sig.parameters.items() if v.default is not inspect.Parameter.empty}
 
 
 def get_name(funcname: str, num: int, kwargs: Dict[str, Any]) -> str:
@@ -243,9 +245,7 @@ class MyFakeModel(Model[FakeParams]):
         self.unfit = False
 
     # pyre-fixme[15]: `predict` overrides method defined in `Model` inconsistently.
-    def predict(
-        self, steps: int, include_history: bool = False, *_args: Any, **_kwargs: Any
-    ) -> pd.DataFrame:
+    def predict(self, steps: int, include_history: bool = False, *_args: Any, **_kwargs: Any) -> pd.DataFrame:
         if self.unfit:
             raise ValueError("Model hasn't been fit")
         return _FROZEN_DATA
@@ -334,10 +334,10 @@ class testEmpConfidenceInt(TestCase):
         with self.assertRaises(ValueError):
             _ = self.unfit_ci.diagnose()
 
-
     def test_plot_error_unfit(self) -> None:
         with self.assertRaises(ValueError):
             _ = self.unfit_ci.plot()
+
 
 if __name__ == "__main__":
     unittest.main()

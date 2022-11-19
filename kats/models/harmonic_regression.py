@@ -7,14 +7,19 @@ import logging
 from dataclasses import dataclass
 from datetime import datetime
 from numbers import Real
-from typing import Any, Callable, Optional, Tuple
+from typing import Any
+from typing import Callable
+from typing import Optional
+from typing import Tuple
 
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from kats.consts import Params, TimeSeriesData
-from kats.models.model import Model
 from scipy import optimize
+
+from kats.consts import Params
+from kats.consts import TimeSeriesData
+from kats.models.model import Model
 
 
 @dataclass
@@ -29,10 +34,7 @@ class HarmonicRegressionParams(Params):
             raise ValueError(msg)
 
         if self.fourier_order <= 0:
-            msg = (
-                "The provided fourier order must be greater than zero. "
-                f"Value: {self.fourier_order}"
-            )
+            msg = "The provided fourier order must be greater than zero. " f"Value: {self.fourier_order}"
             logging.error(msg)
             raise ValueError(msg)
 
@@ -65,9 +67,7 @@ class HarmonicRegressionModel(Model[Optional[np.ndarray]]):
         )
 
     # pyre-fixme[15]: `predict` overrides method defined in `Model` inconsistently.
-    def predict(
-        self, dates: pd.Series, *_args: Optional[Any], **_kwargs: Optional[Any]
-    ) -> pd.DataFrame:
+    def predict(self, dates: pd.Series, *_args: Optional[Any], **_kwargs: Optional[Any]) -> pd.DataFrame:
         """Predicts with harmonic regression values.
          Call fit before calling this function.
         Parameters
@@ -129,9 +129,7 @@ class HarmonicRegressionModel(Model[Optional[np.ndarray]]):
         return ax
 
     @staticmethod
-    def fourier_series(
-        dates: pd.Series, period: float, series_order: int
-    ) -> np.ndarray:
+    def fourier_series(dates: pd.Series, period: float, series_order: int) -> np.ndarray:
         """Provides Fourier series components with the specified frequency
         and order. The starting time is always the epoch.
         Parameters
@@ -144,16 +142,9 @@ class HarmonicRegressionModel(Model[Optional[np.ndarray]]):
         Matrix with seasonality features.
         """
         # convert to days since epoch
-        t = (
-            np.array((dates - datetime(1970, 1, 1)).dt.total_seconds().astype(np.float))
-            / 3600.0
-        )
+        t = np.array((dates - datetime(1970, 1, 1)).dt.total_seconds().astype(np.float)) / 3600.0
         return np.column_stack(
-            [
-                fun((2.0 * (i + 1) * np.pi * t / period))
-                for i in range(series_order)
-                for fun in (np.sin, np.cos)
-            ]
+            [fun((2.0 * (i + 1) * np.pi * t / period)) for i in range(series_order) for fun in (np.sin, np.cos)]
         )
 
     @staticmethod
@@ -176,9 +167,7 @@ class HarmonicRegressionModel(Model[Optional[np.ndarray]]):
 
         return harm_eval
 
-    def fit_harmonics(
-        self, period: float, fourier_order: int
-    ) -> Tuple[np.ndarray, np.ndarray]:
+    def fit_harmonics(self, period: float, fourier_order: int) -> Tuple[np.ndarray, np.ndarray]:
         """Performs harmonic regression.
         Harmonic regression fits cosines
         amplitude*cos(freq*t + phase). Using double angle identity formulas,

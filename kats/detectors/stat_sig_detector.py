@@ -6,22 +6,23 @@
 import json
 import logging
 from datetime import datetime
-from typing import Any, Optional, Tuple
+from typing import Any
+from typing import Optional
+from typing import Tuple
 
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import scipy.stats as stats
-from kats.consts import IRREGULAR_GRANULARITY_ERROR, TimeSeriesData
-from kats.detectors.detector import DetectorModel
-from kats.detectors.detector_consts import (
-    AnomalyResponse,
-    ChangePointInterval,
-    ConfidenceBand,
-    PercentageChange,
-)
-from kats.utils.decomposition import TimeSeriesDecomposition
 
+from kats.consts import IRREGULAR_GRANULARITY_ERROR
+from kats.consts import TimeSeriesData
+from kats.detectors.detector import DetectorModel
+from kats.detectors.detector_consts import AnomalyResponse
+from kats.detectors.detector_consts import ChangePointInterval
+from kats.detectors.detector_consts import ConfidenceBand
+from kats.detectors.detector_consts import PercentageChange
+from kats.utils.decomposition import TimeSeriesDecomposition
 
 """Statistical Significance Detector Module
 This module contains simple detectors that apply a t-test over a rolling window to compare
@@ -100,22 +101,14 @@ class StatSigDetectorModel(DetectorModel):
             self.time_unit: str = model_dict["time_unit"]
             # for seasonality
             self.rem_season: bool = model_dict.get("rem_season", rem_season)
-            self.seasonal_period: str = model_dict.get(
-                "seasonal_period", seasonal_period
-            )
+            self.seasonal_period: str = model_dict.get("seasonal_period", seasonal_period)
 
             # for big data and correct t-scores
-            self.use_corrected_scores: bool = model_dict.get(
-                "use_corrected_scores", use_corrected_scores
-            )
+            self.use_corrected_scores: bool = model_dict.get("use_corrected_scores", use_corrected_scores)
             # threshold for splitting long TS
-            self.max_split_ts_length: int = model_dict.get(
-                "max_split_ts_length", max_split_ts_length
-            )
+            self.max_split_ts_length: int = model_dict.get("max_split_ts_length", max_split_ts_length)
 
-            self.min_perc_change: float = model_dict.get(
-                "min_perc_change", min_perc_change
-            )
+            self.min_perc_change: float = model_dict.get("min_perc_change", min_perc_change)
 
         else:
             self.n_test: Optional[int] = n_test
@@ -131,10 +124,7 @@ class StatSigDetectorModel(DetectorModel):
             self.min_perc_change: float = min_perc_change
 
         if (self.n_control is None) or (self.n_test is None):
-            raise ValueError(
-                "You must either provide serialized model or values for control "
-                "and test intervals."
-            )
+            raise ValueError("You must either provide serialized model or values for control " "and test intervals.")
 
         self.control_interval: Optional[ChangePointInterval] = None
         self.test_interval: Optional[ChangePointInterval] = None
@@ -237,9 +227,7 @@ class StatSigDetectorModel(DetectorModel):
 
         # remove seasonality
         if self.rem_season:
-            sh_data = SeasonalityHandler(
-                data=data, seasonal_period=self.seasonal_period
-            )
+            sh_data = SeasonalityHandler(data=data, seasonal_period=self.seasonal_period)
 
             self.data_season = sh_data.get_seasonality()
             data = sh_data.remove_seasonality()
@@ -284,9 +272,7 @@ class StatSigDetectorModel(DetectorModel):
             self._reorganize_back(anom)
 
         else:
-            self._init_control_test(
-                data if historical_data is None else historical_data
-            )
+            self._init_control_test(data if historical_data is None else historical_data)
             # set the flag to true
             self.is_initialized = True
 
@@ -327,9 +313,7 @@ class StatSigDetectorModel(DetectorModel):
                                     copy=False,
                                 ),
                                 pd.Series(
-                                    np.asarray(
-                                        confidence_band.upper.value.values[start_idx:]
-                                    )
+                                    np.asarray(confidence_band.upper.value.values[start_idx:])
                                     + np.asarray(data_season.value.values),
                                     copy=False,
                                 ),
@@ -346,9 +330,7 @@ class StatSigDetectorModel(DetectorModel):
                                     copy=False,
                                 ),
                                 pd.Series(
-                                    np.asarray(
-                                        confidence_band.lower.value.values[start_idx:]
-                                    )
+                                    np.asarray(confidence_band.lower.value.values[start_idx:])
                                     + np.asarray(data_season.value.values),
                                     copy=False,
                                 ),
@@ -361,9 +343,7 @@ class StatSigDetectorModel(DetectorModel):
                     time=datatime,
                     value=pd.concat(
                         [
-                            pd.Series(
-                                predicted_ts.value.values[:start_idx], copy=False
-                            ),
+                            pd.Series(predicted_ts.value.values[:start_idx], copy=False),
                             pd.Series(
                                 np.asarray(predicted_ts.value.values[start_idx:])
                                 + np.asarray(data_season.value.values),
@@ -400,21 +380,15 @@ class StatSigDetectorModel(DetectorModel):
             test_end_dt = data.time[i]
 
             assert self.n_test is not None
-            test_start_dt = test_end_dt - (self.n_test - 1) * pd.Timedelta(
-                self.time_unit
-            )
+            test_start_dt = test_end_dt - (self.n_test - 1) * pd.Timedelta(self.time_unit)
 
             control_end_dt = test_start_dt
             assert self.n_control is not None
-            control_start_dt = control_end_dt - self.n_control * pd.Timedelta(
-                self.time_unit
-            )
+            control_start_dt = control_end_dt - self.n_control * pd.Timedelta(self.time_unit)
 
             if control_end_dt in total_data_df.index:
                 # exclude index control_end_dt
-                group1 = total_data_df[control_start_dt:control_end_dt].value.to_list()[
-                    :-1
-                ]
+                group1 = total_data_df[control_start_dt:control_end_dt].value.to_list()[:-1]
             else:
                 group1 = total_data_df[control_start_dt:control_end_dt].value.to_list()
             group2 = total_data_df[test_start_dt:test_end_dt].value.to_list()
@@ -444,9 +418,7 @@ class StatSigDetectorModel(DetectorModel):
         assert data is not None
 
         first_half_len = len(data_history)
-        n_seq = len(data) // max_split_ts_length + int(
-            len(data) % max_split_ts_length > 0
-        )
+        n_seq = len(data) // max_split_ts_length + int(len(data) % max_split_ts_length > 0)
         remaining = (max_split_ts_length * n_seq - len(data)) % max_split_ts_length
 
         time_need = pd.concat(
@@ -463,10 +435,7 @@ class StatSigDetectorModel(DetectorModel):
             )
         ]
         for i in range(max_split_ts_length, len(data), max_split_ts_length):
-            new_ts.append(
-                new_ts[-1][-first_half_len:]
-                + list(data.value[i : i + max_split_ts_length])
-            )
+            new_ts.append(new_ts[-1][-first_half_len:] + list(data.value[i : i + max_split_ts_length]))
         new_ts[-1] += [1] * remaining
 
         new_data_ts = TimeSeriesData(
@@ -499,16 +468,12 @@ class StatSigDetectorModel(DetectorModel):
 
         start_point = len(data_history)
         res_score_val = pd.Series(
-            pd.DataFrame(anom.scores.value, copy=False)
-            .iloc[start_point:, :]
-            .values.T.flatten()[:-remaining],
+            pd.DataFrame(anom.scores.value, copy=False).iloc[start_point:, :].values.T.flatten()[:-remaining],
             copy=False,
         )
 
         res_predicted_ts_val = pd.Series(
-            pd.DataFrame(anom_predicted_ts.value, copy=False)
-            .iloc[start_point:, :]
-            .values.T.flatten()[:-remaining],
+            pd.DataFrame(anom_predicted_ts.value, copy=False).iloc[start_point:, :].values.T.flatten()[:-remaining],
             copy=False,
         )
 
@@ -520,9 +485,7 @@ class StatSigDetectorModel(DetectorModel):
         )
 
         res_stat_sig_ts_val = pd.Series(
-            pd.DataFrame(anom_stat_sig_ts.value, copy=False)
-            .iloc[start_point:, :]
-            .values.T.flatten()[:-remaining],
+            pd.DataFrame(anom_stat_sig_ts.value, copy=False).iloc[start_point:, :].values.T.flatten()[:-remaining],
             copy=False,
         )
 
@@ -548,21 +511,15 @@ class StatSigDetectorModel(DetectorModel):
         )
 
         self.response = AnomalyResponse(
-            scores=TimeSeriesData(
-                time=datatime, value=pd.concat([zeros, res_score_val], copy=False)
-            ),
+            scores=TimeSeriesData(time=datatime, value=pd.concat([zeros, res_score_val], copy=False)),
             confidence_band=ConfidenceBand(
                 upper=TimeSeriesData(
                     time=datatime,
-                    value=pd.concat(
-                        [datavalues, res_confidence_band_upper_val], copy=False
-                    ),
+                    value=pd.concat([datavalues, res_confidence_band_upper_val], copy=False),
                 ),
                 lower=TimeSeriesData(
                     time=datatime,
-                    value=pd.concat(
-                        [datavalues, res_confidence_band_lower_val], copy=False
-                    ),
+                    value=pd.concat([datavalues, res_confidence_band_lower_val], copy=False),
                 ),
             ),
             predicted_ts=TimeSeriesData(
@@ -573,9 +530,7 @@ class StatSigDetectorModel(DetectorModel):
                 time=datatime,
                 value=pd.concat([zeros, res_anomaly_magnitude_ts_val], copy=False),
             ),
-            stat_sig_ts=TimeSeriesData(
-                time=datatime, value=pd.concat([zeros, res_stat_sig_ts_val], copy=False)
-            ),
+            stat_sig_ts=TimeSeriesData(time=datatime, value=pd.concat([zeros, res_stat_sig_ts_val], copy=False)),
         )
 
     def visualize(self) -> None:
@@ -648,9 +603,7 @@ class StatSigDetectorModel(DetectorModel):
         )
         return ax1, ax2
 
-    def _set_time_unit(
-        self, data: TimeSeriesData, historical_data: Optional[TimeSeriesData]
-    ) -> None:
+    def _set_time_unit(self, data: TimeSeriesData, historical_data: Optional[TimeSeriesData]) -> None:
         """
         if the time unit is not set, this function tries to set it.
         """
@@ -682,9 +635,7 @@ class StatSigDetectorModel(DetectorModel):
             except ValueError:
                 raise ValueError("Invalide time_unit value.")
 
-    def _should_update(
-        self, data: TimeSeriesData, historical_data: Optional[TimeSeriesData] = None
-    ) -> bool:
+    def _should_update(self, data: TimeSeriesData, historical_data: Optional[TimeSeriesData] = None) -> bool:
         """
         Flag on whether we should update responses, or send a default response of zeros.
         """
@@ -701,10 +652,7 @@ class StatSigDetectorModel(DetectorModel):
         assert self.n_control is not None
         assert self.n_test is not None
 
-        return end_time >= (
-            start_time
-            + (self.n_control + self.n_test - 1) * pd.Timedelta(self.time_unit)
-        )
+        return end_time >= (start_time + (self.n_control + self.n_test - 1) * pd.Timedelta(self.time_unit))
 
     def _handle_not_enough_history(
         self, data: TimeSeriesData, historical_data: Optional[TimeSeriesData]
@@ -723,9 +671,7 @@ class StatSigDetectorModel(DetectorModel):
         if historical_data:
             history_first = historical_data.time.iloc[0]
             history_last = historical_data.time.iloc[-1]
-            min_history_last = history_first + num_hist_points * pd.Timedelta(
-                self.time_unit
-            )
+            min_history_last = history_first + num_hist_points * pd.Timedelta(self.time_unit)
 
             if history_last >= min_history_last:
                 return data, historical_data
@@ -774,22 +720,12 @@ class StatSigDetectorModel(DetectorModel):
         self.response = AnomalyResponse(
             scores=TimeSeriesData(time=data.time, value=pd.Series(zeros, copy=False)),
             confidence_band=ConfidenceBand(
-                upper=TimeSeriesData(
-                    time=data.time, value=pd.Series(data.value.values, copy=False)
-                ),
-                lower=TimeSeriesData(
-                    time=data.time, value=pd.Series(data.value.values, copy=False)
-                ),
+                upper=TimeSeriesData(time=data.time, value=pd.Series(data.value.values, copy=False)),
+                lower=TimeSeriesData(time=data.time, value=pd.Series(data.value.values, copy=False)),
             ),
-            predicted_ts=TimeSeriesData(
-                time=data.time, value=pd.Series(data.value.values, copy=False)
-            ),
-            anomaly_magnitude_ts=TimeSeriesData(
-                time=data.time, value=pd.Series(zeros, copy=False)
-            ),
-            stat_sig_ts=TimeSeriesData(
-                time=data.time, value=pd.Series(zeros, copy=False)
-            ),
+            predicted_ts=TimeSeriesData(time=data.time, value=pd.Series(data.value.values, copy=False)),
+            anomaly_magnitude_ts=TimeSeriesData(time=data.time, value=pd.Series(zeros, copy=False)),
+            stat_sig_ts=TimeSeriesData(time=data.time, value=pd.Series(zeros, copy=False)),
         )
 
     def _update_response(self, date: pd.Timestamp) -> None:
@@ -815,9 +751,7 @@ class StatSigDetectorModel(DetectorModel):
             stat_sig=1.0 if perc_change.stat_sig else 0.0,
         )
 
-    def _get_start_end_dates(
-        self, data: TimeSeriesData
-    ) -> Tuple[datetime, datetime, datetime, datetime]:
+    def _get_start_end_dates(self, data: TimeSeriesData) -> Tuple[datetime, datetime, datetime, datetime]:
         """
         Gets the start and end dates of the initial interval.
         """
@@ -831,9 +765,7 @@ class StatSigDetectorModel(DetectorModel):
 
         assert self.n_test is not None
         assert self.n_control is not None
-        control_start_dt = test_end_dt - (self.n_test + self.n_control) * pd.Timedelta(
-            self.time_unit
-        )
+        control_start_dt = test_end_dt - (self.n_test + self.n_control) * pd.Timedelta(self.time_unit)
 
         control_end_dt = test_start_dt
 
@@ -1042,9 +974,7 @@ class MultiStatSigDetectorModel(StatSigDetectorModel):
 
         # remove seasonality
         if self.rem_season:
-            sh_data = SeasonalityHandler(
-                data=data, seasonal_period=self.seasonal_period
-            )
+            sh_data = SeasonalityHandler(data=data, seasonal_period=self.seasonal_period)
 
             self.data_season = sh_data.get_seasonality()
             data = sh_data.remove_seasonality()
@@ -1103,11 +1033,7 @@ class MultiStatSigDetectorModel(StatSigDetectorModel):
                                     copy=False,
                                 ),
                                 pd.DataFrame(
-                                    np.asarray(
-                                        confidence_band.upper.value.values[
-                                            start_idx:, :
-                                        ]
-                                    )
+                                    np.asarray(confidence_band.upper.value.values[start_idx:, :])
                                     + np.asarray(data_season.value.values),
                                     copy=False,
                                 ),
@@ -1124,11 +1050,7 @@ class MultiStatSigDetectorModel(StatSigDetectorModel):
                                     copy=False,
                                 ),
                                 pd.DataFrame(
-                                    np.asarray(
-                                        confidence_band.lower.value.values[
-                                            start_idx:, :
-                                        ]
-                                    )
+                                    np.asarray(confidence_band.lower.value.values[start_idx:, :])
                                     + np.asarray(data_season.value.values),
                                     copy=False,
                                 ),
@@ -1141,9 +1063,7 @@ class MultiStatSigDetectorModel(StatSigDetectorModel):
                     time=datatime,
                     value=pd.concat(
                         [
-                            pd.DataFrame(
-                                predicted_ts.value.values[:start_idx, :], copy=False
-                            ),
+                            pd.DataFrame(predicted_ts.value.values[:start_idx, :], copy=False),
                             pd.DataFrame(
                                 np.asarray(predicted_ts.value.values[start_idx:, :])
                                 + np.asarray(data_season.value.values),
@@ -1292,10 +1212,7 @@ class SeasonalityHandler:
         time0 = pd.to_datetime(self.data.time[0])
         # calculate remainder as resampling base
         resample_base_sec = (
-            time0.day * 24 * 60 * 60
-            + time0.hour * 60 * 60
-            + time0.minute * 60
-            + time0.second
+            time0.day * 24 * 60 * 60 + time0.hour * 60 * 60 + time0.minute * 60 + time0.second
         ) % self.frequency_sec
 
         self.decomposer_input: TimeSeriesData = self.data.interpolate(
@@ -1307,15 +1224,15 @@ class SeasonalityHandler:
         if len(self.decomposer_input.time[data_time_idx]) != len(self.data):
             raise ValueError(IRREGULAR_GRANULARITY_ERROR)
 
-        self.period = int(
-            self.seasonal_period * 60 * 60 / self.frequency.total_seconds()
-        )
+        self.period = int(self.seasonal_period * 60 * 60 / self.frequency.total_seconds())
 
         if (
             int((self.period + 1) * self.low_pass_jump_factor) < 1
             or int((self.period + 1) * self.trend_jump_factor) < 1
         ):
-            msg = "Invalid low_pass_jump or trend_jump_factor value, try a larger factor or try a larger seasonal_period"
+            msg = (
+                "Invalid low_pass_jump or trend_jump_factor value, try a larger factor or try a larger seasonal_period"
+            )
             logging.error(msg)
             raise ValueError(msg)
 
@@ -1379,8 +1296,7 @@ class SeasonalityHandler:
             data_time_idx = decomp["rem"].time.isin(self.data_nonseason.time)
 
             self.data_nonseason.value = pd.Series(
-                decomp["rem"][data_time_idx].value
-                + decomp["trend"][data_time_idx].value,
+                decomp["rem"][data_time_idx].value + decomp["trend"][data_time_idx].value,
                 name=self.data_nonseason.value.name,
                 copy=False,
             )
@@ -1390,8 +1306,7 @@ class SeasonalityHandler:
         data_time_idx = decomp[str(0)]["rem"].time.isin(self.data_nonseason.time)
         for i in range(self.num_seq):
             self.data_nonseason.value.iloc[:, i] = pd.Series(
-                decomp[str(i)]["rem"][data_time_idx].value
-                + decomp[str(i)]["trend"][data_time_idx].value,
+                decomp[str(i)]["rem"][data_time_idx].value + decomp[str(i)]["trend"][data_time_idx].value,
                 name=self.data_nonseason.value.iloc[:, i].name,
                 copy=False,
             )

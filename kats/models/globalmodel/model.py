@@ -5,26 +5,33 @@
 
 import collections
 import logging
-from typing import Any, Callable, Dict, Generator, List, Optional, Tuple, Union
+from typing import Any
+from typing import Callable
+from typing import Dict
+from typing import Generator
+from typing import List
+from typing import Optional
+from typing import Tuple
+from typing import Union
 
 import joblib
 import numpy as np
 import pandas as pd
 import torch
 import torch.nn as nn
-from kats.consts import TimeSeriesData
-from kats.metrics import metrics
-from kats.models.globalmodel.data_processor import GMBatch, GMDataLoader
-from kats.models.globalmodel.utils import (
-    AdjustedPinballLoss,
-    DilatedRNNStack,
-    GMParam,
-    gmparam_from_string,
-    PinballLoss,
-)
 from torch import Tensor
 from torch.nn.modules.loss import _Loss
 from torch.optim import Adam
+
+from kats.consts import TimeSeriesData
+from kats.metrics import metrics
+from kats.models.globalmodel.data_processor import GMBatch
+from kats.models.globalmodel.data_processor import GMDataLoader
+from kats.models.globalmodel.utils import AdjustedPinballLoss
+from kats.models.globalmodel.utils import DilatedRNNStack
+from kats.models.globalmodel.utils import GMParam
+from kats.models.globalmodel.utils import PinballLoss
+from kats.models.globalmodel.utils import gmparam_from_string
 
 NoneT = torch.FloatTensor([-1e38])
 
@@ -122,25 +129,17 @@ class GMModel:
         """Helper function for building RNN."""
 
         params = self.params
-        feature_size = (
-            params.gmfeature.get_feature_size(params.input_window)
-            if params.gmfeature
-            else 0
-        )
+        feature_size = params.gmfeature.get_feature_size(params.input_window) if params.gmfeature else 0
         input_size = (
             params.input_window + feature_size + 2
         )  # two additional positions for step_num_encode and step_size_encode
         len_quantile = (
             0 if params.quantile is None else len(params.quantile)
         )  # len(params.quantile) if params.quantile is not None else 0
-        output_size = (
-            params.fcst_window * len_quantile + 1
-        )  # one additional position for level smoothing parameter
+        output_size = params.fcst_window * len_quantile + 1  # one additional position for level smoothing parameter
         if params.seasonality > 1:
             input_size += 2 * params.seasonality
-            output_size += (
-                1  # one additional position for seasonality smoothing parameter
-            )
+            output_size += 1  # one additional position for seasonality smoothing parameter
         # ensure data type for jit
         input_size = int(input_size)
         output_size = int(output_size)
@@ -165,22 +164,14 @@ class GMModel:
 
         if self.params.loss_function == "pinball":
             loss_func = PinballLoss(
-                quantile=torch.tensor(
-                    self.params.training_quantile, dtype=torch.get_default_dtype()
-                ),
-                weight=torch.tensor(
-                    self.params.quantile_weight, dtype=torch.get_default_dtype()
-                ),
+                quantile=torch.tensor(self.params.training_quantile, dtype=torch.get_default_dtype()),
+                weight=torch.tensor(self.params.quantile_weight, dtype=torch.get_default_dtype()),
                 reduction="mean",
             )
         elif self.params.loss_function == "adjustedpinball":
             loss_func = AdjustedPinballLoss(
-                quantile=torch.tensor(
-                    self.params.training_quantile, dtype=torch.get_default_dtype()
-                ),
-                weight=torch.tensor(
-                    self.params.quantile_weight, dtype=torch.get_default_dtype()
-                ),
+                quantile=torch.tensor(self.params.training_quantile, dtype=torch.get_default_dtype()),
+                weight=torch.tensor(self.params.quantile_weight, dtype=torch.get_default_dtype()),
                 reduction="mean",
                 input_log=True,
             )
@@ -218,10 +209,7 @@ class GMModel:
                     ans["sbias"] = metrics.sbias(target, fcst[:, :d])
                 elif name == "exceed" and len(quantile) > 1:
                     tmp_val = metrics.mult_exceed(target, fcst[:, d:], quantile)
-                    tmp_dict = {
-                        f"exceed_{quantile[i]}": tmp_val[i]
-                        for i in range(len(quantile))
-                    }
+                    tmp_dict = {f"exceed_{quantile[i]}": tmp_val[i] for i in range(len(quantile))}
                     ans.update(tmp_dict)
             return ans
 
@@ -236,9 +224,7 @@ class GMModel:
         """
 
         name = self.params.optimizer["name"]
-        optimizer_param = (
-            self.params.optimizer["params"] if "params" in self.params.optimizer else {}
-        )
+        optimizer_param = self.params.optimizer["params"] if "params" in self.params.optimizer else {}
         if name.lower() == "adam":
             optimizer = Adam
 
@@ -264,9 +250,7 @@ class GMModel:
         season_sm: Tensor,
         fcst_fill: bool = False,
         fcst_tensor: Tensor = NoneT,
-    ) -> Tuple[
-        Tensor, Tensor, List[Tensor], List[Tensor], List[Tensor], Tensor, Tensor, Tensor
-    ]:
+    ) -> Tuple[Tensor, Tensor, List[Tensor], List[Tensor], List[Tensor], Tensor, Tensor, Tensor]:
         """
         Helper function for on-the-fly preprocessing, including de-trending, de-seasonality and calculating seasonality.
 
@@ -287,9 +271,7 @@ class GMModel:
                 new_x = new_x0.clone()
                 if fcst_fill:
                     # fill-in NaNs with fcst_tensor.
-                    new_x[nans] = fcst_tensor[:, idx - prev_idx].view(batch_size, 1)[
-                        nans
-                    ]
+                    new_x[nans] = fcst_tensor[:, idx - prev_idx].view(batch_size, 1)[nans]
                 else:
                     # fill-in NaNs with levels and seasonalities.
                     new_x[nans] = levels[idx - 1][nans]
@@ -302,14 +284,9 @@ class GMModel:
             if period == 1:
                 levels.append(level_sm * new_x + (1 - level_sm) * levels[idx - 1])
             else:
-                new_level = (
-                    level_sm * new_x / seasonality[idx]
-                    + (1 - level_sm) * levels[idx - 1]
-                )
+                new_level = level_sm * new_x / seasonality[idx] + (1 - level_sm) * levels[idx - 1]
                 levels.append(new_level)
-                new_season = (
-                    season_sm * new_x / new_level + (1 - season_sm) * seasonality[idx]
-                )
+                new_season = season_sm * new_x / new_level + (1 - season_sm) * seasonality[idx]
                 seasonality.append(new_season)
         idx = cur_idx
         anchor_level = levels[idx - 1].view(batch_size, 1)
@@ -326,9 +303,7 @@ class GMModel:
             prev_season = torch.cat(seasonality[idx - period : idx], dim=1)
             diff_season = next_season - prev_season
 
-            fcst_season = next_season.repeat(1, fcst_window // period + 1)[
-                :, :fcst_window
-            ]
+            fcst_season = next_season.repeat(1, fcst_window // period + 1)[:, :fcst_window]
         else:
             # just for complie, would not be used.
             fcst_season, diff_season, next_season = (
@@ -367,17 +342,11 @@ class GMModel:
         # pyre-fixme[2]: Parameter annotation cannot contain `Any`.
         train_TSs: Union[List[TimeSeriesData], Dict[Any, TimeSeriesData]],
         # pyre-fixme[2]: Parameter annotation cannot contain `Any`.
-        valid_TSs: Optional[
-            Union[List[TimeSeriesData], Dict[Any, TimeSeriesData]]
-        ] = None,
+        valid_TSs: Optional[Union[List[TimeSeriesData], Dict[Any, TimeSeriesData]]] = None,
         # pyre-fixme[2]: Parameter annotation cannot contain `Any`.
-        test_train_TSs: Optional[
-            Union[List[TimeSeriesData], Dict[Any, TimeSeriesData]]
-        ] = None,
+        test_train_TSs: Optional[Union[List[TimeSeriesData], Dict[Any, TimeSeriesData]]] = None,
         # pyre-fixme[2]: Parameter annotation cannot contain `Any`.
-        test_valid_TSs: Optional[
-            Union[List[TimeSeriesData], Dict[Any, TimeSeriesData]]
-        ] = None,
+        test_valid_TSs: Optional[Union[List[TimeSeriesData], Dict[Any, TimeSeriesData]]] = None,
         fcst_monitor: bool = False,
         debug: bool = False,
     ) -> Dict[str, List[Any]]:
@@ -426,13 +395,9 @@ class GMModel:
             if epoch in params.learning_rate:
                 lr = params.learning_rate[epoch]
 
-            trainer = optimizer(
-                params=self._get_nn_parameters(), lr=lr, **optimizer_param
-            )
+            trainer = optimizer(params=self._get_nn_parameters(), lr=lr, **optimizer_param)
 
-            logging.info(
-                f"Training for epoch {epoch} with batch_size = {batch_size} and learning_rate = {lr}."
-            )
+            logging.info(f"Training for epoch {epoch} with batch_size = {batch_size} and learning_rate = {lr}.")
 
             for _ in range(params.epoch_size):
                 self._reset_nn_states()
@@ -485,9 +450,7 @@ class GMModel:
                 tr["epoch"] = epoch
                 test_eval.append(tr)
 
-            logging.info(
-                f"Successfully finished training for epoch {epoch} with train_loss {train_loss_val[-1]}"
-            )
+            logging.info(f"Successfully finished training for epoch {epoch} with train_loss {train_loss_val[-1]}")
 
         training_info = {
             "train_loss_monitor": train_loss_monitor,
@@ -534,9 +497,7 @@ class GMModel:
         n = len(ids)
         n_quantile = len(quantile)
         cols = [f"fcst_quantile_{q}" for q in quantile]
-        fcst = np.concatenate(
-            [t.reshape(n, n_quantile, -1) for t in fcst_store["fcst"]], axis=2
-        )
+        fcst = np.concatenate([t.reshape(n, n_quantile, -1) for t in fcst_store["fcst"]], axis=2)
         if "actual" in fcst_store:
             actual = np.column_stack(fcst_store["actual"])[:, :steps]
 
@@ -548,9 +509,7 @@ class GMModel:
                 ],
                 columns=cols,
             )
-            df["time"] = pd.date_range(
-                first_time[i], freq=self.params.freq, periods=steps
-            )
+            df["time"] = pd.date_range(first_time[i], freq=self.params.freq, periods=steps)
             if "actual" in fcst_store:
                 df["actual"] = actual[i]
             ans[idx] = df
@@ -560,9 +519,7 @@ class GMModel:
     def predict(
         self,
         # pyre-fixme[2]: Parameter annotation cannot contain `Any`.
-        test_TSs: Union[
-            TimeSeriesData, List[TimeSeriesData], Dict[Any, TimeSeriesData]
-        ],
+        test_TSs: Union[TimeSeriesData, List[TimeSeriesData], Dict[Any, TimeSeriesData]],
         steps: int,
         test_batch_size: int = 500,
         raw: bool = False,
@@ -587,9 +544,7 @@ class GMModel:
             msg = f"predict function only accepts a TimeSeriesData object, a dictionary or a list of TimeSeriesData objects, but receives {type(test_TSs)}"
 
         # calculate fcst step num.
-        fcst_step_num = steps // self.params.fcst_window + int(
-            steps % self.params.fcst_window != 0
-        )
+        fcst_step_num = steps // self.params.fcst_window + int(steps % self.params.fcst_window != 0)
         fcst_params = self.params.copy()
         # pyre-fixme[16]: `object` has no attribute `fcst_step_num`.
         fcst_params.fcst_step_num = fcst_step_num
@@ -627,14 +582,10 @@ class GMModel:
                 fcst_store["fcst"] = self._adjust_pi(fcst_store["fcst"])
 
             if not raw:
-                fcst_store = self._format_fcst(
-                    ids, fcst_store, steps, batch.time[:, batch.train_length]
-                )
+                fcst_store = self._format_fcst(ids, fcst_store, steps, batch.time[:, batch.train_length])
                 fcst_collects.update(fcst_store)
             else:
-                tmp = {
-                    ids[i]: [t[i] for t in fcst_store["fcst"]] for i in range(len(ids))
-                }
+                tmp = {ids[i]: [t[i] for t in fcst_store["fcst"]] for i in range(len(ids))}
                 fcst_collects.update(tmp)
 
         return fcst_collects
@@ -649,12 +600,8 @@ class GMModel:
         info = {
             "gmparam_string": self.params.to_string(),
             "state_dict": self.rnn.state_dict() if self.rnn is not None else None,
-            "encoder_state_dict": self.encoder.state_dict()
-            if self.encoder is not None
-            else None,
-            "decoder_state_dict": self.decoder.state_dict()
-            if self.decoder is not None
-            else None,
+            "encoder_state_dict": self.encoder.state_dict() if self.encoder is not None else None,
+            "decoder_state_dict": self.decoder.state_dict() if self.decoder is not None else None,
         }
         with open(file_name, "wb") as f:
             joblib.dump(info, f)
@@ -695,10 +642,7 @@ class GMModel:
         period = params.seasonality
         x_lt, levels, seasonality = [], [], []
         if params.seasonality > 1:
-            seasonality = [
-                batch.init_seasonality[:, i].view(tmp_batch_size, 1)
-                for i in range(period)
-            ]
+            seasonality = [batch.init_seasonality[:, i].view(tmp_batch_size, 1) for i in range(period)]
             seasonality.append(batch.init_seasonality[:, 0].view(tmp_batch_size, 1))
         else:
             seasonality = [Tensor([1.0])]
@@ -709,17 +653,12 @@ class GMModel:
             1,
             min(
                 params.max_step_delta,
-                (total_step_num - params.validation_step_num)
-                // params.soft_max_training_step_num,
+                (total_step_num - params.validation_step_num) // params.soft_max_training_step_num,
             ),
         )
 
         # define first test idx
-        first_valid_idx = (
-            batch.valid_indices[0]
-            if len(batch.valid_indices) > 0
-            else batch.train_indices[-1] + 1
-        )
+        first_valid_idx = batch.valid_indices[0] if len(batch.valid_indices) > 0 else batch.train_indices[-1] + 1
         last_train_step = len(batch.train_indices) - 1
 
         cur_step = 0
@@ -731,27 +670,12 @@ class GMModel:
         while cur_step < total_step_num:
             cur_idx = batch.indices[cur_step]
             is_valid = cur_idx >= first_valid_idx
-            step_size_encode = (
-                torch.ones((tmp_batch_size, 1), dtype=tdtype)
-                * np.log(cur_idx - prev_idx)
-                / 2.0
-            )
-            step_num_encode = torch.ones((tmp_batch_size, 1), dtype=tdtype) * np.log(
-                cur_step + 1
-            )
+            step_size_encode = torch.ones((tmp_batch_size, 1), dtype=tdtype) * np.log(cur_idx - prev_idx) / 2.0
+            step_num_encode = torch.ones((tmp_batch_size, 1), dtype=tdtype) * np.log(cur_step + 1)
 
             tmp_cur_training_loss = torch.tensor(0, dtype=torch.get_default_dtype())
 
-            (
-                x_t,
-                anchor_level,
-                x_lt,
-                levels,
-                seasonality,
-                next_season,
-                diff_season,
-                fcst_season,
-            ) = self._process(
+            (x_t, anchor_level, x_lt, levels, seasonality, next_season, diff_season, fcst_season,) = self._process(
                 prev_idx,
                 cur_idx,
                 batch.x,
@@ -769,13 +693,9 @@ class GMModel:
 
             if params.gmfeature is not None:
                 features = batch.get_features(cur_idx - params.input_window, cur_idx)
-                input_t = torch.cat(
-                    [torch.log(x_t), features, step_size_encode, step_num_encode], dim=1
-                )
+                input_t = torch.cat([torch.log(x_t), features, step_size_encode, step_num_encode], dim=1)
             else:
-                input_t = torch.cat(
-                    [torch.log(x_t), step_size_encode, step_num_encode], dim=1
-                )
+                input_t = torch.cat([torch.log(x_t), step_size_encode, step_num_encode], dim=1)
 
             if period > 1:
                 input_t = torch.cat([input_t, next_season - 1.0, diff_season], dim=1)
@@ -814,10 +734,7 @@ class GMModel:
                     train_res.append(tmp_cur_training_loss.detach().numpy())
 
             cur_step += step_delta
-            if (
-                cur_step >= last_train_step
-                and (cur_step - step_delta) < last_train_step
-            ):
+            if cur_step >= last_train_step and (cur_step - step_delta) < last_train_step:
                 cur_step = last_train_step
                 step_delta = 1
             prev_idx = cur_idx
@@ -864,13 +781,9 @@ class GMModel:
     def evaluate(
         self,
         # pyre-fixme[2]: Parameter annotation cannot contain `Any`.
-        test_train_TSs: Union[
-            TimeSeriesData, List[TimeSeriesData], Dict[Any, TimeSeriesData]
-        ],
+        test_train_TSs: Union[TimeSeriesData, List[TimeSeriesData], Dict[Any, TimeSeriesData]],
         # pyre-fixme[2]: Parameter annotation cannot contain `Any`.
-        test_valid_TSs: Union[
-            TimeSeriesData, List[TimeSeriesData], Dict[Any, TimeSeriesData]
-        ],
+        test_valid_TSs: Union[TimeSeriesData, List[TimeSeriesData], Dict[Any, TimeSeriesData]],
     ) -> pd.DataFrame:
         """Evaluate the global model performance on a dataset.
 
@@ -883,9 +796,7 @@ class GMModel:
         """
 
         if type(test_train_TSs) != type(test_valid_TSs):
-            msg = (
-                "The data type of test_train_TSs and test_valid_TSs should be the same."
-            )
+            msg = "The data type of test_train_TSs and test_valid_TSs should be the same."
             logging.error(msg)
             raise ValueError(msg)
 
@@ -898,11 +809,7 @@ class GMModel:
             msg = "test_train_TSs and test_valid_TSs should be of the same length."
             logging.error(msg)
             raise ValueError(msg)
-        keys = (
-            test_train_TSs.keys()
-            if isinstance(test_train_TSs, dict)
-            else range(len(test_train_TSs))
-        )
+        keys = test_train_TSs.keys() if isinstance(test_train_TSs, dict) else range(len(test_train_TSs))
         if len(keys) == 0:
             msg = "The input collection of time series should not be empty."
             logging.error(msg)
@@ -911,17 +818,11 @@ class GMModel:
         steps = np.max([len(test_valid_TSs[t]) for t in keys])
 
         fcst = self.predict(test_train_TSs, steps=steps, raw=True)
-        logging.info(
-            f"Successfully generate forecasts for all test time series with length {steps}."
-        )
+        logging.info(f"Successfully generate forecasts for all test time series with length {steps}.")
         eval_func = self.build_validation_function()
         fcst_window = self.params.fcst_window
         ans = []
-        keys = (
-            test_train_TSs.keys()
-            if isinstance(test_train_TSs, dict)
-            else range(len(test_train_TSs))
-        )
+        keys = test_train_TSs.keys() if isinstance(test_train_TSs, dict) else range(len(test_train_TSs))
         for k in keys:
             tmp = test_valid_TSs[k].value.values
             tmp_step = len(tmp) // fcst_window + int(len(tmp) % fcst_window != 0)
@@ -954,11 +855,7 @@ class GMModel:
         self,
     ) -> None:
         params = self.params
-        encoder_feature_size = (
-            params.gmfeature.get_feature_size(params.input_window)
-            if params.gmfeature
-            else 0
-        )
+        encoder_feature_size = params.gmfeature.get_feature_size(params.input_window) if params.gmfeature else 0
         # two additional positions for step_num_encode and step_size_encode
         encoder_input_size = int(params.input_window + encoder_feature_size + 2)
         len_quantile = len(params.quantile) if params.quantile is not None else 0
@@ -972,11 +869,7 @@ class GMModel:
             h_size=params.h_size,
             jit=params.jit,
         )
-        decoder_feature_size = (
-            params.gmfeature.get_feature_size(params.fcst_window)
-            if params.gmfeature
-            else 0
-        )
+        decoder_feature_size = params.gmfeature.get_feature_size(params.fcst_window) if params.gmfeature else 0
         # one additional position for step_num_encode
         decoder_input_size = int(decoder_feature_size + 1 + self.encoder.out_size)
         decoder_output_size = int(len_quantile * params.fcst_window)
@@ -1069,11 +962,7 @@ class GMModel:
             ),
         )
         # define first test idx
-        first_valid_idx = (
-            batch.valid_indices[0]
-            if len(batch.valid_indices) > 0
-            else batch.train_indices[-1] + 1
-        )
+        first_valid_idx = batch.valid_indices[0] if len(batch.valid_indices) > 0 else batch.train_indices[-1] + 1
 
         first_valid_step = len(batch.train_indices)
 
@@ -1088,28 +977,20 @@ class GMModel:
             is_training = (training_mode) and (not is_valid)
             cur_training_loss = torch.tensor(0.0, dtype=torch.get_default_dtype())
 
-            step_size_encode = (
-                torch.ones((tmp_batch_size, 1), dtype=tdtype)
-                * np.log(cur_idx - prev_idx)
-                / 2.0
-            )
-            step_num_encode = torch.ones((tmp_batch_size, 1), dtype=tdtype) * np.log(
-                cur_step + 1
-            )
+            step_size_encode = torch.ones((tmp_batch_size, 1), dtype=tdtype) * np.log(cur_idx - prev_idx) / 2.0
+            step_num_encode = torch.ones((tmp_batch_size, 1), dtype=tdtype) * np.log(cur_step + 1)
 
-            (x_t, anchor_level, x_lt,) = self._process_s2s(
-                prev_idx, cur_idx, batch.x, x_lt, period, params.input_window
-            )
+            (
+                x_t,
+                anchor_level,
+                x_lt,
+            ) = self._process_s2s(prev_idx, cur_idx, batch.x, x_lt, period, params.input_window)
 
             if params.gmfeature is not None:
                 features = batch.get_features(cur_idx - params.input_window, cur_idx)
-                input_t = torch.cat(
-                    [torch.log(x_t), features, step_size_encode, step_num_encode], dim=1
-                )
+                input_t = torch.cat([torch.log(x_t), features, step_size_encode, step_num_encode], dim=1)
             else:
-                input_t = torch.cat(
-                    [torch.log(x_t), step_size_encode, step_num_encode], dim=1
-                )
+                input_t = torch.cat([torch.log(x_t), step_size_encode, step_num_encode], dim=1)
 
             self._valid_tensor(input_t, "input")
 
@@ -1122,27 +1003,17 @@ class GMModel:
 
                 # pyre-fixme
                 encoder.prepare_decoder(decoder)
-                encoder_step = (
-                    batch.training_encoder_step_num
-                    if not is_valid
-                    else batch.test_encoder_step_num
-                )
+                encoder_step = batch.training_encoder_step_num if not is_valid else batch.test_encoder_step_num
                 for decoder_step_num in range(encoder_step):
-                    decoder_step_num_encode = torch.ones(
-                        (tmp_batch_size, 1), dtype=tdtype
-                    ) * np.log(decoder_step_num + 1)
+                    decoder_step_num_encode = torch.ones((tmp_batch_size, 1), dtype=tdtype) * np.log(
+                        decoder_step_num + 1
+                    )
                     fcst_cur_idx = cur_idx + decoder_step_num * params.fcst_window
                     if params.gmfeature is not None:
-                        fcst_features = batch.get_features(
-                            fcst_cur_idx, fcst_cur_idx + params.fcst_window
-                        )
-                        input_fcst = torch.cat(
-                            [tmp_encode, fcst_features, decoder_step_num_encode], dim=1
-                        )
+                        fcst_features = batch.get_features(fcst_cur_idx, fcst_cur_idx + params.fcst_window)
+                        input_fcst = torch.cat([tmp_encode, fcst_features, decoder_step_num_encode], dim=1)
                     else:
-                        input_fcst = torch.cat(
-                            [tmp_encode, decoder_step_num_encode], dim=1
-                        )
+                        input_fcst = torch.cat([tmp_encode, decoder_step_num_encode], dim=1)
 
                     fcst = decoder(input_fcst) + torch.log(anchor_level)
 
@@ -1161,9 +1032,7 @@ class GMModel:
                     )
 
                     cur_training_loss = (
-                        cur_training_loss + tmp_cur_training_loss
-                        if tmp_cur_training_loss != 0
-                        else cur_training_loss
+                        cur_training_loss + tmp_cur_training_loss if tmp_cur_training_loss != 0 else cur_training_loss
                     )
 
                 if is_training:
@@ -1216,10 +1085,7 @@ class GMModel:
             # restoring to original scale
             fcst = (torch.exp(fcst).detach() - batch.offset).numpy()
             if training_mode:  # get evaluated performance on validation set
-                actuals = (
-                    batch.x[:, cur_idx : cur_idx + params.fcst_window].clone()
-                    - batch.offset
-                ).numpy()
+                actuals = (batch.x[:, cur_idx : cur_idx + params.fcst_window].clone() - batch.offset).numpy()
                 # pyre-fixme
                 valid_res.append(valid_loss_func(fcst, actuals))
 

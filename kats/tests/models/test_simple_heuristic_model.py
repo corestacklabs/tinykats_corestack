@@ -8,16 +8,13 @@ from unittest import TestCase
 
 import numpy as np
 import pandas as pd
-from kats.consts import TimeSeriesData
-from kats.models.simple_heuristic_model import (
-    SimpleHeuristicModel,
-    SimpleHeuristicModelParams,
-)
 from parameterized.parameterized import parameterized
 
-test_univariate_df = pd.DataFrame(
-    {"ds": pd.date_range("2022-01-01", periods=30), "y": np.arange(1, 31)}
-)
+from kats.consts import TimeSeriesData
+from kats.models.simple_heuristic_model import SimpleHeuristicModel
+from kats.models.simple_heuristic_model import SimpleHeuristicModelParams
+
+test_univariate_df = pd.DataFrame({"ds": pd.date_range("2022-01-01", periods=30), "y": np.arange(1, 31)})
 test_univariate_ts = TimeSeriesData(test_univariate_df, time_col_name="ds")
 
 
@@ -50,25 +47,17 @@ class testSimpleHeuristicModel(TestCase):
             self.assertTrue(test_univariate_df.y[-horizon:].sum() == fcst_df.fcst.sum())
         elif test_name == "mean":
             self.assertTrue(
-                np.mean(
-                    np.reshape(np.asarray(test_univariate_df.y), [-1, horizon]), 0
-                ).sum()
-                == fcst_df.fcst.sum()
+                np.mean(np.reshape(np.asarray(test_univariate_df.y), [-1, horizon]), 0).sum() == fcst_df.fcst.sum()
             )
         elif test_name == "median":
             self.assertTrue(
-                np.median(
-                    np.reshape(np.asarray(test_univariate_df.y), [-1, horizon]), 0
-                ).sum()
-                == fcst_df.fcst.sum()
+                np.median(np.reshape(np.asarray(test_univariate_df.y), [-1, horizon]), 0).sum() == fcst_df.fcst.sum()
             )
         else:
             self.assertTrue(test_name == "percentile")
             # check percentile 95 (default value)
             self.assertTrue(
-                np.percentile(
-                    np.reshape(np.asarray(test_univariate_df.y), [-1, horizon]), 95, 0
-                ).sum()
+                np.percentile(np.reshape(np.asarray(test_univariate_df.y), [-1, horizon]), 95, 0).sum()
                 == fcst_df.fcst.sum()
             )
 
@@ -78,9 +67,7 @@ class testSimpleHeuristicModel(TestCase):
             m2.fit()
             fcst_df2 = m2.predict(steps=horizon)
             self.assertTrue(
-                np.percentile(
-                    np.reshape(np.asarray(test_univariate_df.y), [-1, horizon]), 80, 0
-                ).sum()
+                np.percentile(np.reshape(np.asarray(test_univariate_df.y), [-1, horizon]), 80, 0).sum()
                 == fcst_df2.fcst.sum()
             )
 

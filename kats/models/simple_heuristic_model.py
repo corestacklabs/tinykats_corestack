@@ -9,11 +9,15 @@
 Simple Heuristic model is a model that applies simple rules like mean or percentiles on historical data to get prediction.
 """
 import logging
-from typing import Any, Callable, Optional
+from typing import Any
+from typing import Callable
+from typing import Optional
 
 import numpy as np
 import pandas as pd
-from kats.consts import Params, TimeSeriesData
+
+from kats.consts import Params
+from kats.consts import TimeSeriesData
 from kats.models.model import Model
 
 MODELS = ["last", "mean", "median", "percentile"]
@@ -35,9 +39,7 @@ class SimpleHeuristicModelParams(Params):
         super().__init__()
         self.method = method
         self.quantile = quantile
-        logging.debug(
-            f"Initialized SimpleHeuristicModel parameters with method: {self.method}"
-        )
+        logging.debug(f"Initialized SimpleHeuristicModel parameters with method: {self.method}")
 
     def validate_params(self) -> None:
         "Validate SimpleHeuristicModel Model Parameters"
@@ -77,15 +79,11 @@ class SimpleHeuristicModel(Model[SimpleHeuristicModelParams]):
     fcst_df: pd.DataFrame = pd.DataFrame(data=None)
     freq: Optional[str] = None
 
-    def __init__(
-        self, data: TimeSeriesData, params: SimpleHeuristicModelParams
-    ) -> None:
+    def __init__(self, data: TimeSeriesData, params: SimpleHeuristicModelParams) -> None:
         super().__init__(data, params)
         # pyre-fixme[16]: `Optional` has no attribute `value`.
         if not isinstance(self.data.value, pd.Series):
-            msg = "Only support univariate time series, but get {type}.".format(
-                type=type(self.data.value)
-            )
+            msg = "Only support univariate time series, but get {type}.".format(type=type(self.data.value))
             logging.error(msg)
             raise ValueError(msg)
 
@@ -132,10 +130,7 @@ class SimpleHeuristicModel(Model[SimpleHeuristicModelParams]):
 
     def fit(self) -> None:
         "fit Simple Heuristic Model."
-        logging.debug(
-            "Call fit() with parameters: "
-            "method:{method}".format(method=self.params.method)
-        )
+        logging.debug("Call fit() with parameters: " "method:{method}".format(method=self.params.method))
 
         if self.params.method == "last":
             self.model = self._calc_last
@@ -148,9 +143,7 @@ class SimpleHeuristicModel(Model[SimpleHeuristicModelParams]):
             self.model = self._calc_percentile
 
     # pyre-fixme[15]: `predict` overrides method defined in `Model` inconsistently.
-    def predict(
-        self, steps: int, *args: Any, include_history: bool = False, **kwargs: Any
-    ) -> pd.DataFrame:
+    def predict(self, steps: int, *args: Any, include_history: bool = False, **kwargs: Any) -> pd.DataFrame:
         """predict with fitted Simple Heuristic Model.
 
         Args:
@@ -190,12 +183,8 @@ class SimpleHeuristicModel(Model[SimpleHeuristicModelParams]):
         if self.include_history:
             self.dates = np.concatenate((pd.to_datetime(self.data.time), self.dates))
             self.y_fcst = np.concatenate((np.asarray(self.data.value), self.y_fcst))
-            self.y_fcst_lower = np.concatenate(
-                (np.asarray(self.data.value), self.y_fcst_lower)
-            )
-            self.y_fcst_upper = np.concatenate(
-                (np.asarray(self.data.value), self.y_fcst_upper)
-            )
+            self.y_fcst_lower = np.concatenate((np.asarray(self.data.value), self.y_fcst_lower))
+            self.y_fcst_upper = np.concatenate((np.asarray(self.data.value), self.y_fcst_upper))
 
         self.fcst_df = pd.DataFrame(
             {

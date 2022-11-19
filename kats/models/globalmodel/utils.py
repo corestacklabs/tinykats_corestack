@@ -5,15 +5,23 @@
 
 import json
 import logging
-from typing import Any, cast, Dict, List, Optional, Tuple, Type, Union
+from typing import Any
+from typing import Dict
+from typing import List
+from typing import Optional
+from typing import Tuple
+from typing import Type
+from typing import Union
+from typing import cast
 
 import numpy as np
 import torch
-from kats.consts import TimeSeriesData
-from kats.tsfeatures.tsfeatures import TsFeatures
 from numba import jit
 from torch import Tensor
 from torch.nn.modules.loss import _Loss
+
+from kats.consts import TimeSeriesData
+from kats.tsfeatures.tsfeatures import TsFeatures
 
 all_validation_metric_name = ["smape", "sbias", "exceed"]
 
@@ -150,11 +158,7 @@ def split(
 
     n = len(train_TSs)
 
-    keys = (
-        np.array(list(train_TSs.keys()))
-        if isinstance(train_TSs, dict)
-        else np.arange(n)
-    )
+    keys = np.array(list(train_TSs.keys())) if isinstance(train_TSs, dict) else np.arange(n)
 
     if splits == 1:  # no need to split the dataset
         return [
@@ -185,9 +189,7 @@ def split(
         split_data = [
             (
                 {t: train_TSs[t] for t in keys[~index[i]]},
-                {t: valid_TSs[t] for t in keys[~index[i]]}
-                if valid_TSs is not None
-                else None,
+                {t: valid_TSs[t] for t in keys[~index[i]]} if valid_TSs is not None else None,
             )
             for i in range(splits)
         ]
@@ -195,9 +197,7 @@ def split(
         split_data = [
             (
                 {t: train_TSs[t] for t in keys[index[i]]},
-                {t: valid_TSs[t] for t in keys[index[i]]}
-                if valid_TSs is not None
-                else None,
+                {t: valid_TSs[t] for t in keys[index[i]]} if valid_TSs is not None else None,
             )
             for i in range(splits)
         ]
@@ -253,9 +253,7 @@ class LSTM2Cell(torch.nn.Module):
         elif has_prev_state:
             xh = torch.cat([input_t, prev_h_state, prev_h_state], dim=1)
         else:
-            empty_h_state = torch.zeros(
-                input_t.shape[0], 2 * self.h_size, dtype=torch.float32
-            )
+            empty_h_state = torch.zeros(input_t.shape[0], 2 * self.h_size, dtype=torch.float32)
             xh = torch.cat([input_t, empty_h_state], dim=1)
 
         gates = self.lxh(xh)
@@ -271,9 +269,7 @@ class LSTM2Cell(torch.nn.Module):
             new_state = (forget_gate * c_state) + (in_gate * new_state)
         whole_output = out_gate * new_state.tanh()
 
-        output_t, h_state = torch.split(
-            whole_output, [self.out_size, self.h_size], dim=1
-        )
+        output_t, h_state = torch.split(whole_output, [self.out_size, self.h_size], dim=1)
         return output_t, (h_state, new_state)
 
 
@@ -332,9 +328,7 @@ class S2Cell(torch.nn.Module):
         elif has_prev_state:
             xh = torch.cat([input_t, prev_h_state, prev_h_state], dim=1)
         else:
-            empty_h_state = torch.zeros(
-                input_t.shape[0], 2 * self.h_size, dtype=torch.float
-            )
+            empty_h_state = torch.zeros(input_t.shape[0], 2 * self.h_size, dtype=torch.float)
             xh = torch.cat([input_t, empty_h_state], dim=1)
 
         gates = self.lxh(xh)
@@ -355,9 +349,7 @@ class S2Cell(torch.nn.Module):
 
         whole_output = out_gate * new_stat
 
-        output_t, h_state = torch.split(
-            whole_output, [self.out_size, self.h_size], dim=1
-        )
+        output_t, h_state = torch.split(whole_output, [self.out_size, self.h_size], dim=1)
         return output_t, (h_state, new_stat)
 
 
@@ -420,16 +412,12 @@ class DilatedRNNStack(torch.nn.Module):
 
                 if cell_name == "LSTM2Cell":
                     if jit:
-                        cell = torch.jit.script(
-                            LSTM2Cell(tmp_input_size, h_size, state_size)
-                        )
+                        cell = torch.jit.script(LSTM2Cell(tmp_input_size, h_size, state_size))
                     else:
                         cell = LSTM2Cell(tmp_input_size, h_size, state_size)
                 elif cell_name == "S2Cell":
                     if jit:
-                        cell = torch.jit.script(
-                            S2Cell(tmp_input_size, h_size, state_size)
-                        )
+                        cell = torch.jit.script(S2Cell(tmp_input_size, h_size, state_size))
                     else:
                         cell = S2Cell(tmp_input_size, h_size, state_size)
                 else:
@@ -561,9 +549,7 @@ class DilatedRNNStack(torch.nn.Module):
             A `torch.Tensor` object representing outputs of shape (batch_size, output_size).
         """
 
-        prev_block_output = torch.zeros(
-            input_t.shape[0], self.out_size, dtype=torch.float
-        )
+        prev_block_output = torch.zeros(input_t.shape[0], self.out_size, dtype=torch.float)
         t = len(self.h_state_store)
         self.h_state_store.append([])
         self.c_state_store.append([])
@@ -646,12 +632,8 @@ class PinballLoss(_Loss):
         reduction: Optional; A string representing the reduction method. Can be 'mean' or 'sum'. Default is 'mean'.
     """
 
-    def __init__(
-        self, quantile: Tensor, weight: Optional[Tensor] = None, reduction: str = "mean"
-    ) -> None:
-        super(PinballLoss, self).__init__(
-            size_average=None, reduce=None, reduction=reduction
-        )
+    def __init__(self, quantile: Tensor, weight: Optional[Tensor] = None, reduction: str = "mean") -> None:
+        super(PinballLoss, self).__init__(size_average=None, reduce=None, reduction=reduction)
         if len(quantile) < 1:
             msg = "quantile should not be empty."
             logging.error(msg)
@@ -720,9 +702,7 @@ class PinballLoss(_Loss):
         res = torch.max(diff * quants, diff * (quants - 1.0))
         res[nans] = 0.0
         res = res * weights
-        res = (
-            res.view(n, -1, horizon).sum(dim=2) / num_not_nan[:, None]
-        )  # row_wise operation
+        res = res.view(n, -1, horizon).sum(dim=2) / num_not_nan[:, None]  # row_wise operation
 
         if self.reduction == "mean":
             return res.mean(dim=0)
@@ -757,9 +737,7 @@ class AdjustedPinballLoss(_Loss):
         input_log: bool = True,
     ) -> None:
 
-        super(AdjustedPinballLoss, self).__init__(
-            size_average=None, reduce=None, reduction=reduction
-        )
+        super(AdjustedPinballLoss, self).__init__(size_average=None, reduce=None, reduction=reduction)
         if len(quantile) < 1:
             msg = "quantile should not be empty."
             logging.error(msg)
@@ -825,11 +803,7 @@ class AdjustedPinballLoss(_Loss):
             target_exp = target
             fcst_exp = input[:, :horizon]
         diff = target_exp - fcst_exp
-        res = (
-            torch.max(diff * self.quantile[0], diff * (self.quantile[0] - 1.0))
-            / (target_exp + fcst_exp)
-            * 2
-        )
+        res = torch.max(diff * self.quantile[0], diff * (self.quantile[0] - 1.0)) / (target_exp + fcst_exp) * 2
         res[nans] = 0.0
 
         if m > 1:
@@ -964,9 +938,7 @@ class GMFeature:
         feature = []
 
         for i in range(len(x)):
-            pdt = pd.to_datetime(
-                time[i]
-            )  # converting data type only once to speed up computation
+            pdt = pd.to_datetime(time[i])  # converting data type only once to speed up computation
             feature.append(
                 np.concatenate(
                     [
@@ -1176,9 +1148,7 @@ class GMParam:
         seasonality: int = 1,
         model_type: str = "rnn",
         uplifting_ratio: float = 3.0,
-        gmfeature: Union[
-            None, GMFeature, str, List[str]
-        ] = None,  # need to be changed once gmfeature is defined
+        gmfeature: Union[None, GMFeature, str, List[str]] = None,  # need to be changed once gmfeature is defined
         nn_structure: Optional[List[List[int]]] = None,
         decoder_nn_structure: Optional[List[List[int]]] = None,
         cell_name: str = "LSTM",
@@ -1217,9 +1187,7 @@ class GMParam:
             raise ValueError(msg)
         self.uplifting_ratio = uplifting_ratio
 
-        nn_structure, decoder_nn_structure = self._valid_nn_structure(
-            nn_structure, decoder_nn_structure
-        )
+        nn_structure, decoder_nn_structure = self._valid_nn_structure(nn_structure, decoder_nn_structure)
         self.nn_structure: List[List[int]] = nn_structure
         self.decoder_nn_structure: List[List[int]] = decoder_nn_structure
 
@@ -1227,29 +1195,19 @@ class GMParam:
         self.state_size = state_size
         self.h_size = h_size
 
-        batch_size = (
-            batch_size
-            if batch_size is not None
-            else {0: 2, 3: 5, 4: 15, 5: 50, 6: 150, 7: 500}
-        )
+        batch_size = batch_size if batch_size is not None else {0: 2, 3: 5, 4: 15, 5: 50, 6: 150, 7: 500}
         self.batch_size: Dict[int, int] = cast(
             Dict[int, int],
             # pyre-fixme: pyre fail to infer correct data type
             self._valid_union_dict(batch_size, "batch_size", int, int),
         )
-        learning_rate = (
-            learning_rate if learning_rate is not None else {0: 1e-3, 2: 1e-3 / 3.0}
-        )
-        self.learning_rate: Dict[int, float] = self._valid_union_dict(
-            learning_rate, "learning_rate", int, float
-        )
+        learning_rate = learning_rate if learning_rate is not None else {0: 1e-3, 2: 1e-3 / 3.0}
+        self.learning_rate: Dict[int, float] = self._valid_union_dict(learning_rate, "learning_rate", int, float)
         self.loss_function: str = self._valid_loss_function(loss_function)
 
         self.optimizer: Dict[str, Any] = self._valid_optimizer(optimizer)
 
-        self.quantile: List[float] = (
-            quantile if quantile is not None else [0.5, 0.05, 0.95, 0.99]
-        )
+        self.quantile: List[float] = quantile if quantile is not None else [0.5, 0.05, 0.95, 0.99]
         self._valid_list(self.quantile, "quantile", 0, 1)
 
         # additional check needed for filling NaNs during training.
@@ -1265,9 +1223,7 @@ class GMParam:
             self.training_quantile = training_quantile
 
         if quantile_weight is None:
-            self.quantile_weight: List[float] = [1.0 / len(self.quantile)] * len(
-                self.quantile
-            )
+            self.quantile_weight: List[float] = [1.0 / len(self.quantile)] * len(self.quantile)
         else:
             if len(quantile_weight) != len(self.quantile):
                 msg = "quantile and quantile_weight should be of the same length."
@@ -1292,9 +1248,7 @@ class GMParam:
                 logging.error(msg)
                 raise ValueError(msg)
 
-        self.init_seasonality: List[float] = (
-            init_seasonality if init_seasonality is not None else [0.1, 10.0]
-        )
+        self.init_seasonality: List[float] = init_seasonality if init_seasonality is not None else [0.1, 10.0]
         self._valid_list(self.init_seasonality, "init_seasonality", 0, np.inf)
 
         self.init_smoothing_params: List[float] = (
@@ -1342,18 +1296,14 @@ class GMParam:
         self.fcst_step_num = fcst_step_num
 
         # max_step_delta needed for training/testing
-        self.max_step_delta: int = (
-            min(input_window, fcst_window) // min_training_step_length
-        )
+        self.max_step_delta: int = min(input_window, fcst_window) // min_training_step_length
 
         self.jit = jit
         self.gmname = gmname
 
     def _valid_model_type(self, model_type: str) -> str:
         if model_type not in ["rnn", "s2s"]:
-            msg = (
-                f"model_type should be either 'rnn' or 's2s but receives {model_type}."
-            )
+            msg = f"model_type should be either 'rnn' or 's2s but receives {model_type}."
             logging.error(msg)
             raise ValueError(msg)
         return model_type
@@ -1365,18 +1315,12 @@ class GMParam:
     ) -> Tuple[List[List[int]], List[List[int]]]:
         nn_structure = nn_structure if nn_structure is not None else [[1, 3]]
         if self.model_type == "s2s":
-            decoder_nn_structure = (
-                decoder_nn_structure
-                if decoder_nn_structure is not None
-                else nn_structure
-            )
+            decoder_nn_structure = decoder_nn_structure if decoder_nn_structure is not None else nn_structure
         else:
             decoder_nn_structure = []
         return nn_structure, decoder_nn_structure
 
-    def _valid_optimizer(
-        self, optimizer: Union[str, Dict[str, Any], None]
-    ) -> Dict[str, Any]:
+    def _valid_optimizer(self, optimizer: Union[str, Dict[str, Any], None]) -> Dict[str, Any]:
         opt_methods = ["adam"]
         if optimizer is None:
             return {"name": "Adam", "params": {"eps": 1e-7}}
@@ -1433,11 +1377,7 @@ class GMParam:
                 logging.error(msg)
                 raise ValueError(msg)
             for n in value:
-                if (
-                    (not isinstance(n, key_type))
-                    or (not isinstance(value[n], value_type))
-                    or (value[n] <= 0)
-                ):
+                if (not isinstance(n, key_type)) or (not isinstance(value[n], value_type)) or (value[n] <= 0):
                     msg = f"""
                     The key in {name} should be a non-negative {key_type},
                     and the value in batch_size should be a positive {value_type}.
@@ -1542,13 +1482,10 @@ def gmparam_from_string(gmstring: str) -> GMParam:
     del gmparam_dict["max_step_delta"]
 
     if isinstance(gmparam_dict["batch_size"], dict):
-        gmparam_dict["batch_size"] = {
-            int(t): gmparam_dict["batch_size"][t] for t in gmparam_dict["batch_size"]
-        }
+        gmparam_dict["batch_size"] = {int(t): gmparam_dict["batch_size"][t] for t in gmparam_dict["batch_size"]}
     if isinstance(gmparam_dict["learning_rate"], dict):
         gmparam_dict["learning_rate"] = {
-            int(t): gmparam_dict["learning_rate"][t]
-            for t in gmparam_dict["learning_rate"]
+            int(t): gmparam_dict["learning_rate"][t] for t in gmparam_dict["learning_rate"]
         }
     gmparam = GMParam(**gmparam_dict)
     return gmparam
@@ -1580,9 +1517,7 @@ def gmpreprocess(
             + gmparam.fcst_window * gmparam.fcst_step_num
             + gmparam.min_training_step_num * gmparam.min_training_step_length
         )
-        valid_length = (
-            gmparam.fcst_window * gmparam.validation_step_num if valid_set else 0
-        )
+        valid_length = gmparam.fcst_window * gmparam.validation_step_num if valid_set else 0
         length += valid_length
 
     # for test mode
@@ -1595,9 +1530,7 @@ def gmpreprocess(
         logging.error(msg)
         raise ValueError(msg)
 
-    keys = (
-        np.array(list(data.keys())) if isinstance(data, dict) else np.arange(len(data))
-    )
+    keys = np.array(list(data.keys())) if isinstance(data, dict) else np.arange(len(data))
 
     train_TSs = {}
     valid_TSs = {}
@@ -1611,9 +1544,7 @@ def gmpreprocess(
                 train_TSs[k] = ts
     if not valid_set:
         valid_TSs = None
-    logging.info(
-        f"Processed {len(data)} time series and returned {len(train_TSs)} valid time series."
-    )
+    logging.info(f"Processed {len(data)} time series and returned {len(train_TSs)} valid time series.")
     return train_TSs, valid_TSs
 
 
@@ -1627,10 +1558,7 @@ def calc_min_input_length(gmparam: GMParam) -> int:
         An integer representing the minimum length of training data.
     """
 
-    return int(
-        gmparam.input_window
-        + gmparam.min_warming_up_step_num * gmparam.min_training_step_length
-    )
+    return int(gmparam.input_window + gmparam.min_warming_up_step_num * gmparam.min_training_step_length)
 
 
 def calc_max_fcst_horizon(gmparam: GMParam) -> int:

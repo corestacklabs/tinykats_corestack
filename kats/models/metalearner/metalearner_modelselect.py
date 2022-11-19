@@ -12,24 +12,32 @@ This module contains:
 
 import ast
 import logging
-from collections import Counter, defaultdict
-from typing import Any, Dict, List, Optional, Tuple, Union
+from collections import Counter
+from collections import defaultdict
+from typing import Any
+from typing import Dict
+from typing import List
+from typing import Optional
+from typing import Tuple
+from typing import Union
 
 import joblib
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
-from kats.consts import TimeSeriesData
-from kats.tsfeatures.tsfeatures import TsFeatures
 from sklearn import metrics
-from sklearn.ensemble import GradientBoostingClassifier, RandomForestClassifier
+from sklearn.ensemble import GradientBoostingClassifier
+from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import train_test_split
 from sklearn.naive_bayes import GaussianNB
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import StandardScaler
 from sklearn.svm import SVC
+
+from kats.consts import TimeSeriesData
+from kats.tsfeatures.tsfeatures import TsFeatures
 
 
 class MetaLearnModelSelect:
@@ -56,9 +64,7 @@ class MetaLearnModelSelect:
         >>> mlms2.load_model("mlms.pkl")
     """
 
-    def __init__(
-        self, metadata: Optional[List[Dict[str, Any]]] = None, load_model: bool = False
-    ) -> None:
+    def __init__(self, metadata: Optional[List[Dict[str, Any]]] = None, load_model: bool = False) -> None:
         if not load_model:
             # pyre-fixme[6]: Expected `Sized` for 1st param but got
             #  `Optional[List[typing.Any]]`.
@@ -113,9 +119,7 @@ class MetaLearnModelSelect:
                 hpt_list.append(self.metadata[i]["hpt_res"])
 
             if isinstance(self.metadata[i]["features"], str):
-                metadataX_list.append(
-                    list(ast.literal_eval(self.metadata[i]["features"]).values())
-                )
+                metadataX_list.append(list(ast.literal_eval(self.metadata[i]["features"]).values()))
             else:
                 metadataX_list.append(list(self.metadata[i]["features"].values()))
 
@@ -123,9 +127,7 @@ class MetaLearnModelSelect:
 
         self.col_namesX = list(self.metadata[0]["features"].keys())
         self.hpt = pd.Series(hpt_list, name="hpt", copy=False)
-        self.metadataX = pd.DataFrame(
-            metadataX_list, columns=self.col_namesX, copy=False
-        )
+        self.metadataX = pd.DataFrame(metadataX_list, columns=self.col_namesX, copy=False)
         self.metadataX.fillna(0, inplace=True)
         self.metadataY = pd.Series(metadataY_list, name="y", copy=False)
         self.x_mean = np.average(self.metadataX.values, axis=0)
@@ -145,7 +147,9 @@ class MetaLearnModelSelect:
             msg = "Not recommend to do downsampling! Dataset will be too small after downsampling!"
             logging.info(msg)
         elif max(local_count) > min(local_count) * 5:
-            msg = "Number of obs in majority class is much greater than in minority class. Downsampling is recommended!"
+            msg = (
+                "Number of obs in majority class is much greater than in minority class. Downsampling is recommended!"
+            )
             logging.info(msg)
         else:
             msg = "No significant data imbalance problem, no need to do downsampling."
@@ -210,9 +214,7 @@ class MetaLearnModelSelect:
             The matplotlib Axes.
         """
 
-        combined = pd.concat(
-            [self.metadataX.iloc[i], self.metadataX.iloc[j]], axis=1, copy=False
-        )
+        combined = pd.concat([self.metadataX.iloc[i], self.metadataX.iloc[j]], axis=1, copy=False)
         combined.columns = [
             f"{self.metadataY.iloc[i]} model",
             f"{self.metadataY.iloc[j]} model",
@@ -322,21 +324,13 @@ class MetaLearnModelSelect:
         em = np.mean if eval_method == "mean" else np.median
 
         # meta learning errors
-        fit_error["meta-learn"] = em(
-            [hpt_train.iloc[i][c][-1] for i, c in enumerate(y_fit)]
-        )
-        pred_error["meta-learn"] = em(
-            [hpt_test.iloc[i][c][-1] for i, c in enumerate(y_pred)]
-        )
+        fit_error["meta-learn"] = em([hpt_train.iloc[i][c][-1] for i, c in enumerate(y_fit)])
+        pred_error["meta-learn"] = em([hpt_test.iloc[i][c][-1] for i, c in enumerate(y_pred)])
 
         # pre-selected model errors, for all candidate models
         for label in self.metadataY.unique():
-            fit_error[label] = em(
-                [hpt_train.iloc[i][label][-1] for i in range(len(hpt_train))]
-            )
-            pred_error[label] = em(
-                [hpt_test.iloc[i][label][-1] for i in range(len(hpt_test))]
-            )
+            fit_error[label] = em([hpt_train.iloc[i][label][-1] for i in range(len(hpt_train))])
+            pred_error[label] = em([hpt_test.iloc[i][label][-1] for i in range(len(hpt_test))])
 
         self.clf = clf
         return {
@@ -381,9 +375,7 @@ class MetaLearnModelSelect:
             logging.error(msg)
             raise ValueError(msg)
 
-    def pred(
-        self, source_ts: TimeSeriesData, ts_scale: bool = True, n_top: int = 1
-    ) -> Union[str, List[str]]:
+    def pred(self, source_ts: TimeSeriesData, ts_scale: bool = True, n_top: int = 1) -> Union[str, List[str]]:
         """Predict the best forecasting model for a new time series data.
 
         Args:
@@ -465,9 +457,7 @@ class MetaLearnModelSelect:
         pvalue = np.average(bs < 0)
         return pvalue
 
-    def pred_fuzzy(
-        self, source_ts: TimeSeriesData, ts_scale: bool = True, sig_level: float = 0.2
-    ) -> Dict[str, Any]:
+    def pred_fuzzy(self, source_ts: TimeSeriesData, ts_scale: bool = True, sig_level: float = 0.2) -> Dict[str, Any]:
         """Predict a forecasting model for a new time series data using fuzzy method.
 
         The fuzzy method returns the best candiate model and the second best model will be returned if there is no statistically significant difference between them.
@@ -494,9 +484,7 @@ class MetaLearnModelSelect:
             test = (test - self.x_mean) / self.x_std
         test = test.reshape([1, -1])
         m = len(self.clf.estimators_)
-        data = np.array(
-            [self.clf.estimators_[i].predict_proba(test)[0] for i in range(m)]
-        )
+        data = np.array([self.clf.estimators_[i].predict_proba(test)[0] for i in range(m)])
         prob = self.clf.predict_proba(test)[0]
         idx = np.argsort(-prob)[:2]
         pvalue = self._bootstrap(data[:, idx[:2]])

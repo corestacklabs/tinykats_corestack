@@ -4,13 +4,15 @@
 # LICENSE file in the root directory of this source tree.
 
 import math
-from typing import Any, Dict, Union
+from typing import Any
+from typing import Dict
+from typing import Union
 
 import pandas as pd
 import pandas.testing as pdt
-from kats.compat import compat
 from pandas.core.algorithms import safe_sort
 
+from kats.compat import compat
 
 version: compat.Version = compat.Version("pandas")
 
@@ -77,12 +79,7 @@ def assert_frame_equal(
         and hasattr(right.index, "freq")
     ):
         assert left.index.freq == right.index.freq, (left.index.freq, right.index.freq)
-    if (
-        check_flags
-        and version < "1.2"
-        and hasattr(left, "flags")
-        and hasattr(right, "flags")
-    ):
+    if check_flags and version < "1.2" and hasattr(left, "flags") and hasattr(right, "flags"):
         assert left.flags == right.flags, f"{repr(left.flags)} != {repr(right.flags)}"
 
 
@@ -149,12 +146,7 @@ def assert_series_equal(
     ):
         # pyre-fixme[16]: `Index` has no attribute `freq`.
         assert left.index.freq == right.index.freq, (left.index.freq, right.index.freq)
-    if (
-        check_flags
-        and version < "1.2"
-        and hasattr(left, "flags")
-        and hasattr(right, "flags")
-    ):
+    if check_flags and version < "1.2" and hasattr(left, "flags") and hasattr(right, "flags"):
         assert left.flags == right.flags, f"{repr(left.flags)} != {repr(right.flags)}"
     if check_index and version < "1.3":
         assert_index_equal(

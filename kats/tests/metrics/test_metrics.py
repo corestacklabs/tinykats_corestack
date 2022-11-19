@@ -3,19 +3,20 @@
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
 
-from typing import List, Optional, Union
+from typing import List
+from typing import Optional
+from typing import Union
 from unittest import TestCase
 
 import numpy as np
 import numpy.testing as npt
-from kats.metrics import metrics
 from parameterized.parameterized import parameterized
+
+from kats.metrics import metrics
 
 
 class MetricsTest(TestCase):
-    def validate(
-        self, expected: Union[float, np.ndarray], result: Union[float, np.ndarray]
-    ) -> None:
+    def validate(self, expected: Union[float, np.ndarray], result: Union[float, np.ndarray]) -> None:
         if isinstance(expected, float):
             self.assertTrue(isinstance(result, float))
             if np.isnan(expected):
@@ -35,9 +36,7 @@ class MetricsTest(TestCase):
             ("empty", [], []),
         ]
     )
-    def test__arrays(
-        self, _name: str, expected: List[List[float]], arrs: List[List[float]]
-    ) -> None:
+    def test__arrays(self, _name: str, expected: List[List[float]], arrs: List[List[float]]) -> None:
         result = list(metrics._arrays(*arrs))
         self.assertEqual(len(expected), len(result))
         for e, a in zip(expected, result):
@@ -775,7 +774,5 @@ class MetricsTest(TestCase):
         alpha: float,
         rolling_window: Union[None, int],
     ) -> None:
-        result = metrics.mult_interval_score(
-            y_true, y_lower, y_upper, alpha, rolling_window
-        )
+        result = metrics.mult_interval_score(y_true, y_lower, y_upper, alpha, rolling_window)
         self.validate(expected, result)

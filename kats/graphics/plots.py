@@ -20,9 +20,7 @@ except ImportError:
     Figure = object
 
 
-def plot_scatter_with_confints(
-    val: List[float], confint: np.ndarray, title: str
-) -> Figure:
+def plot_scatter_with_confints(val: List[float], confint: np.ndarray, title: str) -> Figure:
     """Plots a scatter plot with confidence intervals used to plot ACF and PACF
     Parameters
     ----------
@@ -69,9 +67,7 @@ def plot_scatter_with_confints(
                     showlegend=False,
                 ),
             ],
-            "layout": go.Layout(
-                title=title, yaxis={"title": "Correlation"}, xaxis={"title": "Lag"}
-            ),
+            "layout": go.Layout(title=title, yaxis={"title": "Correlation"}, xaxis={"title": "Lag"}),
         }
     )
     return fig
@@ -124,16 +120,12 @@ def make_fourier_plot(
                     name="Selected peaks",
                 ),
             ],
-            "layout": go.Layout(
-                title=title, yaxis={"title": ylabel}, xaxis={"title": xlabel}
-            ),
+            "layout": go.Layout(title=title, yaxis={"title": ylabel}, xaxis={"title": xlabel}),
         }
     )
 
 
-def plot_fitted_harmonics(
-    times: pd.Series, original_values: pd.Series, fitted_values: np.ndarray
-) -> Figure:
+def plot_fitted_harmonics(times: pd.Series, original_values: pd.Series, fitted_values: np.ndarray) -> Figure:
     """Plots a scatter plot of the fitted harmonics
     Parameters
     ----------

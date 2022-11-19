@@ -14,21 +14,33 @@ import logging
 from dataclasses import dataclass
 from multiprocessing import cpu_count
 from multiprocessing.pool import ThreadPool
-from typing import Any, Callable, Dict, List, Tuple, Union
+from typing import Any
+from typing import Callable
+from typing import Dict
+from typing import List
+from typing import Tuple
+from typing import Union
 
-import kats.utils.time_series_parameter_tuning as tpt
 import numpy as np
 import pandas as pd
-from kats.consts import SearchMethodEnum, TimeSeriesData
-from kats.metrics.metrics import core_metric
-from kats.models.arima import ARIMAModel, ARIMAParams
-from kats.models.holtwinters import HoltWintersModel, HoltWintersParams
-from kats.models.prophet import ProphetModel, ProphetParams
-from kats.models.sarima import SARIMAModel, SARIMAParams
-from kats.models.stlf import STLFModel, STLFParams
-from kats.models.theta import ThetaModel, ThetaParams
-from kats.tsfeatures.tsfeatures import TsFeatures
 
+import kats.utils.time_series_parameter_tuning as tpt
+from kats.consts import SearchMethodEnum
+from kats.consts import TimeSeriesData
+from kats.metrics.metrics import core_metric
+from kats.models.arima import ARIMAModel
+from kats.models.arima import ARIMAParams
+from kats.models.holtwinters import HoltWintersModel
+from kats.models.holtwinters import HoltWintersParams
+from kats.models.prophet import ProphetModel
+from kats.models.prophet import ProphetParams
+from kats.models.sarima import SARIMAModel
+from kats.models.sarima import SARIMAParams
+from kats.models.stlf import STLFModel
+from kats.models.stlf import STLFParams
+from kats.models.theta import ThetaModel
+from kats.models.theta import ThetaParams
+from kats.tsfeatures.tsfeatures import TsFeatures
 
 candidate_models = {
     "arima": ARIMAModel,
@@ -119,17 +131,13 @@ class GetMetaData:
 
         # Check if the data type is TimeSeriesData
         if not isinstance(self.data, TimeSeriesData):
-            msg = "Only support TimeSeriesData, but get {type}.".format(
-                type=type(self.data)
-            )
+            msg = "Only support TimeSeriesData, but get {type}.".format(type=type(self.data))
             logging.error(msg)
             raise ValueError(msg)
 
         # Check if the time series is univariate
         if not isinstance(self.data.value, pd.Series):
-            msg = "Only support univariate time series, but get {type}.".format(
-                type=type(self.data.value)
-            )
+            msg = "Only support univariate time series, but get {type}.".format(type=type(self.data.value))
             logging.error(msg)
             raise ValueError(msg)
 
@@ -182,9 +190,7 @@ class GetMetaData:
             raise ValueError("It's constant time series!")
 
         # check if the time series contains NAN, inf or -inf
-        if np.any(np.isinf(self.data.value.values)) or np.any(
-            np.isnan(self.data.value.values)
-        ):
+        if np.any(np.isinf(self.data.value.values)) or np.any(np.isnan(self.data.value.values)):
             raise ValueError("Time series contains NAN or infinity value(s)!")
 
         msg = "Valid time series data!"

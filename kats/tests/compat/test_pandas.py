@@ -5,11 +5,15 @@
 
 import inspect
 import unittest
-from typing import Any, Dict
-from unittest.mock import ANY, patch
+from typing import Any
+from typing import Dict
+from unittest.mock import ANY
+from unittest.mock import patch
 
 import pandas as pd
-from kats.compat import compat, pandas
+
+from kats.compat import compat
+from kats.compat import pandas
 
 
 class TestPandas(unittest.TestCase):
@@ -57,9 +61,7 @@ class TestPandas(unittest.TestCase):
     def test_assert_frame_equal_11(self, assert_frame_equal: Any) -> None:
         assert_frame_equal.return_value = False
         df = pd.DataFrame()
-        result = pandas.assert_frame_equal(
-            df, df, check_less_precise=2, check_flags=False, rtol=0.01
-        )
+        result = pandas.assert_frame_equal(df, df, check_less_precise=2, check_flags=False, rtol=0.01)
         self.assertFalse(result)
         args = dict(self.assert_frame_equal_args)
         args["rtol"] = 0.01
@@ -94,9 +96,7 @@ class TestPandas(unittest.TestCase):
     ) -> None:
         assert_series_equal.return_value = False
         s = pd.Series(dtype=int)
-        result = pandas.assert_series_equal(
-            s, s, check_less_precise=2, check_flags=False, check_freq=False, rtol=0.01
-        )
+        result = pandas.assert_series_equal(s, s, check_less_precise=2, check_flags=False, check_freq=False, rtol=0.01)
         self.assertFalse(result)
         args = dict(self.assert_series_equal_args)
         args["check_less_precise"] = 2

@@ -10,17 +10,16 @@ from typing import Sequence
 from unittest import TestCase
 
 import numpy as np
-from kats.consts import TimeSeriesData
-from kats.detectors.bocpd import (
-    BOCPDChangePoint,
-    BOCPDetector,
-    BOCPDModelType,
-    NormalKnownParameters,
-    PoissonModelParameters,
-    TrendChangeParameters,
-)
-from kats.utils.simulator import Simulator
 from parameterized.parameterized import parameterized
+
+from kats.consts import TimeSeriesData
+from kats.detectors.bocpd import BOCPDChangePoint
+from kats.detectors.bocpd import BOCPDetector
+from kats.detectors.bocpd import BOCPDModelType
+from kats.detectors.bocpd import NormalKnownParameters
+from kats.detectors.bocpd import PoissonModelParameters
+from kats.detectors.bocpd import TrendChangeParameters
+from kats.utils.simulator import Simulator
 
 
 class BOCPDTest(TestCase):
@@ -56,15 +55,9 @@ class BOCPDTest(TestCase):
         # algorithm can detect a few points before/after
         self.normal_cp_arr = np.concatenate(
             (
-                self.normal_ts.time.values[
-                    range(BOCPDTest.first_cp_begin - 5, BOCPDTest.first_cp_begin + 5)
-                ],
-                self.normal_ts.time.values[
-                    range(BOCPDTest.first_cp_end - 5, BOCPDTest.first_cp_end + 5)
-                ],
-                self.normal_ts.time.values[
-                    range(BOCPDTest.second_cp_begin - 5, BOCPDTest.second_cp_begin + 5)
-                ],
+                self.normal_ts.time.values[range(BOCPDTest.first_cp_begin - 5, BOCPDTest.first_cp_begin + 5)],
+                self.normal_ts.time.values[range(BOCPDTest.first_cp_end - 5, BOCPDTest.first_cp_end + 5)],
+                self.normal_ts.time.values[range(BOCPDTest.second_cp_begin - 5, BOCPDTest.second_cp_begin + 5)],
             )
         )
 
@@ -100,15 +93,9 @@ class BOCPDTest(TestCase):
         # algorithm can detect a few points before/after
         self.multnorm_cp_arr = np.concatenate(
             (
-                self.multnorm_ts.time.values[
-                    range(BOCPDTest.first_cp_begin - 5, BOCPDTest.first_cp_begin + 5)
-                ],
-                self.multnorm_ts.time.values[
-                    range(BOCPDTest.first_cp_end - 5, BOCPDTest.first_cp_end + 5)
-                ],
-                self.multnorm_ts.time.values[
-                    range(BOCPDTest.second_cp_begin - 5, BOCPDTest.second_cp_begin + 5)
-                ],
+                self.multnorm_ts.time.values[range(BOCPDTest.first_cp_begin - 5, BOCPDTest.first_cp_begin + 5)],
+                self.multnorm_ts.time.values[range(BOCPDTest.first_cp_end - 5, BOCPDTest.first_cp_end + 5)],
+                self.multnorm_ts.time.values[range(BOCPDTest.second_cp_begin - 5, BOCPDTest.second_cp_begin + 5)],
             )
         )
 
@@ -152,9 +139,7 @@ class BOCPDTest(TestCase):
         self.trend_bocpd_model = BOCPDetector(data=self.trend_ts)
         self.trend_cps = self.trend_bocpd_model.detector(
             model=BOCPDModelType.TREND_CHANGE_MODEL,
-            model_parameters=TrendChangeParameters(
-                readjust_sigma_prior=True, num_points_prior=20
-            ),
+            model_parameters=TrendChangeParameters(readjust_sigma_prior=True, num_points_prior=20),
             debug=True,
             threshold=0.5,
             choose_priors=False,
@@ -176,15 +161,9 @@ class BOCPDTest(TestCase):
         # algorithm can detect a few points before/after
         self.poisson_cp_arr = np.concatenate(
             (
-                self.poisson_ts.time.values[
-                    range(BOCPDTest.first_cp_begin - 5, BOCPDTest.first_cp_begin + 5)
-                ],
-                self.poisson_ts.time.values[
-                    range(BOCPDTest.first_cp_end - 5, BOCPDTest.first_cp_end + 5)
-                ],
-                self.poisson_ts.time.values[
-                    range(BOCPDTest.second_cp_begin - 5, BOCPDTest.second_cp_begin + 5)
-                ],
+                self.poisson_ts.time.values[range(BOCPDTest.first_cp_begin - 5, BOCPDTest.first_cp_begin + 5)],
+                self.poisson_ts.time.values[range(BOCPDTest.first_cp_end - 5, BOCPDTest.first_cp_end + 5)],
+                self.poisson_ts.time.values[range(BOCPDTest.second_cp_begin - 5, BOCPDTest.second_cp_begin + 5)],
             )
         )
 
@@ -233,9 +212,7 @@ class BOCPDTest(TestCase):
     def test_normal_change_prob_len(self) -> None:
 
         change_prob_dict = self.normal_bocpd_model.get_change_prob()
-        change_prob = list(change_prob_dict.values())[
-            0
-        ]  # dict only has a single element here
+        change_prob = list(change_prob_dict.values())[0]  # dict only has a single element here
         self.assertEqual(change_prob.shape[0], len(self.normal_ts))
 
     # pyre-fixme[56]: Pyre was not able to infer the type of the decorator
@@ -250,20 +227,14 @@ class BOCPDTest(TestCase):
             ("w_priors_and_agg_post", True, True),
         ]
     )
-    def test_normal_changepoints(
-        self, _: str, choose_priors: bool, agg_cp: bool
-    ) -> None:
+    def test_normal_changepoints(self, _: str, choose_priors: bool, agg_cp: bool) -> None:
 
-        self.assert_changepoints_exist(
-            self.normal_ts, self.normal_cp_arr, self.normal_cps
-        )
+        self.assert_changepoints_exist(self.normal_ts, self.normal_cp_arr, self.normal_cps)
 
     def test_normal_changepoints_gridsearch(self) -> None:
         # test the case where search method has been changed to gridsearch
 
-        self.assert_changepoints_exist(
-            self.normal_ts, self.normal_cp_arr, self.normal_gridsearch_cps
-        )
+        self.assert_changepoints_exist(self.normal_ts, self.normal_cp_arr, self.normal_gridsearch_cps)
 
     # pyre-fixme[56]: Pyre was not able to infer the type of the decorator
     #  `parameterized.parameterized.parameterized.expand([("default", False, False),
@@ -277,9 +248,7 @@ class BOCPDTest(TestCase):
             ("w_priors_and_agg_post", True, True),
         ]
     )
-    def test_additional_multivariate_normal_plots(
-        self, _: str, choose_priors: bool, agg_cp: bool
-    ) -> None:
+    def test_additional_multivariate_normal_plots(self, _: str, choose_priors: bool, agg_cp: bool) -> None:
         # check if multivariate detection works with choosing priors
         cps = self.multnorm_bocpd_model.detector(
             model=BOCPDModelType.NORMAL_KNOWN_MODEL,
@@ -364,9 +333,7 @@ class BOCPDTest(TestCase):
             ),
         ]
     )
-    def test_normal_multivariate_changepoints_length(
-        self, _: str, cps_name: str, target_len: int
-    ) -> None:
+    def test_normal_multivariate_changepoints_length(self, _: str, cps_name: str, target_len: int) -> None:
         cps = getattr(self, cps_name)
         self.assertEqual(len(cps), target_len)
 
@@ -389,9 +356,7 @@ class BOCPDTest(TestCase):
 
     def test_poisson_changepoints(self) -> None:
 
-        self.assert_changepoints_exist(
-            self.poisson_ts, self.poisson_cp_arr, self.poisson_cps
-        )
+        self.assert_changepoints_exist(self.poisson_ts, self.poisson_cp_arr, self.poisson_cps)
 
     def test_time_col_name(self) -> None:
 

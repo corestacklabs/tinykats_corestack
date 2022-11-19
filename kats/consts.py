@@ -23,16 +23,27 @@ import copy
 import datetime
 import logging
 from collections.abc import Iterable
-from enum import auto, Enum, unique
-from typing import Any, cast, Dict, List, Optional, Tuple, Union
+from enum import Enum
+from enum import auto
+from enum import unique
+from typing import Any
+from typing import Dict
+from typing import List
+from typing import Optional
+from typing import Tuple
+from typing import Union
+from typing import cast
 
 import dateutil
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from kats.compat.pandas import assert_frame_equal, assert_series_equal
-from pandas.api.types import is_datetime64_any_dtype as is_datetime, is_numeric_dtype
+from pandas.api.types import is_datetime64_any_dtype as is_datetime
+from pandas.api.types import is_numeric_dtype
 from pandas.tseries.frequencies import to_offset
+
+from kats.compat.pandas import assert_frame_equal
+from kats.compat.pandas import assert_series_equal
 
 FigSize = Tuple[int, int]
 
@@ -41,9 +52,7 @@ FigSize = Tuple[int, int]
 DEFAULT_TIME_NAME = "time"  # Default name for the time column in TimeSeriesData
 DEFAULT_VALUE_NAME = "value"  # Default name for the value column in TimeSeriesData
 PREFIX_OP_1 = "_kats.1"  # Internal prefix used when merging two TimeSeriesData objects
-PREFIX_OP_2 = (
-    "_kats.2"  # Second internal prefix used when merging two TimeSeriesData objects
-)
+PREFIX_OP_2 = "_kats.2"  # Second internal prefix used when merging two TimeSeriesData objects
 INTERPOLATION_METHODS = {
     "linear",
     "bfill",
@@ -215,10 +224,7 @@ class TimeSeriesData:
         # If DataFrame is passed
         if df is not None:
             if not isinstance(df, pd.DataFrame):
-                msg = (
-                    "Argument df needs to be a pandas.DataFrame but is of type "
-                    f"{type(df)}."
-                )
+                msg = "Argument df needs to be a pandas.DataFrame but is of type " f"{type(df)}."
                 raise _log_error(msg)
             # If empty DataFrame is passed then create an empty object
             if df.empty:
@@ -250,14 +256,8 @@ class TimeSeriesData:
         # If separate objects are passed
         elif time is not None and value is not None:
             if not (
-                (
-                    isinstance(time, pd.core.series.Series)
-                    or isinstance(time, pd.DatetimeIndex)
-                )
-                and (
-                    isinstance(value, pd.core.series.Series)
-                    or isinstance(value, pd.DataFrame)
-                )
+                (isinstance(time, pd.core.series.Series) or isinstance(time, pd.DatetimeIndex))
+                and (isinstance(value, pd.core.series.Series) or isinstance(value, pd.DataFrame))
             ):
                 msg = (
                     f"Invalid types: time is {type(time)} when it must be a "
@@ -279,10 +279,7 @@ class TimeSeriesData:
                 # pyre-ignore[6]: Expected `Union[typing.Callable[[Optional[typing.Has...
                 self._time.rename(DEFAULT_TIME_NAME, inplace=True)
             # Make sure the value series has a name
-            if (
-                isinstance(self._value, pd.core.series.Series)
-                and self._value.name is None
-            ):
+            if isinstance(self._value, pd.core.series.Series) and self._value.name is None:
                 # pyre-ignore[6]: Expected `Union[typing.Callable[[Optional[typing.Has...
                 self._value.rename(DEFAULT_VALUE_NAME, inplace=True)
             # Checking for emptiness
@@ -292,9 +289,7 @@ class TimeSeriesData:
                 if isinstance(value, pd.DataFrame):
                     self.value = pd.Series([], name=DEFAULT_VALUE_NAME)
                 else:
-                    self.value = pd.Series(
-                        [], name=value.name if value.name else DEFAULT_VALUE_NAME
-                    )
+                    self.value = pd.Series([], name=value.name if value.name else DEFAULT_VALUE_NAME)
             # Raise exception if only one of time and value is empty
             elif self.time.empty or self.value.empty:
                 msg = "One of time or value is empty while the other is not"
@@ -334,14 +329,8 @@ class TimeSeriesData:
 
         # Validate values
         if not self.value.empty and not (
-            (
-                isinstance(self.value, pd.core.series.Series)
-                and is_numeric_dtype(self.value)
-            )
-            or (
-                isinstance(self.value, pd.DataFrame)
-                and all(is_numeric_dtype(self.value[col]) for col in self.value)
-            )
+            (isinstance(self.value, pd.core.series.Series) and is_numeric_dtype(self.value))
+            or (isinstance(self.value, pd.DataFrame) and all(is_numeric_dtype(self.value[col]) for col in self.value))
         ):
             if isinstance(self.value, pd.core.series.Series):
                 value_dtypes = self.value.dtypes
@@ -432,9 +421,7 @@ class TimeSeriesData:
             except AssertionError:
                 return False
         # If both objects are multivariate
-        elif isinstance(self.value, pd.DataFrame) and isinstance(
-            other.value, pd.DataFrame
-        ):
+        elif isinstance(self.value, pd.DataFrame) and isinstance(other.value, pd.DataFrame):
             # Check if value DataFrames are equal (ignore column order)
             try:
                 assert_frame_equal(
@@ -469,12 +456,8 @@ class TimeSeriesData:
     def __len__(self) -> int:
         return len(self.value)
 
-    def __getitem__(
-        self, sliced: Union[str, Iterable, builtins.slice]
-    ) -> TimeSeriesData:
-        if isinstance(sliced, str) or (
-            isinstance(sliced, Iterable) and all(isinstance(s, str) for s in sliced)
-        ):
+    def __getitem__(self, sliced: Union[str, Iterable, builtins.slice]) -> TimeSeriesData:
+        if isinstance(sliced, str) or (isinstance(sliced, Iterable) and all(isinstance(s, str) for s in sliced)):
             return TimeSeriesData(
                 time=self.time,
                 value=self.value[sliced],
@@ -526,9 +509,7 @@ class TimeSeriesData:
                 try:
                     if tz:
                         return (
-                            pd.to_datetime(
-                                series.values, unit=unix_time_units, utc=True
-                            )
+                            pd.to_datetime(series.values, unit=unix_time_units, utc=True)
                             .tz_convert(tz)
                             .to_series()
                             .reset_index(drop=True)
@@ -536,11 +517,7 @@ class TimeSeriesData:
                     else:
                         return pd.to_datetime(series, unit=unix_time_units)
                 except ValueError:
-                    msg = (
-                        "Failed to parse time column "
-                        f"{list(series)} using unix units "
-                        f"{unix_time_units}"
-                    )
+                    msg = "Failed to parse time column " f"{list(series)} using unix units " f"{unix_time_units}"
                     logging.error(msg)
                     raise ValueError(msg)
             # Otherwise try to parse string
@@ -549,20 +526,14 @@ class TimeSeriesData:
                     if tz:
                         return (
                             pd.to_datetime(series.values, format=date_format)
-                            .tz_localize(
-                                tz, ambiguous=tz_ambiguous, nonexistent=tz_nonexistent
-                            )
+                            .tz_localize(tz, ambiguous=tz_ambiguous, nonexistent=tz_nonexistent)
                             .to_series()
                             .reset_index(drop=True)
                         )
                     else:
                         return pd.to_datetime(series, format=date_format)
                 except ValueError:
-                    msg = (
-                        "Failed to parse time column "
-                        f"{list(series)} using specified format "
-                        f"{date_format}"
-                    )
+                    msg = "Failed to parse time column " f"{list(series)} using specified format " f"{date_format}"
                     logging.error(msg)
                     raise ValueError(msg)
         else:
@@ -587,9 +558,7 @@ class TimeSeriesData:
         if not isinstance(other, TimeSeriesData):
             raise TypeError("extend must take another TimeSeriesData object")
         # Concatenate times
-        self.time = pd.concat(
-            [self.time, other.time], ignore_index=True, copy=False
-        ).reset_index(drop=True)
+        self.time = pd.concat([self.time, other.time], ignore_index=True, copy=False).reset_index(drop=True)
         # Convert values to DataFrame if needed
         cur_value = self.value
         other_value = other.value
@@ -598,9 +567,7 @@ class TimeSeriesData:
         if isinstance(other.value, pd.Series):
             other_value = pd.DataFrame(other_value, copy=False)
         # Concatenate values
-        self.value = pd.concat(
-            [cur_value, other_value], ignore_index=True, copy=False
-        ).reset_index(drop=True)
+        self.value = pd.concat([cur_value, other_value], ignore_index=True, copy=False).reset_index(drop=True)
         # Merge value back to Series if required
         self._set_univariate_values_to_series()
         # Validate that frequency is constant if required
@@ -640,8 +607,7 @@ class TimeSeriesData:
 
         if validate_dimension and len(self.time) != self.value.shape[0]:
             raise ValueError(
-                "time and value have different lengths (dimensions)! "
-                f"({len(self.time)} vs. {self.value.shape[0]})"
+                "time and value have different lengths (dimensions)! " f"({len(self.time)} vs. {self.value.shape[0]})"
             )
 
     def _calc_min_max_values(self) -> None:
@@ -726,9 +692,7 @@ class TimeSeriesData:
             :class:`TimeSeriesData` object, leave as False (default False).
         """
 
-        time_col_name = (
-            DEFAULT_TIME_NAME if standard_time_col_name else self.time_col_name
-        )
+        time_col_name = DEFAULT_TIME_NAME if standard_time_col_name else self.time_col_name
         output_df = pd.DataFrame(dict(zip((time_col_name,), (self.time,))), copy=False)
         if isinstance(self.value, pd.Series):
             if self.value.name is not None:
@@ -736,9 +700,7 @@ class TimeSeriesData:
             else:
                 output_df[DEFAULT_VALUE_NAME] = self.value
         elif isinstance(self.value, pd.DataFrame):
-            output_df = pd.concat(
-                [output_df, self.value], axis=1, copy=False
-            ).reset_index(drop=True)
+            output_df = pd.concat([output_df, self.value], axis=1, copy=False).reset_index(drop=True)
         else:
             raise ValueError(f"Wrong value type: {type(self.value)}")
         return output_df
@@ -782,9 +744,7 @@ class TimeSeriesData:
     def _perform_op(self, other: object, op_type: "OperationsEnum") -> TimeSeriesData:
         # Extract DataFrames with same time column name for joining
         self_df = self.to_dataframe(standard_time_col_name=True)
-        other_df = self._get_binary_op_other_arg(other).to_dataframe(
-            standard_time_col_name=True
-        )
+        other_df = self._get_binary_op_other_arg(other).to_dataframe(standard_time_col_name=True)
         # Join DataFrames on time column
         combo_df = pd.merge(
             self_df,
@@ -835,12 +795,7 @@ class TimeSeriesData:
             df.sort_values(self.time_col_name, inplace=True)
             df.reset_index(inplace=True, drop=True)
         else:
-            logging.warning(
-                (
-                    "Please make sure the time series is sorted by time or "
-                    "set 'sort_by_time' as True."
-                )
-            )
+            logging.warning(("Please make sure the time series is sorted by time or " "set 'sort_by_time' as True."))
         return df
 
     def _extract_from_df(self, df: pd.DataFrame) -> None:
@@ -867,9 +822,7 @@ class TimeSeriesData:
         if df.shape[0] <= 1:
             raise ValueError("Cannot find frequency for less than two data points")
 
-        freq_counts = (
-            df[self.time_col_name].diff().value_counts().sort_values(ascending=False)
-        )
+        freq_counts = df[self.time_col_name].diff().value_counts().sort_values(ascending=False)
 
         frequency = freq_counts.index[0]
 
@@ -925,9 +878,7 @@ class TimeSeriesData:
                     try:
                         df[col] = df[col].astype(float)
                     except ValueError:
-                        raise ValueError(
-                            f"Column {col} is invalid type: {df[col].dtype}"
-                        )
+                        raise ValueError(f"Column {col} is invalid type: {df[col].dtype}")
 
         df.set_index(self.time_col_name, inplace=True)
 
@@ -1059,9 +1010,7 @@ class TSIterator:
             if self.ts.is_univariate():
                 ret = TimeSeriesData(
                     time=pd.Series(self.ts.time[self.curr], copy=False),
-                    value=pd.Series(
-                        self.ts.value.iloc[self.curr], name=self.curr, copy=False
-                    ),
+                    value=pd.Series(self.ts.value.iloc[self.curr], name=self.curr, copy=False),
                 )
             else:
                 ret = TimeSeriesData(

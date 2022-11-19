@@ -5,7 +5,13 @@
 
 import logging
 import sys
-from typing import Any, Callable, Dict, List, Optional, Tuple, Union
+from typing import Any
+from typing import Callable
+from typing import Dict
+from typing import List
+from typing import Optional
+from typing import Tuple
+from typing import Union
 
 if sys.version_info >= (3, 8):
     from typing import Protocol
@@ -14,6 +20,7 @@ else:
 
 import numpy as np
 import pandas as pd
+
 from kats.consts import TimeSeriesData
 
 
@@ -112,18 +119,14 @@ class Pipeline:
         for i, (s, d) in enumerate(zip(steps, data)):
             s.data = d
             if not s.data.is_univariate():
-                msg = "Only support univariate time series, but get {type}.".format(
-                    type=type(s.data.value)
-                )
+                msg = "Only support univariate time series, but get {type}.".format(type=type(s.data.value))
                 logging.error(msg)
                 raise ValueError(msg)
             s.data.time = pd.to_datetime(s.data.time)
             if s.__subtype__ == "outlier":
                 extra_params["pipe"] = True
             metadata.append(s.detector(**extra_params))
-            if (
-                self.remove and s.__subtype__ == "outlier"
-            ):  # outlier removal when the step is outlier detector,
+            if self.remove and s.__subtype__ == "outlier":  # outlier removal when the step is outlier detector,
                 # and user required us to remove outlier
                 data[i] = s.remover(interpolate=True)
         return data, metadata
@@ -187,9 +190,7 @@ class Pipeline:
         for s, d in zip(steps, data):
             s.data = d
             if not isinstance(d.value, pd.Series):
-                msg = "Only support univariate time series, but get {type}.".format(
-                    type=type(d.value)
-                )
+                msg = "Only support univariate time series, but get {type}.".format(type=type(d.value))
                 logging.error(msg)
                 raise ValueError(msg)
             s.fit(**extra_params)
@@ -229,9 +230,7 @@ class Pipeline:
         n: str,
         s: Step,
         data: List[TimeSeriesData],
-    ) -> List[
-        TimeSeriesData
-    ]:  # using list output for adaption of current multi-time series scenarios
+    ) -> List[TimeSeriesData]:  # using list output for adaption of current multi-time series scenarios
         """
         Internal function for performing the detailed fitting functions
 
@@ -249,9 +248,7 @@ class Pipeline:
               methods in Kats
         """
         y = self.y
-        if (
-            str(s.__class__).split()[1][1:8] == "sklearn"
-        ):  # if current step is a scikit-learn model
+        if str(s.__class__).split()[1][1:8] == "sklearn":  # if current step is a scikit-learn model
             return self._fit_sklearn_(s, data, y)
 
         _steps_ = [s for _ in range(len(data))]

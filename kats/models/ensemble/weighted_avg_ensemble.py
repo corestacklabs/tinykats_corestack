@@ -12,14 +12,24 @@ weight.
 """
 import logging
 import sys
-from multiprocessing import cpu_count, Pool
-from typing import Any, cast, Dict, List, Optional, Type, Union
+from multiprocessing import Pool
+from multiprocessing import cpu_count
+from typing import Any
+from typing import Dict
+from typing import List
+from typing import Optional
+from typing import Type
+from typing import Union
+from typing import cast
 
 import numpy as np
 import pandas as pd
-from kats.consts import Params, TimeSeriesData
+
+from kats.consts import Params
+from kats.consts import TimeSeriesData
 from kats.models.ensemble import ensemble
-from kats.models.ensemble.ensemble import BASE_MODELS, EnsembleParams
+from kats.models.ensemble.ensemble import BASE_MODELS
+from kats.models.ensemble.ensemble import EnsembleParams
 from kats.models.model import Model
 from kats.utils.backtesters import BackTesterSimple
 
@@ -44,9 +54,7 @@ class WeightedAvgEnsemble(ensemble.BaseEnsemble):
         self.data = data
         self.params = params
         if not isinstance(self.data.value, pd.Series):
-            msg = "Only support univariate time series, but get {type}.".format(
-                type=type(self.data.value)
-            )
+            msg = "Only support univariate time series, but get {type}.".format(type=type(self.data.value))
             logging.error(msg)
             raise ValueError(msg)
 
@@ -109,14 +117,8 @@ class WeightedAvgEnsemble(ensemble.BaseEnsemble):
         pool.close()
         pool.join()
         self.errors = {model: res.get() for model, res in backtesters.items()}
-        original_weights = {
-            model: 1 / (err + sys.float_info.epsilon)
-            for model, err in self.errors.items()
-        }
-        self.weights = {
-            model: err / sum(original_weights.values())
-            for model, err in original_weights.items()
-        }
+        original_weights = {model: 1 / (err + sys.float_info.epsilon) for model, err in self.errors.items()}
+        self.weights = {model: err / sum(original_weights.values()) for model, err in original_weights.items()}
         return self.weights
 
     # pyre-fixme[14]: `predict` overrides method defined in `Model` inconsistently.
@@ -157,9 +159,7 @@ class WeightedAvgEnsemble(ensemble.BaseEnsemble):
         dates = dates[dates != last_date]
         self.fcst_dates = dates.to_pydatetime()
         self.dates = dates[dates != last_date]
-        self.fcst_df = fcst_df = pd.DataFrame(
-            {"time": self.dates, "fcst": self.fcst_weighted}, copy=False
-        )
+        self.fcst_df = fcst_df = pd.DataFrame({"time": self.dates, "fcst": self.fcst_weighted}, copy=False)
 
         logging.debug("Return forecast data: {fcst_df}")
         return fcst_df

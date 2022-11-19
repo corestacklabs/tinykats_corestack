@@ -4,12 +4,18 @@
 # LICENSE file in the root directory of this source tree.
 
 import logging
-from typing import Any, Dict, Optional, Sequence, Tuple, Union
+from typing import Any
+from typing import Dict
+from typing import Optional
+from typing import Sequence
+from typing import Tuple
+from typing import Union
 
 import numpy as np
 import pandas as pd
-from kats.compat import compat
 from statsmodels.tsa import holtwinters
+
+from kats.compat import compat
 
 ArrayLike = Union[np.ndarray, Sequence[float]]
 Frequency = Union[int, str, pd.Timedelta]
@@ -74,29 +80,17 @@ class ExponentialSmoothing(holtwinters.ExponentialSmoothing):
             self._use_boxcox = use_boxcox
             self._initialization_method = initialization_method
             if bounds is not None:
-                logging.warning(
-                    "ExponentialSmoothing parameter 'bounds' not supported by statsmodels"
-                )
+                logging.warning("ExponentialSmoothing parameter 'bounds' not supported by statsmodels")
             if initialization_method != "missing":
-                logging.warning(
-                    "ExponentialSmoothing parameter 'initialization_method' not supported by statsmodels"
-                )
+                logging.warning("ExponentialSmoothing parameter 'initialization_method' not supported by statsmodels")
             if initial_level is not None:
-                logging.warning(
-                    "ExponentialSmoothing parameter 'initial_level' not supported by statsmodels"
-                )
+                logging.warning("ExponentialSmoothing parameter 'initial_level' not supported by statsmodels")
             if initial_seasonal is not None:
-                logging.warning(
-                    "ExponentialSmoothing parameter 'initial_seasonal' not supported by statsmodels"
-                )
+                logging.warning("ExponentialSmoothing parameter 'initial_seasonal' not supported by statsmodels")
             if initial_trend is not None:
-                logging.warning(
-                    "ExponentialSmoothing parameter 'initial_trend' not supported by statsmodels"
-                )
+                logging.warning("ExponentialSmoothing parameter 'initial_trend' not supported by statsmodels")
             if seasonal_periods is not None:
-                logging.warning(
-                    "ExponentialSmoothing parameter 'seasonal_periods' not supported by statsmodels"
-                )
+                logging.warning("ExponentialSmoothing parameter 'seasonal_periods' not supported by statsmodels")
             super().__init__(
                 endog,
                 trend,

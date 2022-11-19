@@ -15,17 +15,23 @@ from __future__ import annotations
 import logging
 import math
 from copy import copy
-from typing import Any, Dict, List, Optional
+from typing import Any
+from typing import Dict
+from typing import List
+from typing import Optional
 
 import numpy as np
 import pandas as pd
-from kats.consts import Params, TimeSeriesData
+from scipy.stats import norm  # @manual
+from statsmodels.tsa.holtwinters import HoltWintersResults
+from statsmodels.tsa.holtwinters import SimpleExpSmoothing
+from statsmodels.tsa.stattools import acf
+
+from kats.consts import Params
+from kats.consts import TimeSeriesData
 from kats.models.model import Model
 from kats.utils.decomposition import TimeSeriesDecomposition
 from kats.utils.parameter_tuning_utils import get_default_theta_parameter_search_space
-from scipy.stats import norm  # @manual
-from statsmodels.tsa.holtwinters import HoltWintersResults, SimpleExpSmoothing
-from statsmodels.tsa.stattools import acf
 
 
 class ThetaParams(Params):
@@ -84,9 +90,7 @@ class ThetaModel(Model[ThetaParams]):
         self.__subtype__ = "theta"
         # pyre-fixme[16]: `Optional` has no attribute `value`.
         if not isinstance(self.data.value, pd.Series):
-            msg = "Only support univariate time series, but get {type}.".format(
-                type=type(self.data.value)
-            )
+            msg = "Only support univariate time series, but get {type}.".format(type=type(self.data.value))
             logging.error(msg)
             raise ValueError(msg)
         self.n: int = self.data.value.shape[0]
@@ -114,9 +118,7 @@ class ThetaModel(Model[ThetaParams]):
             #  `Optional[TimeSeriesData]`.
             decomp = TimeSeriesDecomposition(deseas_data, "multiplicative").decomposer()
             if (abs(decomp["seasonal"].value) < 10**-10).sum():
-                logging.info(
-                    "Seasonal indexes equal to zero. Using non-seasonal Theta method"
-                )
+                logging.info("Seasonal indexes equal to zero. Using non-seasonal Theta method")
             else:
                 # pyre-fixme[16]: `Optional` has no attribute `value`.
                 deseas_data.value = deseas_data.value / decomp["seasonal"].value
@@ -176,10 +178,7 @@ class ThetaModel(Model[ThetaParams]):
         if ses_model is None:
             raise ValueError("fit must be called before predict.")
 
-        logging.debug(
-            f"Call predict(steps={steps}, include_history={include_history},"
-            f"freq={freq}, alpha={alpha})"
-        )
+        logging.debug(f"Call predict(steps={steps}, include_history={include_history}," f"freq={freq}, alpha={alpha})")
         if freq is None:
             # pyre-fixme[16]: `Optional` has no attribute `time`.
             freq = pd.infer_freq(self.data.time)
@@ -229,16 +228,10 @@ class ThetaModel(Model[ThetaParams]):
             # generate historical fit
             fcst_df = pd.DataFrame(
                 {
-                    "time": np.concatenate(
-                        (pd.to_datetime(self.data.time), self.dates)
-                    ),
+                    "time": np.concatenate((pd.to_datetime(self.data.time), self.dates)),
                     "fcst": np.concatenate((fitted_values, self.y_fcst)),
-                    "fcst_lower": np.concatenate(
-                        (fitted_values - zt * sigma2, self.y_fcst_lower)
-                    ),
-                    "fcst_upper": np.concatenate(
-                        (fitted_values + zt * sigma2, self.y_fcst_upper)
-                    ),
+                    "fcst_lower": np.concatenate((fitted_values - zt * sigma2, self.y_fcst_lower)),
+                    "fcst_upper": np.concatenate((fitted_values + zt * sigma2, self.y_fcst_upper)),
                 },
                 copy=False,
             )

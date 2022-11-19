@@ -11,20 +11,27 @@ Kats supports multiple types of data-partition classes, including:
 """
 
 import logging
-from abc import ABC, abstractmethod
+from abc import ABC
+from abc import abstractmethod
 from datetime import datetime
 from multiprocessing import cpu_count
 from multiprocessing.dummy import Pool
-from typing import Any, cast, Dict, List, NamedTuple, Optional, Tuple, Union
+from typing import Any
+from typing import Dict
+from typing import List
+from typing import NamedTuple
+from typing import Optional
+from typing import Tuple
+from typing import Union
+from typing import cast
 
 import numpy as np
 import pandas as pd
+
 from kats.consts import TimeSeriesData
 
 Timestamp = Union[str, pd.Timestamp, datetime]
-DataPartition = Union[
-    TimeSeriesData, List[TimeSeriesData], Dict[Union[str, int], TimeSeriesData]
-]
+DataPartition = Union[TimeSeriesData, List[TimeSeriesData], Dict[Union[str, int], TimeSeriesData]]
 
 
 class TrainTestData(NamedTuple):
@@ -54,9 +61,7 @@ class DataPartitionBase(ABC):
         ValueError: An invalide data type is passed.
     """
 
-    def __init__(
-        self, multi: bool, max_core: Optional[int] = None, **kwargs: Any
-    ) -> None:
+    def __init__(self, multi: bool, max_core: Optional[int] = None, **kwargs: Any) -> None:
         self.multi = multi
         if multi:  # using multi-processing
             total_cores = cpu_count()
@@ -198,9 +203,7 @@ class SimpleDataPartition(DataPartitionBase):
         self.test_frac = test_frac
         self.test_size = test_size
 
-    def _param_check(
-        self, frac: Optional[float], size: Optional[int], frac_name: str, size_name: str
-    ) -> None:
+    def _param_check(self, frac: Optional[float], size: Optional[int], frac_name: str, size_name: str) -> None:
         if (frac is not None) and (size is not None):
             info = f"Please specify either `{frac_name}` or `{size_name}`, not both."
             _raise_error(info)
@@ -216,11 +219,7 @@ class SimpleDataPartition(DataPartitionBase):
         data: TimeSeriesData,
     ) -> Tuple[Union[int, str], List[TrainTestData]]:
         size = len(data)
-        train_size = (
-            _get_absolute_size(size, self.train_frac)
-            if self.train_frac
-            else self.train_size
-        )
+        train_size = _get_absolute_size(size, self.train_frac) if self.train_frac else self.train_size
         train_size = cast(int, train_size)
         if self.test_frac:
             end_idx = _get_absolute_size(size, self.test_frac) + train_size
@@ -228,9 +227,7 @@ class SimpleDataPartition(DataPartitionBase):
             end_idx = self.test_size + train_size
         else:
             end_idx = size
-        return tag, [
-            TrainTestData(train=data[:train_size], test=data[train_size:end_idx])
-        ]
+        return tag, [TrainTestData(train=data[:train_size], test=data[train_size:end_idx])]
 
 
 class SimpleTimestampDataPartition(DataPartitionBase):
@@ -258,9 +255,7 @@ class SimpleTimestampDataPartition(DataPartitionBase):
         multi: bool = True,
         max_core: Optional[int] = None,
     ) -> None:
-        super(SimpleTimestampDataPartition, self).__init__(
-            multi=multi, max_core=max_core
-        )
+        super(SimpleTimestampDataPartition, self).__init__(multi=multi, max_core=max_core)
         self.split_num = 1
         train_start, train_end, test_start, test_end = self._timestamp_check(
             train_start, train_end, test_start, test_end
@@ -281,9 +276,7 @@ class SimpleTimestampDataPartition(DataPartitionBase):
         train_end = pd.Timestamp(train_end)
         test_start = pd.Timestamp(test_start)
 
-        train_start = (
-            pd.Timestamp.min if train_start is None else pd.Timestamp(train_start)
-        )
+        train_start = pd.Timestamp.min if train_start is None else pd.Timestamp(train_start)
         test_end = pd.Timestamp.max if test_end is None else pd.Timestamp(test_end)
 
         if train_end <= train_start:
@@ -370,9 +363,7 @@ class RollingOriginDataParition(DataPartitionBase):
             msg = f"`test_frac` should be a float in (0, 1) but receives {test_frac}."
             _raise_error(msg)
         if window_frac < 0.0 or window_frac > 1.0:
-            msg = (
-                f"`window_frac` should be a float in [0, 1) but receives {window_frac}."
-            )
+            msg = f"`window_frac` should be a float in [0, 1) but receives {window_frac}."
             _raise_error(msg)
         if start_train_frac + test_frac + window_frac > 1.0:
             msg = "The sum of `start_frain_frac` and `test_frac` should be no larger than 1."

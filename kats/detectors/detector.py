@@ -7,8 +7,12 @@
 Defines the base class for detectors.
 """
 
-from abc import ABC, abstractmethod
-from typing import Any, Optional, Sequence, Union
+from abc import ABC
+from abc import abstractmethod
+from typing import Any
+from typing import Optional
+from typing import Sequence
+from typing import Union
 
 try:
     import plotly.graph_objs as go
@@ -19,7 +23,10 @@ except ImportError:
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from kats.consts import TimeSeriesChangePoint, TimeSeriesData, TimeSeriesIterator
+
+from kats.consts import TimeSeriesChangePoint
+from kats.consts import TimeSeriesData
+from kats.consts import TimeSeriesIterator
 from kats.detectors.detector_consts import AnomalyResponse
 
 

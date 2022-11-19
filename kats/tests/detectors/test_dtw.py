@@ -8,12 +8,11 @@ from unittest import TestCase
 
 import numpy as np
 import pandas as pd
+
 from kats.consts import TimeSeriesData
-from kats.detectors.dtwcpd import (
-    DTWCPDChangePoint,
-    DTWCPDDetector,
-    DTWTimeSeriesTooSmallException,
-)
+from kats.detectors.dtwcpd import DTWCPDChangePoint
+from kats.detectors.dtwcpd import DTWCPDDetector
+from kats.detectors.dtwcpd import DTWTimeSeriesTooSmallException
 
 
 class DTWCPDTest(TestCase):

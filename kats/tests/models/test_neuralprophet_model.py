@@ -6,22 +6,28 @@
 import builtins
 import sys
 import unittest
-from typing import Any, Callable, Dict, List, Mapping, Optional, Sequence
+from typing import Any
+from typing import Callable
+from typing import Dict
+from typing import List
+from typing import Mapping
+from typing import Optional
+from typing import Sequence
 from unittest import TestCase
 from unittest.mock import patch
 
 import numpy as np
 import pandas as pd
-from kats.compat import pandas
-from kats.consts import TimeSeriesData
-from kats.data.utils import load_air_passengers, load_data
-from kats.models.neuralprophet import NeuralProphetModel, NeuralProphetParams
-from kats.tests.models.test_models_dummy_data import (
-    NONSEASONAL_FUTURE_DF,
-    NONSEASONAL_INPUT,
-)
 from parameterized.parameterized import parameterized
 
+from kats.compat import pandas
+from kats.consts import TimeSeriesData
+from kats.data.utils import load_air_passengers
+from kats.data.utils import load_data
+from kats.models.neuralprophet import NeuralProphetModel
+from kats.models.neuralprophet import NeuralProphetParams
+from kats.tests.models.test_models_dummy_data import NONSEASONAL_FUTURE_DF
+from kats.tests.models.test_models_dummy_data import NONSEASONAL_INPUT
 
 TEST_DATA: Dict[str, Any] = {
     "nonseasonal": {
@@ -30,9 +36,7 @@ TEST_DATA: Dict[str, Any] = {
         "params": NeuralProphetParams(epochs=5),
     },
     "daily": {
-        "ts": TimeSeriesData(
-            load_data("peyton_manning.csv").set_axis(["time", "y"], axis=1)
-        ),
+        "ts": TimeSeriesData(load_data("peyton_manning.csv").set_axis(["time", "y"], axis=1)),
         "params": NeuralProphetParams(epochs=5),
         "params_custom_seasonality": NeuralProphetParams(
             epochs=5,
@@ -59,9 +63,7 @@ TEST_DATA: Dict[str, Any] = {
             ],
         ),
     },
-    "multivariate": {
-        "ts": TimeSeriesData(load_data("multivariate_anomaly_simulated_data.csv"))
-    },
+    "multivariate": {"ts": TimeSeriesData(load_data("multivariate_anomaly_simulated_data.csv"))},
 }
 
 
@@ -87,19 +89,15 @@ class NeuralProphetModelTest(TestCase):
             else:
                 return original_import_fn(module, *args, **kwargs)
 
-        cls.mock_imports = patch(
-            "builtins.__import__", side_effect=mock_neuralprophet_import
-        )
+        cls.mock_imports = patch("builtins.__import__", side_effect=mock_neuralprophet_import)
 
     def test_neuralprophet_not_installed(self) -> None:
         # Unload prophet module so its imports can be mocked as necessary
         del sys.modules["kats.models.neuralprophet"]
 
         with self.mock_imports:
-            from kats.models.neuralprophet import (
-                NeuralProphetModel,
-                NeuralProphetParams,
-            )
+            from kats.models.neuralprophet import NeuralProphetModel
+            from kats.models.neuralprophet import NeuralProphetParams
 
             self.assertRaises(RuntimeError, NeuralProphetParams)
             self.assertRaises(
@@ -111,7 +109,8 @@ class NeuralProphetModelTest(TestCase):
 
         # Restore the prophet module
         del sys.modules["kats.models.neuralprophet"]
-        from kats.models.neuralprophet import NeuralProphetModel, NeuralProphetParams
+        from kats.models.neuralprophet import NeuralProphetModel
+        from kats.models.neuralprophet import NeuralProphetParams
 
         # Confirm that the module has been properly reloaded -- should not
         # raise an exception anymore

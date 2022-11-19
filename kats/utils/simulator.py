@@ -11,13 +11,18 @@ from __future__ import annotations
 
 import copy
 from datetime import timedelta
-from typing import Any, Callable, List, Optional, Union
+from typing import Any
+from typing import Callable
+from typing import List
+from typing import Optional
+from typing import Union
 
 import numpy as np
 import pandas as pd
-from kats.consts import TimeSeriesData
 from pandas.tseries.frequencies import to_offset
 from scipy.stats import norm  # @manual
+
+from kats.consts import TimeSeriesData
 
 # A TimedeltaLike object represents a time offset.
 # E.g., length of 1 day can be represented by timedelta(days=1),or by
@@ -120,9 +125,7 @@ class Simulator:
 
         # validate params
         if sigma < 0 or sigma == 0:
-            raise ValueError(
-                "Standard deviation of normal distribution must be positive"
-            )
+            raise ValueError("Standard deviation of normal distribution must be positive")
 
         # Step 1: simulate ARMA(p, q)
         # get the max order of p' and q
@@ -171,14 +174,10 @@ class Simulator:
             periods=self.n,
         )
 
-        ts = TimeSeriesData(
-            time=time, value=pd.Series(x[-self.n :].reshape(-1), copy=False)
-        )
+        ts = TimeSeriesData(time=time, value=pd.Series(x[-self.n :].reshape(-1), copy=False))
         return ts
 
-    def add_trend(
-        self, magnitude: float, trend_type: str = "linear", multiply: bool = False
-    ) -> Simulator:
+    def add_trend(self, magnitude: float, trend_type: str = "linear", multiply: bool = False) -> Simulator:
         """Add a trend component to the target time series for STL-based simulator.
 
         trend_type -  shape of the trend. {"linear","sigmoid"}
@@ -303,9 +302,7 @@ class Simulator:
         >>> sim_ts = sim.stl_sim()
         """
 
-        ts = TimeSeriesData(
-            time=self.time, value=pd.Series(self.timeseries, copy=False)
-        )
+        ts = TimeSeriesData(time=self.time, value=pd.Series(self.timeseries, copy=False))
         return ts
 
     def _adjust_length(self, length: int) -> None:
@@ -372,9 +369,7 @@ class Simulator:
             cp_begin = cp_arr[i]
             cp_end = cp_arr[i + 1]
 
-            y_val[cp_begin:cp_end] = norm.rvs(
-                loc=level_arr[i], scale=noise, size=(cp_end - cp_begin)
-            )
+            y_val[cp_begin:cp_end] = norm.rvs(loc=level_arr[i], scale=noise, size=(cp_end - cp_begin))
 
         # add anomalies
         if len(anomaly_arr) != len(z_score_arr):
@@ -395,9 +390,7 @@ class Simulator:
             y_val[y_idx] = level_arr[seg_idx - 1] + z_score_arr[arr_idx] * noise
 
         # add seasonality
-        y_val += seasonal_magnitude * np.sin(
-            (np.pi / seasonal_period) * np.arange(self.n)
-        )
+        y_val += seasonal_magnitude * np.sin((np.pi / seasonal_period) * np.arange(self.n))
 
         return pd.Series(y_val, copy=False)
 
@@ -633,18 +626,14 @@ class Simulator:
             cp_begin = cp_arr[i]
             cp_end = cp_arr[i + 1]
 
-            y_val[cp_begin:cp_end] = y_val[cp_begin:cp_end] + trend_arr[i] * np.arange(
-                cp_begin, cp_end
-            )
+            y_val[cp_begin:cp_end] = y_val[cp_begin:cp_end] + trend_arr[i] * np.arange(cp_begin, cp_end)
 
             if i > 0:
                 delta_val = y_val[cp_begin] - y_val[cp_begin - 1]
                 y_val[cp_begin:cp_end] -= delta_val
 
         # add seasonality
-        y_val += seasonal_magnitude * np.sin(
-            (np.pi / seasonal_period) * np.arange(self.n)
-        )
+        y_val += seasonal_magnitude * np.sin((np.pi / seasonal_period) * np.arange(self.n))
 
         # add noise and anomalies
         noise_arr = norm.rvs(loc=0, scale=noise, size=self.n)
@@ -698,9 +687,7 @@ class Simulator:
 
         # check if last cp is less than length of ts
         if loc_arr[-1] >= len_ts:
-            raise ValueError(
-                f"Last CP is at {loc_arr[-1]}, larger than length of ts, {len_ts}"
-            )
+            raise ValueError(f"Last CP is at {loc_arr[-1]}, larger than length of ts, {len_ts}")
 
         if (len(loc_arr) - len(param_arr)) != loc_param_diff:
             raise ValueError(
@@ -806,9 +793,7 @@ class Simulator:
         if anomaly_arr is None or z_score_arr is None:
             return ts_input
         ts = copy.deepcopy(ts_input)
-        self._check_arr_inputs(
-            ts=ts, loc_arr=anomaly_arr, param_arr=z_score_arr, loc_param_diff=0
-        )
+        self._check_arr_inputs(ts=ts, loc_arr=anomaly_arr, param_arr=z_score_arr, loc_param_diff=0)
 
         # get the std. dev of the time series
         ts_val = ts.value.values

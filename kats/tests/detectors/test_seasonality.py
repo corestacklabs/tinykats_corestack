@@ -7,9 +7,11 @@ from unittest import TestCase
 
 import numpy as np
 import pandas as pd
+
 from kats.consts import TimeSeriesData
 from kats.data.utils import load_data
-from kats.detectors.seasonality import ACFDetector, FFTDetector
+from kats.detectors.seasonality import ACFDetector
+from kats.detectors.seasonality import FFTDetector
 from kats.models.harmonic_regression import HarmonicRegressionModel
 
 
@@ -47,15 +49,11 @@ class ACFDetectorTest(TestCase):
 
 class FFTDetectorTest(TestCase):
     def setUp(self) -> None:
-        times = pd.to_datetime(
-            np.arange(start=1576195200, stop=1577836801, step=60 * 60), unit="s"
-        )
+        times = pd.to_datetime(np.arange(start=1576195200, stop=1577836801, step=60 * 60), unit="s")
         self.series_times = pd.Series(times)
         harms = HarmonicRegressionModel.fourier_series(self.series_times, 24, 3)
         self.harms_sum = np.sum([1, 1, 1, 1, 1, 1] * harms, axis=1)
-        self.data = TimeSeriesData(
-            pd.DataFrame({"time": self.series_times, "values": self.harms_sum})
-        )
+        self.data = TimeSeriesData(pd.DataFrame({"time": self.series_times, "values": self.harms_sum}))
 
         DATA_multi = load_data("multivariate_anomaly_simulated_data.csv")
         self.TSData_multi = TimeSeriesData(DATA_multi)

@@ -11,7 +11,13 @@ Facebook Prophet and AR-Net, built on PyTorch.
 """
 
 import logging
-from typing import Any, Callable, Dict, List, Optional, Tuple, Union
+from typing import Any
+from typing import Callable
+from typing import Dict
+from typing import List
+from typing import Optional
+from typing import Tuple
+from typing import Union
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -28,7 +34,8 @@ except ImportError:
 
 TorchLoss = torch.nn.modules.loss._Loss
 
-from kats.consts import Params, TimeSeriesData
+from kats.consts import Params
+from kats.consts import TimeSeriesData
 from kats.models.model import Model
 from kats.utils.parameter_tuning_utils import (
     get_default_neuralprophet_parameter_search_space,
@@ -161,9 +168,7 @@ class NeuralProphetParams(Params):
         # when Numpy 1.21 is supported (for np.typing), do
         # import np.typing as npt
         # replace 'np.ndarray' by npt.NDArray['np.datetime64']
-        changepoints: Optional[
-            Union[List[str], List[np.datetime64], np.ndarray]
-        ] = None,
+        changepoints: Optional[Union[List[str], List[np.datetime64], np.ndarray]] = None,
         n_changepoints: int = 10,
         changepoints_range: float = 0.9,
         trend_reg: float = 0,
@@ -219,15 +224,9 @@ class NeuralProphetParams(Params):
         self.optimizer = optimizer
         self.normalize = normalize
         self.impute_missing = impute_missing
-        self.custom_seasonalities = (
-            [] if custom_seasonalities is None else custom_seasonalities
-        )
-        self.extra_future_regressors = (
-            [] if extra_future_regressors is None else extra_future_regressors
-        )
-        self.extra_lagged_regressors = (
-            [] if extra_lagged_regressors is None else extra_lagged_regressors
-        )
+        self.custom_seasonalities = [] if custom_seasonalities is None else custom_seasonalities
+        self.extra_future_regressors = [] if extra_future_regressors is None else extra_future_regressors
+        self.extra_lagged_regressors = [] if extra_lagged_regressors is None else extra_lagged_regressors
         self._reqd_regressor_names: List[str] = []
         logging.debug(
             "Initialized Neural Prophet with parameters. "
@@ -264,9 +263,7 @@ class NeuralProphetParams(Params):
         # If custom_seasonalities passed, ensure they contain the required keys.
         reqd_seasonality_keys = ["name", "period", "fourier_order"]
         if not all(
-            req_key in seasonality
-            for req_key in reqd_seasonality_keys
-            for seasonality in self.custom_seasonalities
+            req_key in seasonality for req_key in reqd_seasonality_keys for seasonality in self.custom_seasonalities
         ):
             msg = f"Custom seasonality dicts must contain the following keys:\n{reqd_seasonality_keys}"
             logging.error(msg)
@@ -460,16 +457,11 @@ class NeuralProphetModel(Model[NeuralProphetParams]):
             raise ValueError("Call fit() before predict().")
 
         logging.debug(
-            "Call predict() with parameters: "
-            f"steps:{steps}, raw:{raw}, future:{future}, kwargs:{kwargs}."
+            "Call predict() with parameters: " f"steps:{steps}, raw:{raw}, future:{future}, kwargs:{kwargs}."
         )
 
         # when extra_regressors are needed
-        if (
-            len(self.params.extra_future_regressors)
-            + len(self.params.extra_lagged_regressors)
-            > 0
-        ):
+        if len(self.params.extra_future_regressors) + len(self.params.extra_lagged_regressors) > 0:
             if future is None:
                 msg = "`future` should not be None when extra regressors are needed."
                 _error_msg(msg)
@@ -507,9 +499,7 @@ class NeuralProphetModel(Model[NeuralProphetParams]):
         return fcst_df
 
     # pyre-fixme[14]: `kats.models.neuralprophet.NeuralProphetModel.plot` overrides method defined in `Model` inconsistently.
-    def plot(
-        self, fcst: pd.DataFrame, figsize: Optional[Tuple[int, int]] = None
-    ) -> plt.Axes:
+    def plot(self, fcst: pd.DataFrame, figsize: Optional[Tuple[int, int]] = None) -> plt.Axes:
         fcst["y"] = None
         # pyre-fixme[16]: `Optional` has no attribute `plot`.
         return self.model.plot(fcst, figsize=figsize)

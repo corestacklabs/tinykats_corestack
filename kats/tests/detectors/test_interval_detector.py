@@ -3,19 +3,23 @@
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
 
-from datetime import datetime, timedelta
+from datetime import datetime
+from datetime import timedelta
 from operator import attrgetter
-from typing import List, Tuple, Type, Union
+from typing import List
+from typing import Tuple
+from typing import Type
+from typing import Union
 from unittest import TestCase
 
 import numpy as np
 import pandas as pd
-
-from kats.consts import TimeSeriesData
-from kats.detectors.interval_detector import ABDetectorModel, TestStatistic
 from parameterized.parameterized import parameterized
 from scipy.stats import norm
 
+from kats.consts import TimeSeriesData
+from kats.detectors.interval_detector import ABDetectorModel
+from kats.detectors.interval_detector import TestStatistic
 
 _SERIALIZED = b'{"alpha": 0.1, "duration": 1, "test_direction": "b_greater", "distribution": "binomial", "test_statistic": "absolute_difference"}'
 
@@ -88,9 +92,7 @@ class TestABDetectorModel(TestCase):
             [5, ValueError],
         ]
     )
-    def test_incorrect_alpha(
-        self, alpha: Union[None, float, int], expected: Type[Exception]
-    ) -> None:
+    def test_incorrect_alpha(self, alpha: Union[None, float, int], expected: Type[Exception]) -> None:
         with self.assertRaises(expected):
             ABDetectorModel(alpha=alpha, duration=1)
 
@@ -155,9 +157,7 @@ class TestABDetectorModel(TestCase):
             [[False, False, False, False], ([], [])],
         ]
     )
-    def test_get_true_run_indices(
-        self, sequence: List[bool], expected: Tuple[List[int], List[int]]
-    ) -> None:
+    def test_get_true_run_indices(self, sequence: List[bool], expected: Tuple[List[int], List[int]]) -> None:
         starts, ends = self.interval_detector._get_true_run_indices(np.array(sequence))
         expected_starts, expected_ends = expected
         assert starts.tolist() == expected_starts
@@ -172,16 +172,12 @@ class TestABDetectorModel(TestCase):
         ]
     )
     def test_get_critical_value_custom_duration(self, p_goal: float) -> None:
-        lowest_p = self.interval_detector._get_lowest_p(
-            m=3, n=100, p_goal=p_goal, r_tol=1e-3
-        )
+        lowest_p = self.interval_detector._get_lowest_p(m=3, n=100, p_goal=p_goal, r_tol=1e-3)
         assert np.isclose(lowest_p.p_global, p_goal, rtol=1e-3)
 
     def test_absolute_difference_test_statistic(self) -> None:
         df = self.df.copy()
-        self.interval_detector.critical_value = (
-            self.interval_detector._get_critical_value(1, 1e-5)
-        )
+        self.interval_detector.critical_value = self.interval_detector._get_critical_value(1, 1e-5)
         test_statistic = self.interval_detector.get_test_statistic(df)
         # "manually" compute z-scores
         diff = self.value_b - self.value_a - self.effect_size
@@ -199,24 +195,14 @@ class TestABDetectorModel(TestCase):
 
     def test_relative_difference_test_statistic(self) -> None:
         df = self.df.copy()
-        self.interval_detector.critical_value = (
-            self.interval_detector._get_critical_value(1, 1e-5)
-        )
+        self.interval_detector.critical_value = self.interval_detector._get_critical_value(1, 1e-5)
         self.interval_detector.test_statistic = TestStatistic.RELATIVE_DIFFERENCE
         test_statistic = self.interval_detector.get_test_statistic(df)
         # "manually" compute z-scores
-        diff = (
-            np.log(self.value_b) - np.log(self.value_a) - np.log(1 + self.effect_size)
-        )
+        diff = np.log(self.value_b) - np.log(self.value_a) - np.log(1 + self.effect_size)
         std_error = np.sqrt(
-            self.value_a
-            * (1 - self.value_a)
-            / self.sample_count_a
-            / (self.value_a**2)
-            + self.value_b
-            * (1 - self.value_b)
-            / self.sample_count_b
-            / (self.value_b**2)
+            self.value_a * (1 - self.value_a) / self.sample_count_a / (self.value_a**2)
+            + self.value_b * (1 - self.value_b) / self.sample_count_b / (self.value_b**2)
         )
         z_score = diff / std_error
         upper = np.exp(diff + _Z_SCORE * std_error)
@@ -365,16 +351,12 @@ class TestABDetectorModel(TestCase):
         for m in range(1, 100):
             assert np.isclose(
                 _dp_solve(p=p, n=100, m=m)[-1],
-                self.interval_detector._probability_of_at_least_one_m_run_in_n_trials(
-                    p=p, n=100, m=m
-                ),
+                self.interval_detector._probability_of_at_least_one_m_run_in_n_trials(p=p, n=100, m=m),
             )
         for n in range(1, 100):
             assert np.isclose(
                 _dp_solve(p=p, n=n, m=n)[-1],
-                self.interval_detector._probability_of_at_least_one_m_run_in_n_trials(
-                    p=p, n=n, m=n
-                ),
+                self.interval_detector._probability_of_at_least_one_m_run_in_n_trials(p=p, n=n, m=n),
             )
 
     # pyre-fixme[56]: Pyre was not able to infer the type of the decorator

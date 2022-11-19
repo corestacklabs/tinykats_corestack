@@ -17,15 +17,21 @@ https://pytorch.org/docs/stable/generated/torch.nn.LSTM.html
 """
 
 import logging
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
+from typing import Dict
+from typing import List
+from typing import Optional
+from typing import Tuple
 
 import numpy as np
 import pandas as pd
 import torch
 import torch.nn as nn
-from kats.consts import Params, TimeSeriesData
-from kats.models.model import Model
 from sklearn.preprocessing import MinMaxScaler
+
+from kats.consts import Params
+from kats.consts import TimeSeriesData
+from kats.models.model import Model
 
 
 class LSTMParams(Params):
@@ -79,9 +85,7 @@ class LSTMForecast(nn.Module):
 
         self.lstm = nn.LSTM(input_size=input_size, hidden_size=params.hidden_size)
 
-        self.linear = nn.Linear(
-            in_features=params.hidden_size, out_features=output_size
-        )
+        self.linear = nn.Linear(in_features=params.hidden_size, out_features=output_size)
 
     def forward(self, input_seq: torch.Tensor) -> torch.Tensor:
         """The forward method for the LSTM forecast PyTorch module
@@ -95,9 +99,7 @@ class LSTMForecast(nn.Module):
             output Linear layer
         """
 
-        lstm_out, self.hidden_cell = self.lstm(
-            input_seq.view(len(input_seq), 1, -1), self.hidden_cell
-        )
+        lstm_out, self.hidden_cell = self.lstm(input_seq.view(len(input_seq), 1, -1), self.hidden_cell)
         predictions = self.linear(lstm_out.view(len(input_seq), -1))
         return predictions[-1]
 
@@ -127,9 +129,7 @@ class LSTMModel(Model[LSTMParams]):
         super().__init__(data, params)
         # pyre-fixme[16]: `Optional` has no attribute `value`.
         if not isinstance(self.data.value, pd.Series):
-            msg = (
-                f"Only support univariate time series, but get {type(self.data.value)}."
-            )
+            msg = f"Only support univariate time series, but get {type(self.data.value)}."
             logging.error(msg)
             raise ValueError(msg)
 
@@ -239,9 +239,7 @@ class LSTMModel(Model[LSTMParams]):
         time_window = self.params.time_window
         hidden_size = self.params.hidden_size
 
-        logging.debug(
-            "Call predict() with parameters. " f"steps:{steps}, kwargs:{kwargs}"
-        )
+        logging.debug("Call predict() with parameters. " f"steps:{steps}, kwargs:{kwargs}")
         # pyre-fixme[16]: `Optional` has no attribute `time`.
         self.freq = kwargs.get("freq", pd.infer_freq(self.data.time))
 
@@ -260,9 +258,7 @@ class LSTMModel(Model[LSTMParams]):
                 test_inputs.append(model(seq).item())
 
         # inverse transform
-        fcst_denormalized = scaler.inverse_transform(
-            np.array(test_inputs[time_window:]).reshape(-1, 1)
-        ).flatten()
+        fcst_denormalized = scaler.inverse_transform(np.array(test_inputs[time_window:]).reshape(-1, 1)).flatten()
         logging.info("Generated forecast data from LSTM model.")
         logging.debug(f"Forecast data: {fcst_denormalized}")
 

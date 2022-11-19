@@ -4,29 +4,39 @@
 # LICENSE file in the root directory of this source tree.
 
 import unittest
-from typing import Any, Dict, Optional, Union
+from typing import Any
+from typing import Dict
+from typing import Optional
+from typing import Union
 from unittest import TestCase
 
 import numpy as np
 import pandas as pd
+from parameterized.parameterized import parameterized
+
 from kats.compat.pandas import assert_frame_equal
 from kats.consts import TimeSeriesData
-from kats.data.utils import load_air_passengers, load_data
-from kats.models.sarima import SARIMAModel, SARIMAParams
+from kats.data.utils import load_air_passengers
+from kats.data.utils import load_data
+from kats.models.sarima import SARIMAModel
+from kats.models.sarima import SARIMAParams
+from kats.tests.models.test_models_dummy_data import AIR_FCST_15_SARIMA_PARAM_1_MODEL_1
 from kats.tests.models.test_models_dummy_data import (
-    AIR_FCST_15_SARIMA_PARAM_1_MODEL_1,
     AIR_FCST_15_SARIMA_PARAM_1_MODEL_1_INCL_HIST,
-    AIR_FCST_15_SARIMA_PARAM_1_MODEL_2,
-    AIR_FCST_15_SARIMA_PARAM_2_MODEL_1,
-    AIR_FCST_15_SARIMA_PARAM_2_MODEL_2,
-    AIR_FCST_30_SARIMA_PARAM_1_MODEL_1,
+)
+from kats.tests.models.test_models_dummy_data import AIR_FCST_15_SARIMA_PARAM_1_MODEL_2
+from kats.tests.models.test_models_dummy_data import AIR_FCST_15_SARIMA_PARAM_2_MODEL_1
+from kats.tests.models.test_models_dummy_data import AIR_FCST_15_SARIMA_PARAM_2_MODEL_2
+from kats.tests.models.test_models_dummy_data import AIR_FCST_30_SARIMA_PARAM_1_MODEL_1
+from kats.tests.models.test_models_dummy_data import (
     AIR_FCST_30_SARIMA_PARAM_1_MODEL_1_INCL_HIST,
-    AIR_FCST_30_SARIMA_PARAM_1_MODEL_2,
-    AIR_FCST_30_SARIMA_PARAM_2_MODEL_1,
-    AIR_FCST_30_SARIMA_PARAM_2_MODEL_2,
+)
+from kats.tests.models.test_models_dummy_data import AIR_FCST_30_SARIMA_PARAM_1_MODEL_2
+from kats.tests.models.test_models_dummy_data import AIR_FCST_30_SARIMA_PARAM_2_MODEL_1
+from kats.tests.models.test_models_dummy_data import AIR_FCST_30_SARIMA_PARAM_2_MODEL_2
+from kats.tests.models.test_models_dummy_data import (
     EXOG_FCST_15_SARIMA_PARAM_EXOG_MODEL_1,
 )
-from parameterized.parameterized import parameterized
 
 AIR_TS: pd.DataFrame = load_air_passengers()
 MULTI_DF: pd.DataFrame = load_data("multivariate_anomaly_simulated_data.csv")
@@ -35,9 +45,7 @@ STEPS_2 = 30
 TEST_DATA: Dict[str, Dict[str, Any]] = {
     "monthly": {
         "ts": AIR_TS,
-        "invalid_ts": TimeSeriesData(
-            load_data("multivariate_anomaly_simulated_data.csv")
-        ),
+        "invalid_ts": TimeSeriesData(load_data("multivariate_anomaly_simulated_data.csv")),
         "freq": "MS",
         "p1": SARIMAParams(
             p=1,
@@ -196,14 +204,10 @@ class SARIMAModelTest(TestCase):
         m = SARIMAModel(data=ts, params=params)
         # pyre-fixme[6]: Incompatible parameter type...
         m.fit(**model_params)
-        res_1 = m.predict(
-            steps=steps_1, include_history=include_history, freq=freq
-        ).reset_index(
+        res_1 = m.predict(steps=steps_1, include_history=include_history, freq=freq).reset_index(
             drop=True,
         )
-        res_2 = m.predict(
-            steps=steps_2, include_history=include_history, freq=freq
-        ).reset_index(
+        res_2 = m.predict(steps=steps_2, include_history=include_history, freq=freq).reset_index(
             drop=True,
         )
         assert_frame_equal(truth_1, res_1, rtol=0.01)
@@ -279,31 +283,23 @@ class SARIMAModelTest(TestCase):
         params: SARIMAParams,
         model_params: Dict[str, Optional[Union[str, int, bool]]],
     ) -> None:
-        with self.assertRaises(
-            (ValueError, np.linalg.LinAlgError, NotImplementedError)
-        ):
+        with self.assertRaises((ValueError, np.linalg.LinAlgError, NotImplementedError)):
             m = SARIMAModel(data=ts, params=params)
             # pyre-fixme[6]: Incompatible parameter type...
             m.fit(**model_params)
 
     def test_exec_plot(self) -> None:
-        m = SARIMAModel(
-            data=TEST_DATA["monthly"]["ts"], params=TEST_DATA["monthly"]["p1"]
-        )
+        m = SARIMAModel(data=TEST_DATA["monthly"]["ts"], params=TEST_DATA["monthly"]["p1"])
         m.fit(**TEST_DATA["monthly"]["m1"])
         _ = m.predict(steps=STEPS_1)
         m.plot()
 
     def test_name(self) -> None:
-        m = SARIMAModel(
-            data=TEST_DATA["monthly"]["ts"], params=TEST_DATA["monthly"]["p1"]
-        )
+        m = SARIMAModel(data=TEST_DATA["monthly"]["ts"], params=TEST_DATA["monthly"]["p1"])
         self.assertEqual(m.__str__(), "SARIMA")
 
     def test_search_space(self) -> None:
-        m = SARIMAModel(
-            data=TEST_DATA["monthly"]["ts"], params=TEST_DATA["monthly"]["p1"]
-        )
+        m = SARIMAModel(data=TEST_DATA["monthly"]["ts"], params=TEST_DATA["monthly"]["p1"])
         self.assertEqual(
             m.get_parameter_search_space(),
             [

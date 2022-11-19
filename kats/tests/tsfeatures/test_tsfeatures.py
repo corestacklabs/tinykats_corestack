@@ -5,20 +5,24 @@
 
 import importlib
 from operator import attrgetter
-from typing import Any, cast, Dict, List, Union
+from typing import Any
+from typing import Dict
+from typing import List
+from typing import Union
+from typing import cast
 from unittest import TestCase
-
 from unittest.mock import patch
-
-import kats.tsfeatures.tsfeatures
 
 import numpy as np
 import pandas as pd
+from parameterized.parameterized import parameterized
+
+import kats.tsfeatures.tsfeatures
 from kats.compat import statsmodels
 from kats.consts import TimeSeriesData
 from kats.data.utils import load_air_passengers
-from kats.tsfeatures.tsfeatures import _FEATURE_GROUP_MAPPING, TsFeatures
-from parameterized.parameterized import parameterized
+from kats.tsfeatures.tsfeatures import _FEATURE_GROUP_MAPPING
+from kats.tsfeatures.tsfeatures import TsFeatures
 
 SAMPLE_INPUT_TS_BOCPD_SCALED = pd.DataFrame(
     {
@@ -54,15 +58,11 @@ SAMPLE_INPUT_TS_BOCPD_SCALED = pd.DataFrame(
 )
 
 
-def _univariate_features(
-    feats: Union[Dict[str, float], List[Dict[str, float]]]
-) -> Dict[str, float]:
+def _univariate_features(feats: Union[Dict[str, float], List[Dict[str, float]]]) -> Dict[str, float]:
     return cast(Dict[str, float], feats)
 
 
-def _multivariate_features(
-    feats: Union[Dict[str, float], List[Dict[str, float]]]
-) -> List[Dict[str, float]]:
+def _multivariate_features(feats: Union[Dict[str, float], List[Dict[str, float]]]) -> List[Dict[str, float]]:
     return cast(List[Dict[str, float]], feats)
 
 
@@ -88,9 +88,7 @@ class TSfeaturesTest(TestCase):
             )
         )
 
-    def assertDictAlmostEqual(
-        self, expected: Dict[str, Any], features: Dict[str, Any], places: int = 4
-    ) -> None:
+    def assertDictAlmostEqual(self, expected: Dict[str, Any], features: Dict[str, Any], places: int = 4) -> None:
         """Compares that two dictionaries are floating-point almost equal.
 
         Note: the dictionaries may or may not contain floating-point values.
@@ -119,9 +117,7 @@ class TSfeaturesTest(TestCase):
                 features.add(feat)
 
     # pyre-fixme[56]: Pyre was not able to infer the type of the decorator `parameter...
-    @parameterized.expand(
-        [("univariate", "ts_bocpd"), ("multivariate", "ts_bocpd_multi")]
-    )
+    @parameterized.expand([("univariate", "ts_bocpd"), ("multivariate", "ts_bocpd_multi")])
     def test_tsfeatures_basic(self, test_name: str, ts_name: str) -> None:
         ts = attrgetter(ts_name)(self)
         features = TsFeatures(hw_params=False).transform(ts)
@@ -195,9 +191,7 @@ class TSfeaturesTest(TestCase):
     def test_tsfeatures(self) -> None:
         feature_vector = _univariate_features(TsFeatures().transform(self.TSData))
 
-        feature_vector_round = {
-            key: round(feature_vector[key], 6) for key in feature_vector
-        }
+        feature_vector_round = {key: round(feature_vector[key], 6) for key in feature_vector}
 
         # test there is no nan in feature vector
         self.assertEqual(
@@ -258,12 +252,8 @@ class TSfeaturesTest(TestCase):
             rounded_truth["trend_strength"] = 0.93833
             rounded_truth["seasonality_strength"] = 0.329934
             rounded_truth["spikiness"] = 111.697325
-            feature_vector_round["holt_alpha"] = np.round(
-                feature_vector_round["holt_alpha"], 1
-            )
-            feature_vector_round["holt_beta"] = np.round(
-                feature_vector_round["holt_beta"], 1
-            )
+            feature_vector_round["holt_alpha"] = np.round(feature_vector_round["holt_alpha"], 1)
+            feature_vector_round["holt_beta"] = np.round(feature_vector_round["holt_beta"], 1)
             rounded_truth["holt_alpha"] = 1.0
             rounded_truth["holt_beta"] = 0.0
             rounded_truth["hw_alpha"] = 1.0
@@ -272,9 +262,7 @@ class TSfeaturesTest(TestCase):
         self.assertEqual(feature_vector_round, rounded_truth)
 
     # pyre-fixme[56]: Pyre was not able to infer the type of the decorator `parameter...
-    @parameterized.expand(
-        [("univariate", "TSData"), ("multivariate", "TSData_multivariate")]
-    )
+    @parameterized.expand([("univariate", "TSData"), ("multivariate", "TSData_multivariate")])
     def test_feature_selections(self, test_name: str, ts_name: str) -> None:
         # test disabling functions
 
@@ -482,12 +470,8 @@ class TSfeaturesTest(TestCase):
         value = np.arange(30)
         time_ = pd.date_range(end="2022-08-01", freq="1D", periods=30)
         tsd = TimeSeriesData(pd.DataFrame({"value": value, "time": time_}))
-        features = _univariate_features(
-            TsFeatures(selected_features=["acfpacf_features"]).transform(tsd)
-        )
-        acfpacf_features = [
-            features[f] for f in _FEATURE_GROUP_MAPPING["acfpacf_features"]
-        ]
+        features = _univariate_features(TsFeatures(selected_features=["acfpacf_features"]).transform(tsd))
+        acfpacf_features = [features[f] for f in _FEATURE_GROUP_MAPPING["acfpacf_features"]]
         self.assertEqual(acfpacf_features, [np.nan] * len(acfpacf_features))
 
     def test_IntegerArrays(self) -> None:
@@ -667,9 +651,7 @@ class TSfeaturesTest(TestCase):
             }
         )
         ts = TimeSeriesData(df=_df_)
-        features = _univariate_features(
-            TsFeatures(selected_features=["nowcasting"]).transform(ts)
-        )
+        features = _univariate_features(TsFeatures(selected_features=["nowcasting"]).transform(ts))
         expected = {
             "nowcast_roc": 0.435531,
             "nowcast_mom": -0.12,
@@ -692,9 +674,7 @@ class TSfeaturesTest(TestCase):
                 }
             )
         )
-        features = _univariate_features(
-            TsFeatures(selected_features=["time"]).transform(ts)
-        )
+        features = _univariate_features(TsFeatures(selected_features=["time"]).transform(ts))
         expected = {
             "time_years": 2,
             "time_months": 3,

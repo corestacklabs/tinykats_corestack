@@ -13,7 +13,8 @@ The features are rolling, i.e. they are the times series as well.
   >>> df = ROC(df, 5)
 """
 
-from typing import Dict, Optional
+from typing import Dict
+from typing import Optional
 
 import numpy as np
 import pandas as pd
@@ -79,9 +80,7 @@ def MA(df: pd.DataFrame, n: int, column: str = "y") -> pd.DataFrame:
     if column == "y":
         MA = pd.Series(df[column].rolling(n).mean(), name="MA_" + str(n), copy=False)
     else:
-        MA = pd.Series(
-            df[column].rolling(n).mean(), name=column + "_MA_" + str(n), copy=False
-        )
+        MA = pd.Series(df[column].rolling(n).mean(), name=column + "_MA_" + str(n), copy=False)
     df = df.join(MA)
     return df
 
@@ -108,9 +107,7 @@ def LAG(df: pd.DataFrame, n: int, column: str = "y") -> pd.DataFrame:
     return df
 
 
-def MACD(
-    df: pd.DataFrame, n_fast: int = 12, n_slow: int = 21, column: str = "y"
-) -> pd.DataFrame:
+def MACD(df: pd.DataFrame, n_fast: int = 12, n_slow: int = 21, column: str = "y") -> pd.DataFrame:
     """Adds three columns indicating MACD: https://www.investopedia.com/terms/m/macd.asp.
 
     Args:
@@ -124,12 +121,8 @@ def MACD(
         A dataframe with all the columns from input df, and the added 3 columns.
     """
 
-    EMAfast = pd.Series(
-        df[column].ewm(span=n_fast, min_periods=n_slow - 1).mean(), copy=False
-    )
-    EMAslow = pd.Series(
-        df[column].ewm(span=n_slow, min_periods=n_slow - 1).mean(), copy=False
-    )
+    EMAfast = pd.Series(df[column].ewm(span=n_fast, min_periods=n_slow - 1).mean(), copy=False)
+    EMAslow = pd.Series(df[column].ewm(span=n_slow, min_periods=n_slow - 1).mean(), copy=False)
     if column == "y":
         MACD = pd.Series(
             EMAfast - EMAslow,
@@ -239,57 +232,39 @@ def MACD(
             M = x[(window - 1) :] - x[: -(window - 1)]
             N = x[: -(window - 1)]
             arr = M / N
-            nowcasting_features[0] = np.nan_to_num(
-                arr, nan=0.0, posinf=0.0, neginf=0.0
-            ).mean()
+            nowcasting_features[0] = np.nan_to_num(arr, nan=0.0, posinf=0.0, neginf=0.0).mean()
 
         # MOM: indicating momentum: difference of current value and n steps back.
         if extra_args is not None and extra_args.get("nowcast_mom", default_status):
             M = x[window:] - x[:-window]
-            nowcasting_features[1] = np.nan_to_num(
-                M, nan=0.0, posinf=0.0, neginf=0.0
-            ).mean()
+            nowcasting_features[1] = np.nan_to_num(M, nan=0.0, posinf=0.0, neginf=0.0).mean()
 
         # MA: indicating moving average in the past n steps.
         if extra_args is not None and extra_args.get("nowcast_ma", default_status):
             ret = np.cumsum(x, dtype=float)
             ret[window:] = ret[window:] - ret[:-window]
             ma = ret[window - 1 :] / window
-            nowcasting_features[2] = np.nan_to_num(
-                ma, nan=0.0, posinf=0.0, neginf=0.0
-            ).mean()
+            nowcasting_features[2] = np.nan_to_num(ma, nan=0.0, posinf=0.0, neginf=0.0).mean()
 
         # LAG: indicating lagged value at the past n steps.
         if extra_args is not None and extra_args.get("nowcast_lag", default_status):
             N = x[:-window]
-            nowcasting_features[3] = np.nan_to_num(
-                N, nan=0.0, posinf=0.0, neginf=0.0
-            ).mean()
+            nowcasting_features[3] = np.nan_to_num(N, nan=0.0, posinf=0.0, neginf=0.0).mean()
 
         # MACD: https://www.investopedia.com/terms/m/macd.asp.
         ema_fast = _ewma(x, n_fast, n_slow - 1)
         ema_slow = _ewma(x, n_slow, n_slow - 1)
         MACD = ema_fast - ema_slow
         if extra_args is not None and extra_args.get("nowcast_macd", default_status):
-            nowcasting_features[4] = np.nan_to_num(
-                np.nanmean(MACD), nan=0.0, posinf=0.0, neginf=0.0
-            )
+            nowcasting_features[4] = np.nan_to_num(np.nanmean(MACD), nan=0.0, posinf=0.0, neginf=0.0)
 
         MACDsign = _ewma(MACD, 9, 8)
-        if extra_args is not None and extra_args.get(
-            "nowcast_macdsign", default_status
-        ):
-            nowcasting_features[5] = np.nan_to_num(
-                np.nanmean(MACDsign), nan=0.0, posinf=0.0, neginf=0.0
-            )
+        if extra_args is not None and extra_args.get("nowcast_macdsign", default_status):
+            nowcasting_features[5] = np.nan_to_num(np.nanmean(MACDsign), nan=0.0, posinf=0.0, neginf=0.0)
 
         MACDdiff = MACD - MACDsign
-        if extra_args is not None and extra_args.get(
-            "nowcast_macddiff", default_status
-        ):
-            nowcasting_features[6] = np.nan_to_num(
-                np.nanmean(MACDdiff), nan=0.0, posinf=0.0, neginf=0.0
-            )
+        if extra_args is not None and extra_args.get("nowcast_macddiff", default_status):
+            nowcasting_features[6] = np.nan_to_num(np.nanmean(MACDdiff), nan=0.0, posinf=0.0, neginf=0.0)
 
         return nowcasting_features
 
@@ -379,9 +354,7 @@ def EMA(df, n: int, column: str = "y") -> pd.DataFrame:
         A dataframe with all the columns from input df, and the added EMA column.
     """
     close = df[column]
-    EMA = pd.Series(
-        close.ewm(span=n, min_periods=n - 1).mean(), name="EMA_" + str(n), copy=False
-    )
+    EMA = pd.Series(close.ewm(span=n, min_periods=n - 1).mean(), name="EMA_" + str(n), copy=False)
     df = df.join(EMA)
     return df
 
@@ -442,9 +415,7 @@ def RSI(df, n: int, column: str = "y") -> pd.DataFrame:
     down_direction = -diff.where(diff < 0, 0.0)
     min_periods = n
     emaup = up_direction.ewm(alpha=1 / n, min_periods=min_periods, adjust=False).mean()
-    emadn = down_direction.ewm(
-        alpha=1 / n, min_periods=min_periods, adjust=False
-    ).mean()
+    emadn = down_direction.ewm(alpha=1 / n, min_periods=min_periods, adjust=False).mean()
     relative_strength = emaup / emadn
     rsi_col = pd.Series(
         np.where(emadn == 0, 100, 100 - (100 / (1 + relative_strength))),

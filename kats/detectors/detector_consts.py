@@ -7,14 +7,21 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime
-from typing import cast, List, Optional, Tuple, Union
+from typing import List
+from typing import Optional
+from typing import Tuple
+from typing import Union
+from typing import cast
 
 import attr
 import numpy as np
 import pandas as pd
-from kats.consts import TimeSeriesData
-from scipy.stats import norm, t, ttest_ind  # @manual
+from scipy.stats import norm  # @manual
+from scipy.stats import t
+from scipy.stats import ttest_ind
 from statsmodels.stats import multitest
+
+from kats.consts import TimeSeriesData
 
 # from np.typing import ArrayLike
 ArrayLike = np.ndarray
@@ -38,9 +45,9 @@ class ChangePointInterval:
     start_time: datetime
     end_time: datetime
     previous_interval: Optional[ChangePointInterval] = attr.ib(default=None, init=False)
-    _all_spikes: Union[
-        Optional[List[SingleSpike]], Optional[List[List[SingleSpike]]]
-    ] = attr.ib(default=None, init=False)
+    _all_spikes: Union[Optional[List[SingleSpike]], Optional[List[List[SingleSpike]]]] = attr.ib(
+        default=None, init=False
+    )
     spike_std_threshold: float = attr.ib(default=2.0, init=False)
     data_df: Optional[pd.DataFrame] = attr.ib(None, init=False)
     _ts_cols: List[str] = attr.ib(factory=lambda: ["value"], init=False)
@@ -64,9 +71,7 @@ class ChangePointInterval:
         all_data_df = data.to_dataframe()
         all_data_df.columns = ["time"] + self._ts_cols
         all_data_df["time"] = pd.to_datetime(all_data_df["time"])
-        all_data_df = all_data_df.loc[
-            (all_data_df.time >= self.start_time) & (all_data_df.time < self.end_time)
-        ]
+        all_data_df = all_data_df.loc[(all_data_df.time >= self.start_time) & (all_data_df.time < self.end_time)]
         self.data_df = all_data_df
 
     def _detect_spikes(self) -> Union[List[SingleSpike], List[List[SingleSpike]]]:
@@ -79,9 +84,7 @@ class ChangePointInterval:
 
             spike_df = df.query(f"z_score >={self.spike_std_threshold}")
             return [
-                SingleSpike(
-                    time=row["time"], value=row["value"], n_sigma=row["z_score"]
-                )
+                SingleSpike(time=row["time"], value=row["value"], n_sigma=row["z_score"])
                 for counter, row in spike_df.iterrows()
             ]
         else:
@@ -120,9 +123,7 @@ class ChangePointInterval:
         df = self.data_df
         if df is not None:
             new_data_df = pd.concat([df, new_data_df], copy=False)
-        self.data_df = new_data_df.loc[
-            (new_data_df.time >= self.start_time) & (new_data_df.time < self.end_time)
-        ]
+        self.data_df = new_data_df.loc[(new_data_df.time >= self.start_time) & (new_data_df.time < self.end_time)]
 
     @property
     def start_time_str(self) -> str:
@@ -258,17 +259,13 @@ class PercentageChange:
         if self.num_series > 1:
             return np.array(
                 [
-                    False
-                    if cast(np.ndarray, self.upper)[i] > 1.0
-                    and cast(np.ndarray, self.lower)[i] < 1
-                    else True
+                    False if cast(np.ndarray, self.upper)[i] > 1.0 and cast(np.ndarray, self.lower)[i] < 1 else True
                     for i in range(self.current.num_series)
                 ]
             )
         # not stat sig e.g. [0.88, 1.55]
         return not (
-            cast(Union[float, np.ndarray], self.upper) > 1.0
-            and cast(Union[float, np.ndarray], self.lower) < 1.0
+            cast(Union[float, np.ndarray], self.upper) > 1.0 and cast(Union[float, np.ndarray], self.lower) < 1.0
         )
 
     @property
@@ -282,9 +279,7 @@ class PercentageChange:
             if np.abs(self.perc_change) < self.min_perc_change:
                 t_score = 0.0
         else:
-            t_score = np.where(
-                np.abs(self.perc_change) < self.min_perc_change, 0, t_score
-            )
+            t_score = np.where(np.abs(self.perc_change) < self.min_perc_change, 0, t_score)
 
         return cast(float, t_score)
 
@@ -437,9 +432,7 @@ class PercentageChange:
             return
 
         # The new p-values are the old p-values rescaled so that self.alpha is still the threshold for rejection
-        _, self._p_value, _, _ = multitest.multipletests(
-            p_value_start, alpha=self.alpha, method=self.method
-        )
+        _, self._p_value, _, _ = multitest.multipletests(p_value_start, alpha=self.alpha, method=self.method)
         self._t_score = np.zeros(num_series)
         # We are using a two-sided test here, so we take inverse_tcdf(self._p_value / 2) with df = len(self.current) + len(self.previous) - 2
 
@@ -469,12 +462,7 @@ class PercentageChange:
 
         # for multivariate TS data
         if self.num_series > 1:
-            return np.asarray(
-                [
-                    np.cov(current[:, c], previous[:, c])[0, 1] / n_min
-                    for c in range(self.num_series)
-                ]
-            )
+            return np.asarray([np.cov(current[:, c], previous[:, c])[0, 1] / n_min for c in range(self.num_series)])
 
         return np.cov(current, previous)[0, 1] / n_min
 
@@ -495,12 +483,8 @@ class PercentageChange:
             + (control_var * (test_mean**2)) / (n_control * (control_mean**4))
         )
         # the signs appear flipped because norm.ppf(0.025) ~ -1.96
-        self.lower = self.ratio_estimate + norm.ppf(self.alpha / 2) * np.sqrt(
-            abs(sigma_sq_ratio)
-        )
-        self.upper = self.ratio_estimate - norm.ppf(self.alpha / 2) * np.sqrt(
-            abs(sigma_sq_ratio)
-        )
+        self.lower = self.ratio_estimate + norm.ppf(self.alpha / 2) * np.sqrt(abs(sigma_sq_ratio))
+        self.upper = self.ratio_estimate - norm.ppf(self.alpha / 2) * np.sqrt(abs(sigma_sq_ratio))
 
 
 @dataclass
@@ -559,16 +543,12 @@ class AnomalyResponse:
         predicted_ts = self.predicted_ts
         if predicted_ts is not None:
             self.predicted_ts = self._update_ts_slice(predicted_ts, time, pred)
-        self.anomaly_magnitude_ts = self._update_ts_slice(
-            self.anomaly_magnitude_ts, time, anom_mag
-        )
+        self.anomaly_magnitude_ts = self._update_ts_slice(self.anomaly_magnitude_ts, time, anom_mag)
         stat_sig_ts = self.stat_sig_ts
         if stat_sig_ts is not None:
             self.stat_sig_ts = self._update_ts_slice(stat_sig_ts, time, stat_sig)
 
-    def _update_ts_slice(
-        self, ts: TimeSeriesData, time: datetime, value: Union[float, ArrayLike]
-    ) -> TimeSeriesData:
+    def _update_ts_slice(self, ts: TimeSeriesData, time: datetime, value: Union[float, ArrayLike]) -> TimeSeriesData:
         time = ts.time.iloc[1:].append(pd.Series(time, copy=False))
         time.reset_index(drop=True, inplace=True)
         if self.num_series == 1:
@@ -577,23 +557,16 @@ class AnomalyResponse:
             return TimeSeriesData(time=time, value=value)
         else:
             if isinstance(value, float):
-                raise ValueError(
-                    f"num_series = {self.num_series} so value should have type ArrayLike."
-                )
+                raise ValueError(f"num_series = {self.num_series} so value should have type ArrayLike.")
             value_dict = {}
             for i, value_col in enumerate(self.key_mapping):
-                value_dict[value_col] = (
-                    ts.value[value_col].iloc[1:].append(pd.Series(value[i], copy=False))
-                )
+                value_dict[value_col] = ts.value[value_col].iloc[1:].append(pd.Series(value[i], copy=False))
                 value_dict[value_col].reset_index(drop=True, inplace=True)
             return TimeSeriesData(
                 pd.DataFrame(
                     {
                         **{"time": time},
-                        **{
-                            value_col: value_dict[value_col]
-                            for value_col in self.key_mapping
-                        },
+                        **{value_col: value_dict[value_col] for value_col in self.key_mapping},
                     },
                     copy=False,
                 )
@@ -660,9 +633,7 @@ class AnomalyResponse:
         cb = self.confidence_band
         upper = None if cb is None else cb.upper.value.values
         lower = None if cb is None else cb.lower.value.values
-        predicted = (
-            None if self.predicted_ts is None else self.predicted_ts.value.values
-        )
+        predicted = None if self.predicted_ts is None else self.predicted_ts.value.values
         statsig = None if self.stat_sig_ts is None else self.stat_sig_ts.value.values
         str_ret = f"""
         Time: {self.scores.time.values},

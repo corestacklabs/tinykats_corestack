@@ -7,7 +7,6 @@
 
 import pandas as pd
 
-
 PROPHET_EMPTY_DUMMY_DATA = pd.DataFrame(
     {
         "time": {},

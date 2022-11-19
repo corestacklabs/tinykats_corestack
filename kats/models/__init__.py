@@ -3,14 +3,12 @@
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
 
-from . import (  # noqa  # noqa  # noqa  # noqa  # noqa  # noqa
-    arima,
-    bayesian_var,
-    ensemble,
-    harmonic_regression,
-    holtwinters,
-    linear_model,
-)
+from . import arima  # noqa  # noqa  # noqa  # noqa  # noqa  # noqa
+from . import bayesian_var
+from . import ensemble
+from . import harmonic_regression
+from . import holtwinters
+from . import linear_model
 
 try:
     from . import lstm  # noqa
@@ -20,14 +18,14 @@ except ImportError:
     logging.warning("kats.models.lstm not available (requires torch)")
 from . import (  # noqa  # noqa  # noqa  # noqa  # noqa  # noqa  # noqa  # noqa  # noqa  # noqa  # noqa
     globalmodel,
-    metalearner,
-    model,
-    nowcasting,
-    prophet,
-    quadratic_model,
-    reconciliation,
-    sarima,
-    stlf,
-    theta,
-    var,
 )
+from . import metalearner
+from . import model
+from . import nowcasting
+from . import prophet
+from . import quadratic_model
+from . import reconciliation
+from . import sarima
+from . import stlf
+from . import theta
+from . import var

@@ -11,27 +11,33 @@ from unittest.mock import patch
 
 import numpy as np
 import pandas as pd
-from ax.modelbridge.registry import Models, SearchSpace
+from ax.modelbridge.registry import Models
+from ax.modelbridge.registry import SearchSpace
 from ax.service.utils.instantiation import InstantiationBase
+
 from kats.consts import TimeSeriesData
 from kats.models.arima import ARIMAModel
-from kats.models.holtwinters import HoltWintersModel, HoltWintersParams
+from kats.models.holtwinters import HoltWintersModel
+from kats.models.holtwinters import HoltWintersParams
 from kats.models.metalearner.get_metadata import GetMetaData
 from kats.models.metalearner.metalearner_hpt import MetaLearnHPT
 from kats.models.metalearner.metalearner_modelselect import MetaLearnModelSelect
 from kats.models.metalearner.metalearner_predictability import MetaLearnPredictability
-from kats.models.neuralprophet import NeuralProphetModel, NeuralProphetParams
-from kats.models.prophet import ProphetModel, ProphetParams
-from kats.models.sarima import SARIMAModel, SARIMAParams
-from kats.models.stlf import STLFModel, STLFParams
-from kats.models.theta import ThetaModel, ThetaParams
-from kats.tests.models.test_models_dummy_data import (
-    METALEARNING_TEST_FEATURES,
-    METALEARNING_TEST_METADATA_STR,
-    METALEARNING_TEST_MULTI,
-    METALEARNING_TEST_T1,
-    METALEARNING_TEST_T2,
-)
+from kats.models.neuralprophet import NeuralProphetModel
+from kats.models.neuralprophet import NeuralProphetParams
+from kats.models.prophet import ProphetModel
+from kats.models.prophet import ProphetParams
+from kats.models.sarima import SARIMAModel
+from kats.models.sarima import SARIMAParams
+from kats.models.stlf import STLFModel
+from kats.models.stlf import STLFParams
+from kats.models.theta import ThetaModel
+from kats.models.theta import ThetaParams
+from kats.tests.models.test_models_dummy_data import METALEARNING_TEST_FEATURES
+from kats.tests.models.test_models_dummy_data import METALEARNING_TEST_METADATA_STR
+from kats.tests.models.test_models_dummy_data import METALEARNING_TEST_MULTI
+from kats.tests.models.test_models_dummy_data import METALEARNING_TEST_T1
+from kats.tests.models.test_models_dummy_data import METALEARNING_TEST_T2
 
 # TS which is too short
 TSData_short = TimeSeriesData(METALEARNING_TEST_T2.iloc[:8, :])
@@ -98,9 +104,7 @@ def generate_meta_data(n):
     features = np.random.randn(n * 40).reshape(n, -1)
     generators = {
         m: Models.UNIFORM(
-            SearchSpace(
-                [InstantiationBase.parameter_from_json(item) for item in spaces[m]]
-            ),
+            SearchSpace([InstantiationBase.parameter_from_json(item) for item in spaces[m]]),
             deduplicate=False,
         )
         for m in spaces
@@ -392,9 +396,7 @@ class MetaLearnPredictabilityTest(TestCase):
         )
 
         # Test invalid input type for prediction by feature
-        self.assertRaises(
-            ValueError, mlp.pred_by_feature, str(METALEARNING_TEST_FEATURES)
-        )
+        self.assertRaises(ValueError, mlp.pred_by_feature, str(METALEARNING_TEST_FEATURES))
 
         t2_df = t2.to_dataframe().copy()
         mlp.pred(t2)
@@ -406,17 +408,13 @@ class MetaLearnPredictabilityTest(TestCase):
         equals(feature, feature2)
 
         # Test saving model
-        with patch(
-            "kats.models.metalearner.metalearner_predictability.joblib.dump"
-        ) as mocked_dump:
+        with patch("kats.models.metalearner.metalearner_predictability.joblib.dump") as mocked_dump:
             mlp.save_model("mlp.pkl")
             mocked_dump.assert_called()
 
         # Test loading model
         mlp2 = MetaLearnPredictability(load_model=True)
-        with patch(
-            "kats.models.metalearner.metalearner_predictability.joblib.load"
-        ) as mocked_load:
+        with patch("kats.models.metalearner.metalearner_predictability.joblib.load") as mocked_load:
             mocked_load.side_effect = [{}, Exception]
             mlp2.load_model("mlp.pkl")
             mocked_load.assert_called()
@@ -476,9 +474,7 @@ class MetaLearnHPTTest(TestCase):
         MetaLearnHPT(x, y, ["p"], ["d", "q"])
         self.assertRaises(ValueError, MetaLearnHPT, x, y, categorical_idx=["p"])
         self.assertRaises(ValueError, MetaLearnHPT, x, y, numerical_idx=["p"])
-        self.assertRaises(
-            ValueError, MetaLearnHPT, x, y, categorical_idx=["p"], default_model="arima"
-        )
+        self.assertRaises(ValueError, MetaLearnHPT, x, y, categorical_idx=["p"], default_model="arima")
 
     def test_customized_models(self) -> None:
         x, y = METALEARNING_METADATA_BY_MODEL["arima"]

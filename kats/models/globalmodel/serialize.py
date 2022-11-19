@@ -6,12 +6,16 @@
 import json
 import logging
 from multiprocessing import cpu_count
-from typing import Any, Dict, Union
+from typing import Any
+from typing import Dict
+from typing import Union
+
+from torch import Tensor
 
 from kats.models.globalmodel.ensemble import GMEnsemble
 from kats.models.globalmodel.model import GMModel
-from kats.models.globalmodel.utils import GMParam, gmparam_from_string
-from torch import Tensor
+from kats.models.globalmodel.utils import GMParam
+from kats.models.globalmodel.utils import gmparam_from_string
 
 
 def _gmmodel_nn_to_dict(gm: GMModel) -> Dict[str, Any]:
@@ -103,9 +107,7 @@ def load_global_model_from_json(json_str: str) -> Union[GMModel, GMEnsemble]:
             ensemble_type=param_dict["ensemble_type"],
         )
         ans.gm_info = param_dict["gm_info"]
-        ans.gm_models = [
-            _dict_to_gmmodel_nn(gmparam, t) for t in param_dict["gm_models"]
-        ]
+        ans.gm_models = [_dict_to_gmmodel_nn(gmparam, t) for t in param_dict["gm_models"]]
 
     # string for GMModel
     elif set(param_dict.keys()) == {"gmparam", "rnn", "decoder", "encoder"}:

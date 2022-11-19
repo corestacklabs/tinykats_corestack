@@ -20,7 +20,14 @@ import inspect
 import logging
 from functools import partial
 from itertools import groupby
-from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple, Union
+from typing import Any
+from typing import Callable
+from typing import Dict
+from typing import List
+from typing import Optional
+from typing import Sequence
+from typing import Tuple
+from typing import Union
 
 import numpy as np
 import pandas as pd
@@ -31,7 +38,9 @@ from scipy.linalg import toeplitz
 from scipy.signal import periodogram  # @manual
 from statsmodels.stats.diagnostic import het_arch
 from statsmodels.tsa.seasonal import STL
-from statsmodels.tsa.stattools import acf, kpss, pacf
+from statsmodels.tsa.stattools import acf
+from statsmodels.tsa.stattools import kpss
+from statsmodels.tsa.stattools import pacf
 
 try:
     from numba import jit  # @manual
@@ -47,14 +56,12 @@ except ImportError:
 
 from kats.compat.statsmodels import ExponentialSmoothing
 from kats.consts import TimeSeriesData
-from kats.detectors import (
-    bocpd,
-    cusum_detection,
-    outlier,
-    robust_stat_detection,
-    seasonality,
-    trend_mk,
-)
+from kats.detectors import bocpd
+from kats.detectors import cusum_detection
+from kats.detectors import outlier
+from kats.detectors import robust_stat_detection
+from kats.detectors import seasonality
+from kats.detectors import trend_mk
 
 """
 Each entry in _ALL_TS_FEATURES is of the form
@@ -334,18 +341,14 @@ class TsFeatures:
         # Higher level of features:
         # Once disabled, won't even go inside these groups of features
         # for calculation
-        final_filter, default = self._compute_final_filter(
-            selected_features, f2g, g2f, kwargs
-        )
+        final_filter, default = self._compute_final_filter(selected_features, f2g, g2f, kwargs)
         self.final_filter: Dict[str, bool] = final_filter
 
         self._set_defaults(kwargs, default)
         self._setup(spectral_freq, window_size, nbins, lag_size)
         self._compile_methods()
 
-    def _compute_f2g(
-        self, kwargs: Dict[str, Any], g2f: Dict[str, List[str]]
-    ) -> Dict[str, str]:
+    def _compute_f2g(self, kwargs: Dict[str, Any], g2f: Dict[str, List[str]]) -> Dict[str, str]:
         f2g = {}
         for k, v in g2f.items():
             for f in v:
@@ -354,10 +357,7 @@ class TsFeatures:
         self._total_feature_len_ = len(f2g)
         for f in kwargs.keys():
             if not (f in f2g.keys() or f in g2f.keys()):
-                msg = (
-                    f"couldn't find your desired feature/group '{f}', please "
-                    "check spelling"
-                )
+                msg = f"couldn't find your desired feature/group '{f}', please " "check spelling"
                 logging.error(msg)
                 raise ValueError(msg)
         return f2g
@@ -374,10 +374,7 @@ class TsFeatures:
         if selected_features:
             for f in selected_features:
                 if not (f in f2g.keys() or f in g2f.keys()):
-                    msg = (
-                        f"couldn't find your desired feature/group '{f}', please "
-                        "check spelling"
-                    )
+                    msg = f"couldn't find your desired feature/group '{f}', please " "check spelling"
                     logging.error(msg)
                     raise ValueError(msg)
                 if f in g2f.keys():  # the opt-in request is for a feature group
@@ -427,9 +424,7 @@ class TsFeatures:
         self.__kwargs__ = kwargs
         self.default = default
 
-    def _setup(
-        self, spectral_freq: int, window_size: int, nbins: int, lag_size: int
-    ) -> None:
+    def _setup(self, spectral_freq: int, window_size: int, nbins: int, lag_size: int) -> None:
         self.statistics_features = {
             "length": TsFeatures.get_length,
             "mean": TsFeatures.get_mean,
@@ -466,13 +461,9 @@ class TsFeatures:
                 methods = self._x_methods
             else:
                 methods = self._ts_methods
-            methods[method] = partial(
-                func, extra_args=self.__kwargs__, default_status=self.default
-            )
+            methods[method] = partial(func, extra_args=self.__kwargs__, default_status=self.default)
 
-    def transform(
-        self, x: TimeSeriesData
-    ) -> Union[Dict[str, float], List[Dict[str, float]]]:
+    def transform(self, x: TimeSeriesData) -> Union[Dict[str, float], List[Dict[str, float]]]:
         """
         The overall high-level function for transforming
         time series into a number of features
@@ -492,10 +483,7 @@ class TsFeatures:
             raise ValueError(msg)
 
         if type(x.value.values) != np.ndarray:
-            logging.warning(
-                "expecting values to be a np.ndarray, instead got "
-                f"{type(x.value.values)}"
-            )
+            logging.warning("expecting values to be a np.ndarray, instead got " f"{type(x.value.values)}")
             # make sure that values are numpy array for feeding to Numba
             df = pd.DataFrame(
                 {"time": x.time.values, "value": np.array(x.value.values, dtype=float)},
@@ -747,23 +735,15 @@ class TsFeatures:
 
         # strength of trend
         if extra_args is not None and extra_args.get("trend_strength", default_status):
-            stl_features["trend_strength"] = 1 - np.var(res.resid) / np.var(
-                res.trend + res.resid
-            )
+            stl_features["trend_strength"] = 1 - np.var(res.resid) / np.var(res.trend + res.resid)
 
         # strength of seasonality
-        if extra_args is not None and extra_args.get(
-            "seasonality_strength", default_status
-        ):
-            stl_features["seasonality_strength"] = 1 - np.var(res.resid) / np.var(
-                res.seasonal + res.resid
-            )
+        if extra_args is not None and extra_args.get("seasonality_strength", default_status):
+            stl_features["seasonality_strength"] = 1 - np.var(res.resid) / np.var(res.seasonal + res.resid)
 
         # spikiness: variance of the leave-one-out variances of the remainder component
         if extra_args is not None and extra_args.get("spikiness", default_status):
-            resid_array = np.repeat(
-                np.array(res.resid)[:, np.newaxis], len(res.resid), axis=1
-            )
+            resid_array = np.repeat(np.array(res.resid)[:, np.newaxis], len(res.resid), axis=1)
             resid_array[np.diag_indices(len(resid_array))] = np.NaN
             stl_features["spikiness"] = np.var(np.nanvar(resid_array, axis=0))
 
@@ -786,9 +766,7 @@ class TsFeatures:
         extra_args: Optional[Dict[str, bool]] = None,
         default_status: bool = True,
     ) -> Dict[str, float]:
-        return TsFeatures.get_level_shift_features(
-            x, window_size, extra_args, default_status
-        )
+        return TsFeatures.get_level_shift_features(x, window_size, extra_args, default_status)
 
     # Level shift
     @staticmethod
@@ -821,24 +799,17 @@ class TsFeatures:
 
         level_shift_features = {"level_shift_idx": np.nan, "level_shift_size": np.nan}
         if len(x) < window_size + 2:
-            msg = (
-                "Length of time series is shorter than window_size, unable to "
-                "calculate level shift features"
-            )
+            msg = "Length of time series is shorter than window_size, unable to " "calculate level shift features"
             logging.error(msg)
             return level_shift_features
 
-        sliding_idx = (np.arange(len(x))[None, :] + np.arange(window_size)[:, None])[
-            :, : len(x) - window_size + 1
-        ]
+        sliding_idx = (np.arange(len(x))[None, :] + np.arange(window_size)[:, None])[:, : len(x) - window_size + 1]
         means = np.mean(x[sliding_idx], axis=0)
         mean_diff = np.abs(means[:-1] - means[1:])
 
         if extra_args is not None and extra_args.get("level_shift_idx", default_status):
             level_shift_features["level_shift_idx"] = np.argmax(mean_diff)
-        if extra_args is not None and extra_args.get(
-            "level_shift_size", default_status
-        ):
+        if extra_args is not None and extra_args.get("level_shift_size", default_status):
             level_shift_features["level_shift_size"] = mean_diff[np.argmax(mean_diff)]
         return level_shift_features
 
@@ -858,19 +829,14 @@ class TsFeatures:
         """
 
         if len(x) <= nbins:
-            msg = (
-                "Length of time series is shorter than nbins, unable to "
-                "calculate flat spots feature"
-            )
+            msg = "Length of time series is shorter than nbins, unable to " "calculate flat spots feature"
             logging.error(msg)
             return np.nan
 
         max_run_length = 0
         window_size = int(len(x) / nbins)
         for i in range(0, len(x), window_size):
-            run_length = np.max(
-                [len(list(v)) for k, v in groupby(x[i : i + window_size])]
-            )
+            run_length = np.max([len(list(v)) for k, v in groupby(x[i : i + window_size])])
             if run_length > max_run_length:
                 max_run_length = run_length
         return max_run_length
@@ -1067,10 +1033,7 @@ class TsFeatures:
             "seas_pacf1": np.nan,
         }
         if len(x) < 10 or len(x) < period or len(np.unique(x)) == 1:
-            msg = (
-                "Length is shorter than period, or constant time series, "
-                "unable to calculate acf/pacf features"
-            )
+            msg = "Length is shorter than period, or constant time series, " "unable to calculate acf/pacf features"
             logging.error(msg)
             return acfpacf_features
 
@@ -1085,13 +1048,8 @@ class TsFeatures:
 
         y_pacf_list = pacf(x, nlags=period)[1:]
 
-        if (
-            TsFeatures._yule_walker_determinant(diff1x) == 0
-            or TsFeatures._yule_walker_determinant(diff2x) == 0
-        ):
-            logging.warning(
-                "Could not generate acfpacf features because input matrix is singular."
-            )
+        if TsFeatures._yule_walker_determinant(diff1x) == 0 or TsFeatures._yule_walker_determinant(diff2x) == 0:
+            logging.warning("Could not generate acfpacf features because input matrix is singular.")
             return acfpacf_features
 
         diff1y_pacf_list = pacf(diff1x, nlags=nlag)[1:]
@@ -1452,37 +1410,19 @@ class TsFeatures:
             if extra_args is not None and extra_args.get("cusum_num", default_status):
                 cusum_detector_features["cusum_num"] = len(cusum_cp)
             if extra_args is not None and extra_args.get("cusum_conf", default_status):
-                cusum_detector_features["cusum_conf"] = (
-                    0 if cp is None else cp.confidence
-                )
-            if extra_args is not None and extra_args.get(
-                "cusum_cp_index", default_status
-            ):
-                cusum_detector_features["cusum_cp_index"] = (
-                    0 if cp is None else cp.cp_index / len(ts)
-                )
+                cusum_detector_features["cusum_conf"] = 0 if cp is None else cp.confidence
+            if extra_args is not None and extra_args.get("cusum_cp_index", default_status):
+                cusum_detector_features["cusum_cp_index"] = 0 if cp is None else cp.cp_index / len(ts)
             if extra_args is not None and extra_args.get("cusum_delta", default_status):
                 cusum_detector_features["cusum_delta"] = 0 if cp is None else cp.delta
             if extra_args is not None and extra_args.get("cusum_llr", default_status):
                 cusum_detector_features["cusum_llr"] = 0 if cp is None else cp.llr
-            if extra_args is not None and extra_args.get(
-                "cusum_regression_detected", default_status
-            ):
-                cusum_detector_features["cusum_regression_detected"] = (
-                    False if cp is None else cp.regression_detected
-                )
-            if extra_args is not None and extra_args.get(
-                "cusum_stable_changepoint", default_status
-            ):
-                cusum_detector_features["cusum_stable_changepoint"] = (
-                    False if cp is None else cp.stable_changepoint
-                )
-            if extra_args is not None and extra_args.get(
-                "cusum_p_value", default_status
-            ):
-                cusum_detector_features["cusum_p_value"] = (
-                    0 if cp is None else cp.p_value
-                )
+            if extra_args is not None and extra_args.get("cusum_regression_detected", default_status):
+                cusum_detector_features["cusum_regression_detected"] = False if cp is None else cp.regression_detected
+            if extra_args is not None and extra_args.get("cusum_stable_changepoint", default_status):
+                cusum_detector_features["cusum_stable_changepoint"] = False if cp is None else cp.stable_changepoint
+            if extra_args is not None and extra_args.get("cusum_p_value", default_status):
+                cusum_detector_features["cusum_p_value"] = 0 if cp is None else cp.p_value
         except Exception as e:
             logging.warning(f"Cusum Detector failed {e}")
         return cusum_detector_features
@@ -1517,9 +1457,7 @@ class TsFeatures:
             robust_cp = robust.detector()
             if extra_args is not None and extra_args.get("robust_num", default_status):
                 robust_stat_detector_features["robust_num"] = len(robust_cp)
-            if extra_args is not None and extra_args.get(
-                "robust_metric_mean", default_status
-            ):
+            if extra_args is not None and extra_args.get("robust_metric_mean", default_status):
                 ncp = len(robust_cp)
                 if ncp == 0:
                     robust_stat_detector_features["robust_metric_mean"] = np.nan
@@ -1566,21 +1504,13 @@ class TsFeatures:
             bocp_cp = bocp.detector(choose_priors=False)
             if extra_args is not None and extra_args.get("bocp_num", default_status):
                 bocp_detector_features["bocp_num"] = len(bocp_cp)
-            if extra_args is not None and extra_args.get(
-                "bocp_conf_max", default_status
-            ):
+            if extra_args is not None and extra_args.get("bocp_conf_max", default_status):
                 bocp_detector_features["bocp_conf_max"] = (
-                    0
-                    if len(bocp_cp) == 0
-                    else np.max([cp.confidence for cp in bocp_cp])
+                    0 if len(bocp_cp) == 0 else np.max([cp.confidence for cp in bocp_cp])
                 )
-            if extra_args is not None and extra_args.get(
-                "bocp_conf_mean", default_status
-            ):
+            if extra_args is not None and extra_args.get("bocp_conf_mean", default_status):
                 bocp_detector_features["bocp_conf_mean"] = (
-                    0
-                    if len(bocp_cp) == 0
-                    else np.mean([cp.confidence for cp in bocp_cp])
+                    0 if len(bocp_cp) == 0 else np.mean([cp.confidence for cp in bocp_cp])
                 )
         except Exception as e:
             logging.warning(f"BOCPDetector failed {e}")
@@ -1660,17 +1590,13 @@ class TsFeatures:
             tdetected_time_points = tdetector.detector(direction="both")
             if extra_args is not None and extra_args.get("trend_num", default_status):
                 trend_detector_features["trend_num"] = len(tdetected_time_points)
-            if extra_args is not None and extra_args.get(
-                "trend_num_increasing", default_status
-            ):
+            if extra_args is not None and extra_args.get("trend_num_increasing", default_status):
                 num_increasing = 0
                 for p in tdetected_time_points:
                     if p.trend_direction == "increasing":
                         num_increasing += 1
                 trend_detector_features["trend_num_increasing"] = num_increasing
-            if extra_args is not None and extra_args.get(
-                "trend_avg_abs_tau", default_status
-            ):
+            if extra_args is not None and extra_args.get("trend_avg_abs_tau", default_status):
                 npoints = len(tdetected_time_points)
                 if npoints == 0:
                     trend_detector_features["trend_avg_abs_tau"] = 0
@@ -1757,58 +1683,40 @@ class TsFeatures:
             M = x[(window - 1) :] - x[: -(window - 1)]
             N = x[: -(window - 1)]
             arr = M / N
-            nowcasting_features[0] = np.nan_to_num(
-                arr, nan=0.0, posinf=0.0, neginf=0.0
-            ).mean()
+            nowcasting_features[0] = np.nan_to_num(arr, nan=0.0, posinf=0.0, neginf=0.0).mean()
 
         # MOM: indicating momentum: difference of current value and n steps back.
         if extra_args is not None and extra_args.get("nowcast_mom", default_status):
             M = x[window:] - x[:-window]
-            nowcasting_features[1] = np.nan_to_num(
-                M, nan=0.0, posinf=0.0, neginf=0.0
-            ).mean()
+            nowcasting_features[1] = np.nan_to_num(M, nan=0.0, posinf=0.0, neginf=0.0).mean()
 
         # MA: indicating moving average in the past n steps.
         if extra_args is not None and extra_args.get("nowcast_ma", default_status):
             ret = np.cumsum(x, dtype=float)
             ret[window:] = ret[window:] - ret[:-window]
             ma = ret[window - 1 :] / window
-            nowcasting_features[2] = np.nan_to_num(
-                ma, nan=0.0, posinf=0.0, neginf=0.0
-            ).mean()
+            nowcasting_features[2] = np.nan_to_num(ma, nan=0.0, posinf=0.0, neginf=0.0).mean()
 
         # LAG: indicating lagged value at the past n steps.
         if extra_args is not None and extra_args.get("nowcast_lag", default_status):
             N = x[:-window]
-            nowcasting_features[3] = np.nan_to_num(
-                N, nan=0.0, posinf=0.0, neginf=0.0
-            ).mean()
+            nowcasting_features[3] = np.nan_to_num(N, nan=0.0, posinf=0.0, neginf=0.0).mean()
 
         # MACD: https://www.investopedia.com/terms/m/macd.asp.
         ema_fast = TsFeatures._ewma(x, n_fast, n_slow - 1)
         ema_slow = TsFeatures._ewma(x, n_slow, n_slow - 1)
         MACD = ema_fast - ema_slow
         if extra_args is not None and extra_args.get("nowcast_macd", default_status):
-            nowcasting_features[4] = np.nan_to_num(
-                np.nanmean(MACD), nan=0.0, posinf=0.0, neginf=0.0
-            )
+            nowcasting_features[4] = np.nan_to_num(np.nanmean(MACD), nan=0.0, posinf=0.0, neginf=0.0)
 
         if len(x) >= 27:
             MACDsign = TsFeatures._ewma(MACD, 9, 8)
-            if extra_args is not None and extra_args.get(
-                "nowcast_macdsign", default_status
-            ):
-                nowcasting_features[5] = np.nan_to_num(
-                    np.nanmean(MACDsign), nan=0.0, posinf=0.0, neginf=0.0
-                )
+            if extra_args is not None and extra_args.get("nowcast_macdsign", default_status):
+                nowcasting_features[5] = np.nan_to_num(np.nanmean(MACDsign), nan=0.0, posinf=0.0, neginf=0.0)
 
             MACDdiff = MACD - MACDsign
-            if extra_args is not None and extra_args.get(
-                "nowcast_macddiff", default_status
-            ):
-                nowcasting_features[6] = np.nan_to_num(
-                    np.nanmean(MACDdiff), nan=0.0, posinf=0.0, neginf=0.0
-                )
+            if extra_args is not None and extra_args.get("nowcast_macddiff", default_status):
+                nowcasting_features[6] = np.nan_to_num(np.nanmean(MACDdiff), nan=0.0, posinf=0.0, neginf=0.0)
 
         return nowcasting_features
 
@@ -1861,9 +1769,7 @@ class TsFeatures:
                 nowcasting_features[feature] = np.nan
 
         try:
-            _features = TsFeatures._get_nowcasting_np(
-                x, window, n_fast, n_slow, extra_args, default_status
-            )
+            _features = TsFeatures._get_nowcasting_np(x, window, n_fast, n_slow, extra_args, default_status)
             for idx, feature in enumerate(features):
                 if extra_args is not None and extra_args.get(feature, default_status):
                     nowcasting_features[feature] = _features[idx]
@@ -1926,15 +1832,11 @@ class TsFeatures:
                 _period = 7
             res = STL(ts.value.values, period=_period).fit()
 
-            if extra_args is not None and extra_args.get(
-                "seasonal_period", default_status
-            ):
+            if extra_args is not None and extra_args.get("seasonal_period", default_status):
                 seasonality_features["seasonal_period"] = _period
 
             # getting seasonality magnitude
-            if extra_args is not None and extra_args.get(
-                "seasonality_mag", default_status
-            ):
+            if extra_args is not None and extra_args.get("seasonality_mag", default_status):
                 seasonality_features["seasonality_mag"] = np.round(
                     np.quantile(res.seasonal, 0.95) - np.quantile(res.seasonal, 0.05)
                 )
@@ -1949,9 +1851,7 @@ class TsFeatures:
                 seasonality_features["trend_mag"] = _res.params[0]
 
             # residual standard deviation
-            if extra_args is not None and extra_args.get(
-                "residual_std", default_status
-            ):
+            if extra_args is not None and extra_args.get("residual_std", default_status):
                 seasonality_features["residual_std"] = np.std(res.resid)
 
         except Exception as e:
@@ -2010,76 +1910,50 @@ class TsFeatures:
             if extra_args is not None and extra_args.get("time_months", default_status):
                 time_features["time_months"] = index.strftime("%Y-%m").nunique()
 
-            if extra_args is not None and extra_args.get(
-                "time_monthsofyear", default_status
-            ):
+            if extra_args is not None and extra_args.get("time_monthsofyear", default_status):
                 time_features["time_monthsofyear"] = index.month.nunique()
 
             if extra_args is not None and extra_args.get("time_weeks", default_status):
                 time_features["time_weeks"] = index.strftime("%G-%V").nunique()
 
-            if extra_args is not None and extra_args.get(
-                "time_weeksofyear", default_status
-            ):
+            if extra_args is not None and extra_args.get("time_weeksofyear", default_status):
                 time_features["time_weeksofyear"] = index.weekofyear.nunique()
 
             if extra_args is not None and extra_args.get("time_days", default_status):
                 time_features["time_days"] = index.strftime("%Y-%d").nunique()
 
-            if extra_args is not None and extra_args.get(
-                "time_daysofyear", default_status
-            ):
+            if extra_args is not None and extra_args.get("time_daysofyear", default_status):
                 time_features["time_daysofyear"] = index.dayofyear.nunique()
 
-            if extra_args is not None and extra_args.get(
-                "time_avg_timezone_offset", default_status
-            ):
+            if extra_args is not None and extra_args.get("time_avg_timezone_offset", default_status):
                 try:
                     utcoffsets = [dt.utcoffset().total_seconds() for dt in index]
-                    time_features["time_avg_timezone_offset"] = np.array(
-                        utcoffsets
-                    ).mean()
+                    time_features["time_avg_timezone_offset"] = np.array(utcoffsets).mean()
                 except AttributeError:
                     time_features["time_avg_timezone_offset"] = 0.0
 
-            if extra_args is not None and extra_args.get(
-                "time_length_days", default_status
-            ):
+            if extra_args is not None and extra_args.get("time_length_days", default_status):
                 time_features["time_length_days"] = (index.max() - index.min()).days
 
-            if extra_args is not None and extra_args.get(
-                "time_freq_Monday", default_status
-            ):
+            if extra_args is not None and extra_args.get("time_freq_Monday", default_status):
                 time_features["time_freq_Monday"] = (dow == 0).sum() / n
 
-            if extra_args is not None and extra_args.get(
-                "time_freq_Tuesday", default_status
-            ):
+            if extra_args is not None and extra_args.get("time_freq_Tuesday", default_status):
                 time_features["time_freq_Tuesday"] = (dow == 1).sum() / n
 
-            if extra_args is not None and extra_args.get(
-                "time_freq_Wednesday", default_status
-            ):
+            if extra_args is not None and extra_args.get("time_freq_Wednesday", default_status):
                 time_features["time_freq_Wednesday"] = (dow == 2).sum() / n
 
-            if extra_args is not None and extra_args.get(
-                "time_freq_Thursday", default_status
-            ):
+            if extra_args is not None and extra_args.get("time_freq_Thursday", default_status):
                 time_features["time_freq_Thursday"] = (dow == 3).sum() / n
 
-            if extra_args is not None and extra_args.get(
-                "time_freq_Friday", default_status
-            ):
+            if extra_args is not None and extra_args.get("time_freq_Friday", default_status):
                 time_features["time_freq_Friday"] = (dow == 4).sum() / n
 
-            if extra_args is not None and extra_args.get(
-                "time_freq_Saturday", default_status
-            ):
+            if extra_args is not None and extra_args.get("time_freq_Saturday", default_status):
                 time_features["time_freq_Saturday"] = (dow == 5).sum() / n
 
-            if extra_args is not None and extra_args.get(
-                "time_freq_Sunday", default_status
-            ):
+            if extra_args is not None and extra_args.get("time_freq_Sunday", default_status):
                 time_features["time_freq_Sunday"] = (dow == 6).sum() / n
 
         except Exception as e:

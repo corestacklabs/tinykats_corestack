@@ -11,14 +11,19 @@ variables `x` and `x^2`, where `x` is the time.
 """
 
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Any
+from typing import Dict
+from typing import List
+from typing import Optional
 
 import numpy as np
 import pandas as pd
 import statsmodels.api as sm
-from kats.consts import Params, TimeSeriesData
-from kats.models.model import Model
 from statsmodels.sandbox.regression.predstd import wls_prediction_std
+
+from kats.consts import Params
+from kats.consts import TimeSeriesData
+from kats.models.model import Model
 
 
 class QuadraticModelParams(Params):
@@ -33,10 +38,7 @@ class QuadraticModelParams(Params):
     def __init__(self, alpha: float = 0.05, **kwargs: Any) -> None:
         super().__init__()
         self.alpha = alpha
-        logging.debug(
-            "Initialized QuadraticModel parameters. "
-            "alpha:{alpha}".format(alpha=alpha)
-        )
+        logging.debug("Initialized QuadraticModel parameters. " "alpha:{alpha}".format(alpha=alpha))
 
     def validate_params(self) -> None:
         """Validate Quadratic Model Parameters
@@ -73,18 +75,13 @@ class QuadraticModel(Model[QuadraticModelParams]):
         super().__init__(data, params)
         # pyre-fixme[16]: `Optional` has no attribute `value`.
         if not isinstance(self.data.value, pd.Series):
-            msg = "Only support univariate time series, but get {type}.".format(
-                type=type(self.data.value)
-            )
+            msg = "Only support univariate time series, but get {type}.".format(type=type(self.data.value))
             logging.error(msg)
             raise ValueError(msg)
 
     def fit(self) -> None:
         """fit Quadratic Model."""
-        logging.debug(
-            "Call fit() with parameters: "
-            "alpha:{alpha}".format(alpha=self.params.alpha)
-        )
+        logging.debug("Call fit() with parameters: " "alpha:{alpha}".format(alpha=self.params.alpha))
 
         # pyre-fixme[16]: `Optional` has no attribute `time`.
         self.past_length = len(self.data.time)
@@ -100,9 +97,7 @@ class QuadraticModel(Model[QuadraticModelParams]):
 
     # pyre-fixme[14]: `predict` overrides method defined in `Model` inconsistently.
     # pyre-fixme[15]: `predict` overrides method defined in `Model` inconsistently.
-    def predict(
-        self, steps: int, include_history: bool = False, **kwargs: Any
-    ) -> pd.DataFrame:
+    def predict(self, steps: int, include_history: bool = False, **kwargs: Any) -> pd.DataFrame:
         """predict with fitted quadratic model.
 
         Args:
@@ -119,8 +114,7 @@ class QuadraticModel(Model[QuadraticModelParams]):
         model = self.model
         assert model is not None
         logging.debug(
-            "Call predict() with parameters. "
-            "steps:{steps}, kwargs:{kwargs}".format(steps=steps, kwargs=kwargs)
+            "Call predict() with parameters. " "steps:{steps}, kwargs:{kwargs}".format(steps=steps, kwargs=kwargs)
         )
         # pyre-fixme[16]: `Optional` has no attribute `time`.
         self.freq = kwargs.get("freq", pd.infer_freq(self.data.time))
@@ -134,9 +128,7 @@ class QuadraticModel(Model[QuadraticModelParams]):
         _X_fcst = np.column_stack([_X_future, np.power(_X_future, 2)])
         X_fcst = sm.add_constant(_X_fcst)
         y_fcst = model.predict(X_fcst)
-        sdev, y_fcst_lower, y_fcst_upper = wls_prediction_std(
-            self.model, exog=X_fcst, alpha=self.params.alpha
-        )
+        sdev, y_fcst_lower, y_fcst_upper = wls_prediction_std(self.model, exog=X_fcst, alpha=self.params.alpha)
         self.sdev = sdev
         self.y_fcst = pd.Series(y_fcst, copy=False)
         self.y_fcst_lower = pd.Series(y_fcst_lower, copy=False)

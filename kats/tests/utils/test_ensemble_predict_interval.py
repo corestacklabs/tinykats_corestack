@@ -8,10 +8,14 @@ from unittest import TestCase
 
 import numpy as np
 import pandas as pd
+
 from kats.consts import TimeSeriesData
-from kats.models.holtwinters import HoltWintersModel, HoltWintersParams
-from kats.models.prophet import ProphetModel, ProphetParams
-from kats.models.sarima import SARIMAModel, SARIMAParams
+from kats.models.holtwinters import HoltWintersModel
+from kats.models.holtwinters import HoltWintersParams
+from kats.models.prophet import ProphetModel
+from kats.models.prophet import ProphetParams
+from kats.models.sarima import SARIMAModel
+from kats.models.sarima import SARIMAParams
 from kats.utils.ensemble_predict_interval import ensemble_predict_interval
 
 
@@ -25,9 +29,7 @@ class testEnsemblePredictInterval(TestCase):
             + +np.cos(np.arange(180)) * 20
             + np.random.randn(180) * 10
         )
-        ts = TimeSeriesData(
-            pd.DataFrame({"time": pd.date_range("2021-05-06", periods=180), "val": val})
-        )
+        ts = TimeSeriesData(pd.DataFrame({"time": pd.date_range("2021-05-06", periods=180), "val": val}))
         self.test_ts = ts[120:]
         self.hist_ts = ts[:120]
 

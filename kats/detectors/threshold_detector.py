@@ -3,13 +3,17 @@
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
 
-from typing import Any, Optional
+from typing import Any
+from typing import Optional
 
 import numpy as np
 import pandas as pd
 from fbprophet import Prophet
-from fbprophet.serialize import model_from_json, model_to_json
-from kats.consts import DEFAULT_VALUE_NAME, TimeSeriesData
+from fbprophet.serialize import model_from_json
+from fbprophet.serialize import model_to_json
+
+from kats.consts import DEFAULT_VALUE_NAME
+from kats.consts import TimeSeriesData
 from kats.detectors.detector import DetectorModel
 from kats.detectors.detector_consts import AnomalyResponse
 

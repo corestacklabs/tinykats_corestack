@@ -17,9 +17,7 @@ try:
 except ImportError:
     import logging
 
-    logging.warning(
-        "kats.detectors.prophet_detector is not available (requires Prophet)"
-    )
+    logging.warning("kats.detectors.prophet_detector is not available (requires Prophet)")
 from . import residual_translation  # noqa # usort: skip
 from . import robust_stat_detection  # noqa # usort: skip
 from . import seasonality  # noqa # usort: skip

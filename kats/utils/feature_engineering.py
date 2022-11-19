@@ -3,11 +3,14 @@
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
 
-from typing import Any, cast, Dict, Optional, Union
+from typing import Any
+from typing import Dict
+from typing import Optional
+from typing import Union
+from typing import cast
 
 import numpy as np
 import pandas as pd
-
 
 # Map months to seasons.
 # Equivalent to ((index.month + 1) % 12) // 3 but 15x faster.
@@ -158,9 +161,7 @@ def time_features(s: pd.Series, result: Optional[pd.DataFrame] = None) -> pd.Dat
     return result
 
 
-def datetime_features(
-    s: pd.Series, result: Optional[pd.DataFrame] = None
-) -> pd.DataFrame:
+def datetime_features(s: pd.Series, result: Optional[pd.DataFrame] = None) -> pd.DataFrame:
     """Compute date and time features for each row of a time series.
 
     Args:
@@ -192,9 +193,7 @@ def timestamp_datetime_features(t: pd.Timestamp) -> Dict[str, Any]:
     return result
 
 
-def circle_encode(
-    ts: pd.DataFrame, features: Dict[str, int], modulo: bool = False
-) -> pd.DataFrame:
+def circle_encode(ts: pd.DataFrame, features: Dict[str, int], modulo: bool = False) -> pd.DataFrame:
     """Circularly encode features.
 
     Args:

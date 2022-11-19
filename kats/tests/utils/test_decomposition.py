@@ -4,18 +4,22 @@
 # LICENSE file in the root directory of this source tree.
 
 import unittest
-from datetime import datetime, timedelta
+from datetime import datetime
+from datetime import timedelta
 from unittest import TestCase
 
 import numpy as np
 import pandas as pd
+from scipy.stats import ks_2samp
+from statsmodels.tsa.seasonal import STL
+from statsmodels.tsa.seasonal import seasonal_decompose
+
 from kats.consts import TimeSeriesData
-from kats.data.utils import load_air_passengers, load_data
+from kats.data.utils import load_air_passengers
+from kats.data.utils import load_data
 from kats.detectors.residual_translation import KDEResidualTranslator
 from kats.utils.decomposition import TimeSeriesDecomposition
 from kats.utils.simulator import Simulator
-from scipy.stats import ks_2samp
-from statsmodels.tsa.seasonal import seasonal_decompose, STL
 
 
 class DecompositionTest(TestCase):
@@ -25,9 +29,7 @@ class DecompositionTest(TestCase):
 
         data_nonstandard_name = data.copy()
         data_nonstandard_name.columns = ["ds", "y"]
-        self.ts_data_nonstandard_name = TimeSeriesData(
-            df=data_nonstandard_name, time_col_name="ds"
-        )
+        self.ts_data_nonstandard_name = TimeSeriesData(df=data_nonstandard_name, time_col_name="ds")
 
         daily_data = load_data("peyton_manning.csv")
         daily_data.columns = ["time", "y"]
@@ -48,18 +50,14 @@ class DecompositionTest(TestCase):
         output2 = m2.decomposer()
 
         self.assertEqual(output1["trend"].value.all(), output2["trend"].value.all())
-        self.assertEqual(
-            output1["seasonal"].value.all(), output2["seasonal"].value.all()
-        )
+        self.assertEqual(output1["seasonal"].value.all(), output2["seasonal"].value.all())
         self.assertEqual(output1["rem"].value.all(), output2["rem"].value.all())
 
         m3 = TimeSeriesDecomposition(self.ts_data, "additive", "STL2")
         output3 = m3.decomposer()
 
         self.assertEqual(output1["trend"].value.all(), output3["trend"].value.all())
-        self.assertEqual(
-            output1["seasonal"].value.all(), output3["seasonal"].value.all()
-        )
+        self.assertEqual(output1["seasonal"].value.all(), output3["seasonal"].value.all())
         self.assertEqual(output1["rem"].value.all(), output3["rem"].value.all())
 
     def test_nonstandard_time_col_name(self) -> None:
@@ -74,24 +72,18 @@ class DecompositionTest(TestCase):
             m.results["seasonal"].time_col_name,
             self.ts_data_nonstandard_name.time_col_name,
         )
-        self.assertEqual(
-            m.results["rem"].time_col_name, self.ts_data_nonstandard_name.time_col_name
-        )
+        self.assertEqual(m.results["rem"].time_col_name, self.ts_data_nonstandard_name.time_col_name)
 
     def test_decomposition_additive(self) -> None:
         m = TimeSeriesDecomposition(self.ts_data, "additive")
         output = m.decomposer()
 
         out = pd.merge(
-            pd.DataFrame.from_dict(
-                {"time": pd.DatetimeIndex(self.ts_data.time), "y": self.ts_data.value}
-            ),
+            pd.DataFrame.from_dict({"time": pd.DatetimeIndex(self.ts_data.time), "y": self.ts_data.value}),
             pd.DataFrame.from_dict(
                 {
                     "time": output["trend"].time,
-                    "y": output["trend"].value
-                    + output["seasonal"].value
-                    + output["rem"].value,
+                    "y": output["trend"].value + output["seasonal"].value + output["rem"].value,
                 }
             ),
             how="inner",
@@ -99,25 +91,17 @@ class DecompositionTest(TestCase):
             suffixes=("_actuals", "_decomposed"),
         )
 
-        self.assertAlmostEqual(
-            np.mean((out["y_actuals"] - out["y_decomposed"]) ** 2), 0, 5
-        )
+        self.assertAlmostEqual(np.mean((out["y_actuals"] - out["y_decomposed"]) ** 2), 0, 5)
 
-        m_seasonal = TimeSeriesDecomposition(
-            self.ts_data, "additive", "seasonal_decompose"
-        )
+        m_seasonal = TimeSeriesDecomposition(self.ts_data, "additive", "seasonal_decompose")
         output = m_seasonal.decomposer()
 
         out = pd.merge(
-            pd.DataFrame.from_dict(
-                {"time": pd.DatetimeIndex(self.ts_data.time), "y": self.ts_data.value}
-            ),
+            pd.DataFrame.from_dict({"time": pd.DatetimeIndex(self.ts_data.time), "y": self.ts_data.value}),
             pd.DataFrame.from_dict(
                 {
                     "time": output["trend"].time,
-                    "y": output["trend"].value
-                    + output["seasonal"].value
-                    + output["rem"].value,
+                    "y": output["trend"].value + output["seasonal"].value + output["rem"].value,
                 }
             ),
             how="inner",
@@ -125,9 +109,7 @@ class DecompositionTest(TestCase):
             suffixes=("_actuals", "_decomposed"),
         )
 
-        self.assertAlmostEqual(
-            np.mean((out["y_actuals"] - out["y_decomposed"]) ** 2), 0, 5
-        )
+        self.assertAlmostEqual(np.mean((out["y_actuals"] - out["y_decomposed"]) ** 2), 0, 5)
 
         m2 = TimeSeriesDecomposition(self.ts_data_daily, "additive")
         output = m2.decomposer()
@@ -142,22 +124,16 @@ class DecompositionTest(TestCase):
             pd.DataFrame.from_dict(
                 {
                     "time": output["trend"].time,
-                    "y": output["trend"].value
-                    + output["seasonal"].value
-                    + output["rem"].value,
+                    "y": output["trend"].value + output["seasonal"].value + output["rem"].value,
                 }
             ),
             how="inner",
             on="time",
             suffixes=("_actuals", "_decomposed"),
         )
-        self.assertAlmostEqual(
-            np.mean((out2["y_actuals"] - out2["y_decomposed"]) ** 2), 0, 5
-        )
+        self.assertAlmostEqual(np.mean((out2["y_actuals"] - out2["y_decomposed"]) ** 2), 0, 5)
 
-        m2_seasonal = TimeSeriesDecomposition(
-            self.ts_data_daily, "additive", "seasonal_decompose"
-        )
+        m2_seasonal = TimeSeriesDecomposition(self.ts_data_daily, "additive", "seasonal_decompose")
         output = m2_seasonal.decomposer()
 
         out2 = pd.merge(
@@ -170,33 +146,25 @@ class DecompositionTest(TestCase):
             pd.DataFrame.from_dict(
                 {
                     "time": output["trend"].time,
-                    "y": output["trend"].value
-                    + output["seasonal"].value
-                    + output["rem"].value,
+                    "y": output["trend"].value + output["seasonal"].value + output["rem"].value,
                 }
             ),
             how="inner",
             on="time",
             suffixes=("_actuals", "_decomposed"),
         )
-        self.assertAlmostEqual(
-            np.mean((out2["y_actuals"] - out2["y_decomposed"]) ** 2), 0, 5
-        )
+        self.assertAlmostEqual(np.mean((out2["y_actuals"] - out2["y_decomposed"]) ** 2), 0, 5)
 
     def test_decomposition_multiplicative(self) -> None:
         m = TimeSeriesDecomposition(self.ts_data, "multiplicative")
         output = m.decomposer()
 
         out = pd.merge(
-            pd.DataFrame.from_dict(
-                {"time": pd.DatetimeIndex(self.ts_data.time), "y": self.ts_data.value}
-            ),
+            pd.DataFrame.from_dict({"time": pd.DatetimeIndex(self.ts_data.time), "y": self.ts_data.value}),
             pd.DataFrame.from_dict(
                 {
                     "time": output["trend"].time,
-                    "y": output["trend"].value
-                    * output["seasonal"].value
-                    * output["rem"].value,
+                    "y": output["trend"].value * output["seasonal"].value * output["rem"].value,
                 }
             ),
             how="inner",
@@ -204,25 +172,17 @@ class DecompositionTest(TestCase):
             suffixes=("_actuals", "_decomposed"),
         )
 
-        self.assertAlmostEqual(
-            np.mean((out["y_actuals"] - out["y_decomposed"]) ** 2), 0, 5
-        )
+        self.assertAlmostEqual(np.mean((out["y_actuals"] - out["y_decomposed"]) ** 2), 0, 5)
 
-        m_seas = TimeSeriesDecomposition(
-            self.ts_data, "multiplicative", "seasonal_decompose"
-        )
+        m_seas = TimeSeriesDecomposition(self.ts_data, "multiplicative", "seasonal_decompose")
         output = m_seas.decomposer()
 
         out = pd.merge(
-            pd.DataFrame.from_dict(
-                {"time": pd.DatetimeIndex(self.ts_data.time), "y": self.ts_data.value}
-            ),
+            pd.DataFrame.from_dict({"time": pd.DatetimeIndex(self.ts_data.time), "y": self.ts_data.value}),
             pd.DataFrame.from_dict(
                 {
                     "time": output["trend"].time,
-                    "y": output["trend"].value
-                    * output["seasonal"].value
-                    * output["rem"].value,
+                    "y": output["trend"].value * output["seasonal"].value * output["rem"].value,
                 }
             ),
             how="inner",
@@ -230,9 +190,7 @@ class DecompositionTest(TestCase):
             suffixes=("_actuals", "_decomposed"),
         )
 
-        self.assertAlmostEqual(
-            np.mean((out["y_actuals"] - out["y_decomposed"]) ** 2), 0, 5
-        )
+        self.assertAlmostEqual(np.mean((out["y_actuals"] - out["y_decomposed"]) ** 2), 0, 5)
         m2 = TimeSeriesDecomposition(self.ts_data_daily, "multiplicative")
         output = m2.decomposer()
 
@@ -246,22 +204,16 @@ class DecompositionTest(TestCase):
             pd.DataFrame.from_dict(
                 {
                     "time": output["trend"].time,
-                    "y": output["trend"].value
-                    * output["seasonal"].value
-                    * output["rem"].value,
+                    "y": output["trend"].value * output["seasonal"].value * output["rem"].value,
                 }
             ),
             how="inner",
             on="time",
             suffixes=("_actuals", "_decomposed"),
         )
-        self.assertAlmostEqual(
-            np.mean((out2["y_actuals"] - out2["y_decomposed"]) ** 2), 0, 5
-        )
+        self.assertAlmostEqual(np.mean((out2["y_actuals"] - out2["y_decomposed"]) ** 2), 0, 5)
 
-        m2_seas = TimeSeriesDecomposition(
-            self.ts_data_daily, "multiplicative", "seasonal_decompose"
-        )
+        m2_seas = TimeSeriesDecomposition(self.ts_data_daily, "multiplicative", "seasonal_decompose")
         output = m2_seas.decomposer()
 
         out2 = pd.merge(
@@ -274,18 +226,14 @@ class DecompositionTest(TestCase):
             pd.DataFrame.from_dict(
                 {
                     "time": output["trend"].time,
-                    "y": output["trend"].value
-                    * output["seasonal"].value
-                    * output["rem"].value,
+                    "y": output["trend"].value * output["seasonal"].value * output["rem"].value,
                 }
             ),
             how="inner",
             on="time",
             suffixes=("_actuals", "_decomposed"),
         )
-        self.assertAlmostEqual(
-            np.mean((out2["y_actuals"] - out2["y_decomposed"]) ** 2), 0, 5
-        )
+        self.assertAlmostEqual(np.mean((out2["y_actuals"] - out2["y_decomposed"]) ** 2), 0, 5)
 
     def test_plot(self) -> None:
         m = TimeSeriesDecomposition(self.ts_data, "multiplicative")
@@ -305,9 +253,7 @@ class DecompositionTest(TestCase):
     def test_new_freq(self) -> None:
         DATA_multi = self.TSData_multi.to_dataframe()
         df_15_min = DATA_multi[["time", "1"]]
-        df_15_min["time"] = list(
-            pd.date_range(end="2020-02-01", periods=df_15_min.shape[0], freq="25T")
-        )
+        df_15_min["time"] = list(pd.date_range(end="2020-02-01", periods=df_15_min.shape[0], freq="25T"))
         df_15_min["time"] = df_15_min["time"].astype("str")
         df_15_min.columns = ["time", "y"]
 
@@ -319,9 +265,7 @@ class DecompositionTest(TestCase):
         m2.decomposer()
 
     def test_10_minutes_level_dense_data(self) -> None:
-        sim = Simulator(
-            n=2 * 144, freq="10T", start=pd.to_datetime("2021-01-01")
-        )  # 2 days of data
+        sim = Simulator(n=2 * 144, freq="10T", start=pd.to_datetime("2021-01-01"))  # 2 days of data
         sim.add_trend(magnitude=1)
         sim.add_seasonality(magnitude=50, period=timedelta(days=1))
         sim.add_noise(magnitude=10)
@@ -351,68 +295,30 @@ class DecompositionTest(TestCase):
         decomp3 = m3.decomposer()
 
         # check that interpolate doesn't add new data points
-        self.assertEqual(
-            len(decomp["trend"].to_dataframe()), len(dense_dates_ts.to_dataframe())
-        )
-        self.assertEqual(
-            len(decomp2["trend"].to_dataframe()), len(dense_dates_ts.to_dataframe())
-        )
-        self.assertEqual(
-            len(decomp3["trend"].to_dataframe()), len(dense_dates_ts.to_dataframe())
-        )
+        self.assertEqual(len(decomp["trend"].to_dataframe()), len(dense_dates_ts.to_dataframe()))
+        self.assertEqual(len(decomp2["trend"].to_dataframe()), len(dense_dates_ts.to_dataframe()))
+        self.assertEqual(len(decomp3["trend"].to_dataframe()), len(dense_dates_ts.to_dataframe()))
 
         # check if decomposition does what it intends to do
         stl = STL(dense_dates_df.reset_index().value, period=2)
         true_results = stl.fit()
-        self.assertTrue(
-            (
-                true_results.seasonal.values
-                == decomp["seasonal"].to_dataframe()["season"].values
-            ).all()
-        )
-        self.assertTrue(
-            (
-                true_results.trend.values
-                == decomp["trend"].to_dataframe()["trend"].values
-            ).all()
-        )
+        self.assertTrue((true_results.seasonal.values == decomp["seasonal"].to_dataframe()["season"].values).all())
+        self.assertTrue((true_results.trend.values == decomp["trend"].to_dataframe()["trend"].values).all())
         stl = STL(dense_dates_df.reset_index().value, period=144, robust=True)
         true_results = stl.fit()
+        self.assertTrue((true_results.seasonal.values == decomp2["seasonal"].to_dataframe()["season"].values).all())
+        self.assertTrue((true_results.trend.values == decomp2["trend"].to_dataframe()["trend"].values).all())
+        true_results = seasonal_decompose(dense_dates_df.reset_index().value, period=2, model="additive")
+        self.assertTrue((true_results.seasonal.values == decomp3["seasonal"].to_dataframe()["seasonal"].values).all())
         self.assertTrue(
-            (
-                true_results.seasonal.values
-                == decomp2["seasonal"].to_dataframe()["season"].values
-            ).all()
-        )
-        self.assertTrue(
-            (
-                true_results.trend.values
-                == decomp2["trend"].to_dataframe()["trend"].values
-            ).all()
-        )
-        true_results = seasonal_decompose(
-            dense_dates_df.reset_index().value, period=2, model="additive"
-        )
-        self.assertTrue(
-            (
-                true_results.seasonal.values
-                == decomp3["seasonal"].to_dataframe()["seasonal"].values
-            ).all()
-        )
-        self.assertTrue(
-            (
-                true_results.trend.values
-                == decomp3["trend"].to_dataframe()["trend"].values
-            )[
+            (true_results.trend.values == decomp3["trend"].to_dataframe()["trend"].values)[
                 1:-1
             ].all()  # at the beginning and end NaNs
         )
 
     def test_10_minutes_level_sparse_data(self) -> None:
         # create data
-        sim = Simulator(
-            n=2 * 144, freq="10T", start=pd.to_datetime("2021-01-01")
-        )  # 2 days of data
+        sim = Simulator(n=2 * 144, freq="10T", start=pd.to_datetime("2021-01-01"))  # 2 days of data
         sim.add_trend(magnitude=1)
         sim.add_seasonality(magnitude=50, period=timedelta(days=1))
         sim.add_noise(magnitude=10)
@@ -449,59 +355,23 @@ class DecompositionTest(TestCase):
         decomp3 = m3.decomposer()
 
         # check that interpolate doesn't add new data points
-        self.assertEqual(
-            len(decomp["trend"].to_dataframe()), len(dense_dates_ts.to_dataframe())
-        )
-        self.assertEqual(
-            len(decomp2["trend"].to_dataframe()), len(dense_dates_ts.to_dataframe())
-        )
-        self.assertEqual(
-            len(decomp3["trend"].to_dataframe()), len(dense_dates_ts.to_dataframe())
-        )
+        self.assertEqual(len(decomp["trend"].to_dataframe()), len(dense_dates_ts.to_dataframe()))
+        self.assertEqual(len(decomp2["trend"].to_dataframe()), len(dense_dates_ts.to_dataframe()))
+        self.assertEqual(len(decomp3["trend"].to_dataframe()), len(dense_dates_ts.to_dataframe()))
 
         # check if decomposition does what it intends to do
         stl = STL(sparse_dates_df.reset_index().value, period=2)
         true_results = stl.fit()
-        self.assertTrue(
-            (
-                true_results.seasonal.values
-                == decomp["seasonal"].to_dataframe()["season"].values
-            ).all()
-        )
-        self.assertTrue(
-            (
-                true_results.trend.values
-                == decomp["trend"].to_dataframe()["trend"].values
-            ).all()
-        )
+        self.assertTrue((true_results.seasonal.values == decomp["seasonal"].to_dataframe()["season"].values).all())
+        self.assertTrue((true_results.trend.values == decomp["trend"].to_dataframe()["trend"].values).all())
         stl = STL(sparse_dates_df.reset_index().value, period=144, robust=True)
         true_results = stl.fit()
+        self.assertTrue((true_results.seasonal.values == decomp2["seasonal"].to_dataframe()["season"].values).all())
+        self.assertTrue((true_results.trend.values == decomp2["trend"].to_dataframe()["trend"].values).all())
+        true_results = seasonal_decompose(sparse_dates_df.reset_index().value, period=2, model="additive")
+        self.assertTrue((true_results.seasonal.values == decomp3["seasonal"].to_dataframe()["seasonal"].values).all())
         self.assertTrue(
-            (
-                true_results.seasonal.values
-                == decomp2["seasonal"].to_dataframe()["season"].values
-            ).all()
-        )
-        self.assertTrue(
-            (
-                true_results.trend.values
-                == decomp2["trend"].to_dataframe()["trend"].values
-            ).all()
-        )
-        true_results = seasonal_decompose(
-            sparse_dates_df.reset_index().value, period=2, model="additive"
-        )
-        self.assertTrue(
-            (
-                true_results.seasonal.values
-                == decomp3["seasonal"].to_dataframe()["seasonal"].values
-            ).all()
-        )
-        self.assertTrue(
-            (
-                true_results.trend.values
-                == decomp3["trend"].to_dataframe()["trend"].values
-            )[
+            (true_results.trend.values == decomp3["trend"].to_dataframe()["trend"].values)[
                 1:-1
             ].all()  # at the beginning and end NaNs
         )
@@ -512,9 +382,7 @@ class KDEResidualTranslatorTest(TestCase):
         data = load_air_passengers(return_ts=False)
         data.columns = ["time", "value"]
         self._y = TimeSeriesData(data)
-        yhat = pd.DataFrame(
-            {"value": self._y.value.rolling(7).mean().shift(1), "time": self._y.time}
-        )
+        yhat = pd.DataFrame({"value": self._y.value.rolling(7).mean().shift(1), "time": self._y.time})
         self._yhat = TimeSeriesData(yhat)
         self._residual = self._y - self._yhat
 
@@ -719,25 +587,17 @@ class SimulatorTest(TestCase):
         date_start = datetime.strptime(date_start_str, "%Y-%m-%d")
         previous_seq = [date_start + timedelta(days=x) for x in range(60)]
         values = np.random.randn(len(previous_seq))
-        ts_init = TimeSeriesData(
-            pd.DataFrame({"time": previous_seq[0:60], "y_str": values[0:60]})
-        )
+        ts_init = TimeSeriesData(pd.DataFrame({"time": previous_seq[0:60], "y_str": values[0:60]}))
 
         sim2 = Simulator(n=450, start="2018-01-01")
 
-        ts_level = sim2.inject_level_shift(
-            ts_input=ts_init, cp_arr=[10, 30, 40], level_arr=[10, -10]
-        )
+        ts_level = sim2.inject_level_shift(ts_input=ts_init, cp_arr=[10, 30, 40], level_arr=[10, -10])
         self.assertEqual(len(ts_init), len(ts_level))
 
-        ts_trend = sim2.inject_trend_shift(
-            ts_input=ts_init, cp_arr=[10, 20, 30], trend_arr=[1, -3]
-        )
+        ts_trend = sim2.inject_trend_shift(ts_input=ts_init, cp_arr=[10, 20, 30], trend_arr=[1, -3])
         self.assertEqual(len(ts_init), len(ts_trend))
 
-        ts_spike = sim2.inject_spikes(
-            ts_input=ts_init, anomaly_arr=[10, 20, 30], z_score_arr=[10, -10, 2]
-        )
+        ts_spike = sim2.inject_spikes(ts_input=ts_init, anomaly_arr=[10, 20, 30], z_score_arr=[10, -10, 2])
         self.assertEqual(len(ts_init), len(ts_spike))
 
 

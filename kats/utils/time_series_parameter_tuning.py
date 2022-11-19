@@ -19,17 +19,29 @@ import logging
 import math
 import time
 import uuid
-from abc import ABC, abstractmethod
+from abc import ABC
+from abc import abstractmethod
 from functools import reduce
 from multiprocessing.pool import Pool
 from numbers import Number
-from typing import Any, Callable, Dict, List, Optional, Union
+from typing import Any
+from typing import Callable
+from typing import Dict
+from typing import List
+from typing import Optional
+from typing import Union
 
 import pandas as pd
-from ax import Arm, ComparisonOp, Data, OptimizationConfig, SearchSpace
+from ax import Arm
+from ax import ComparisonOp
+from ax import Data
+from ax import OptimizationConfig
+from ax import SearchSpace
 from ax.core.experiment import Experiment
 from ax.core.generator_run import GeneratorRun
-from ax.core.metric import Metric, MetricFetchE, MetricFetchResult
+from ax.core.metric import Metric
+from ax.core.metric import MetricFetchE
+from ax.core.metric import MetricFetchResult
 from ax.core.objective import Objective
 from ax.core.outcome_constraint import OutcomeConstraint
 from ax.core.trial import BaseTrial
@@ -37,7 +49,9 @@ from ax.modelbridge.discrete import DiscreteModelBridge
 from ax.modelbridge.registry import Models
 from ax.runners.synthetic import SyntheticRunner
 from ax.service.utils.instantiation import InstantiationBase
-from ax.utils.common.result import Err, Ok
+from ax.utils.common.result import Err
+from ax.utils.common.result import Ok
+
 from kats.consts import SearchMethodEnum
 
 # Maximum number of worker processes used to evaluate trial arms in parallel
@@ -94,9 +108,7 @@ class Final(type):
 
         for b in bases:
             if isinstance(b, Final):
-                raise TypeError(
-                    "type '{0}' is not an acceptable base type".format(b.__name__)
-                )
+                raise TypeError("type '{0}' is not an acceptable base type".format(b.__name__))
         return type.__new__(metacls, name, bases, dict(classdict))
 
 
@@ -215,9 +227,7 @@ class TimeSeriesEvaluationMetric(Metric):
                 record.update({"trial_index": trial.index})
             return Ok(value=Data(df=pd.DataFrame.from_records(records)))
         except Exception as e:
-            return Err(
-                MetricFetchE(message=f"Failed to fetch {self.name}", exception=e)
-            )
+            return Err(MetricFetchE(message=f"Failed to fetch {self.name}", exception=e))
 
 
 class TimeSeriesParameterTuning(ABC):
@@ -251,19 +261,12 @@ class TimeSeriesParameterTuning(ABC):
             parameters = [{}]
         # pyre-fixme[4]: Attribute must be annotated.
         self.logger = logging.getLogger(__name__)
-        self.logger.info(
-            "Parameter tuning search space dimensions: {}".format(parameters)
-        )
+        self.logger.info("Parameter tuning search space dimensions: {}".format(parameters))
         self.validate_parameters_format(parameters)
         # pyre-fixme[4]: Attribute must be annotated.
-        self.parameters = [
-            InstantiationBase.parameter_from_json(parameter) for parameter in parameters
-        ]
+        self.parameters = [InstantiationBase.parameter_from_json(parameter) for parameter in parameters]
         self.outcome_constraints = (
-            [
-                InstantiationBase.outcome_constraint_from_str(str_constraint)
-                for str_constraint in outcome_constraints
-            ]
+            [InstantiationBase.outcome_constraint_from_str(str_constraint) for str_constraint in outcome_constraints]
             if outcome_constraints is not None
             else None
         )
@@ -272,13 +275,9 @@ class TimeSeriesParameterTuning(ABC):
         # pyre-fixme[4]: Attribute must be annotated.
         self.job_id = uuid.uuid4()
         # pyre-fixme[4]: Attribute must be annotated.
-        self.experiment_name = (
-            experiment_name if experiment_name else f"parameter_tuning_{self.job_id}"
-        )
+        self.experiment_name = experiment_name if experiment_name else f"parameter_tuning_{self.job_id}"
         # pyre-fixme[4]: Attribute must be annotated.
-        self.objective_name = (
-            objective_name if objective_name else f"objective_{self.job_id}"
-        )
+        self.objective_name = objective_name if objective_name else f"objective_{self.job_id}"
         self.multiprocessing = multiprocessing
 
         self._exp = Experiment(
@@ -314,13 +313,11 @@ class TimeSeriesParameterTuning(ABC):
 
         if not isinstance(parameters, list):
             raise TypeError(
-                "The input parameter, parameters, should be a list even if a "
-                "single parameter is defined."
+                "The input parameter, parameters, should be a list even if a " "single parameter is defined."
             )
         if len(parameters) == 0:
             raise ValueError(
-                "The parameter list is empty. No search space can be created "
-                "if not parameter is specified."
+                "The parameter list is empty. No search space can be created " "if not parameter is specified."
             )
         for i, parameter_dict in enumerate(parameters):
             if not isinstance(parameter_dict, dict):
@@ -430,26 +427,18 @@ class TimeSeriesParameterTuning(ABC):
         """
 
         transform = (
-            armscore_df.set_index(["trial_index", "arm_name", "metric_name"])
-            .unstack("metric_name")
-            .reset_index()
+            armscore_df.set_index(["trial_index", "arm_name", "metric_name"]).unstack("metric_name").reset_index()
         )
         new_cols = transform.columns.to_flat_index()
-        parameters_holder = transform[
-            list(filter(lambda x: "parameters" in x, new_cols))[0]
-        ]
+        parameters_holder = transform[list(filter(lambda x: "parameters" in x, new_cols))[0]]
         transform.drop(columns="parameters", level=0, inplace=True)
         new_cols = new_cols.drop(labels=filter(lambda x: "parameters" in x, new_cols))
-        transform.columns = ["trial_index", "arm_name"] + [
-            "_".join(tpl) for tpl in new_cols[2:]
-        ]
+        transform.columns = ["trial_index", "arm_name"] + ["_".join(tpl) for tpl in new_cols[2:]]
         transform["parameters"] = parameters_holder
         # pyre-fixme[7]: Expected `DataFrame` but got `Union[DataFrame, Series]`.
         return transform
 
-    def list_parameter_value_scores(
-        self, legit_arms_only: bool = False
-    ) -> pd.DataFrame:
+    def list_parameter_value_scores(self, legit_arms_only: bool = False) -> pd.DataFrame:
         """Creates a Pandas DataFrame from evaluated arms then returns it.
 
         The method should be called to fetch evaluation results of arms that
@@ -497,22 +486,12 @@ class TimeSeriesParameterTuning(ABC):
                     boolean_indices = []
                     for oc in optimization_config.outcome_constraints:
                         if oc.op is ComparisonOp.LEQ:
-                            boolean_indices.append(
-                                data.df[data.df.metric_name == oc.metric.name]["mean"]
-                                <= oc.bound
-                            )
+                            boolean_indices.append(data.df[data.df.metric_name == oc.metric.name]["mean"] <= oc.bound)
                         else:
-                            boolean_indices.append(
-                                data.df[data.df.metric_name == oc.metric.name]["mean"]
-                                >= oc.bound
-                            )
+                            boolean_indices.append(data.df[data.df.metric_name == oc.metric.name]["mean"] >= oc.bound)
                     eligible_arm_indices = reduce(lambda x, y: x & y, boolean_indices)
-                    eligible_arm_names = data.df.loc[eligible_arm_indices.index][
-                        eligible_arm_indices
-                    ].arm_name
-                    return list(
-                        filter(lambda x: x.name in eligible_arm_names.values, arms)
-                    )
+                    eligible_arm_names = data.df.loc[eligible_arm_indices.index][eligible_arm_indices].arm_name
+                    return list(filter(lambda x: x.name in eligible_arm_names.values, arms))
 
                 filtered_arms = filter_violating_arms(
                     list(self._exp.arms_by_name.values()),
@@ -521,9 +500,7 @@ class TimeSeriesParameterTuning(ABC):
                     #  got `Optional[ax.core.optimization_config.OptimizationConfig]`.
                     self._exp.optimization_config,
                 )
-                armscore_df = armscore_df[
-                    armscore_df["arm_name"].isin([arm.name for arm in filtered_arms])
-                ]
+                armscore_df = armscore_df[armscore_df["arm_name"].isin([arm.name for arm in filtered_arms])]
             armscore_df = self._repivot_dataframe(armscore_df)
         return armscore_df
 
@@ -532,10 +509,7 @@ class SearchMethodFactory(metaclass=Final):
     """Generates and returns  search strategy object."""
 
     def __init__(self) -> None:
-        raise TypeError(
-            "SearchMethodFactory is not allowed to be instantiated. Use "
-            "it as a static class."
-        )
+        raise TypeError("SearchMethodFactory is not allowed to be instantiated. Use " "it as a static class.")
 
     @staticmethod
     def create_search_method(
@@ -620,8 +594,7 @@ class SearchMethodFactory(metaclass=Final):
             )
         else:
             raise NotImplementedError(
-                "A search method yet to implement is selected. Only grid"
-                " search and random search are implemented."
+                "A search method yet to implement is selected. Only grid" " search and random search are implemented."
             )
 
 
@@ -663,9 +636,7 @@ class GridSearch(TimeSeriesParameterTuning):
             multiprocessing,
         )
         # pyre-fixme[4]: Attribute must be annotated.
-        self._factorial = Models.FACTORIAL(
-            search_space=self.get_search_space(), check_cardinality=False
-        )
+        self._factorial = Models.FACTORIAL(search_space=self.get_search_space(), check_cardinality=False)
         self.logger.info("A factorial model for arm generation is created.")
         self.logger.info("A GridSearch object is successfully created.")
 
@@ -682,14 +653,10 @@ class GridSearch(TimeSeriesParameterTuning):
 
         if arm_count != -1:
             # FullFactorialGenerator ignores specified arm_count as it automatically determines how many arms
-            self.logger.info(
-                "GridSearch arm_count input is ignored and automatically determined by generator."
-            )
+            self.logger.info("GridSearch arm_count input is ignored and automatically determined by generator.")
             arm_count = -1
         factorial_run = self._factorial.gen(n=arm_count)
-        self.generator_run_for_search_method(
-            evaluation_function=evaluation_function, generator_run=factorial_run
-        )
+        self.generator_run_for_search_method(evaluation_function=evaluation_function, generator_run=factorial_run)
 
 
 class RandomSearch(TimeSeriesParameterTuning):
@@ -738,9 +705,7 @@ class RandomSearch(TimeSeriesParameterTuning):
         )
         if seed is None:
             seed = int(time.time())
-            self.logger.info(
-                "No seed is given by the user, it will be set by the current time"
-            )
+            self.logger.info("No seed is given by the user, it will be set by the current time")
         self.logger.info("Seed that is used in random search: {seed}".format(seed=seed))
         if random_strategy == SearchMethodEnum.RANDOM_SEARCH_UNIFORM:
             # pyre-fixme[4]: Attribute must be annotated.
@@ -752,10 +717,7 @@ class RandomSearch(TimeSeriesParameterTuning):
                 search_space=self.get_search_space(), deduplicate=True, seed=seed
             )
         else:
-            raise NotImplementedError(
-                "Invalid random strategy selection. It should be either "
-                "uniform or sobol."
-            )
+            raise NotImplementedError("Invalid random strategy selection. It should be either " "uniform or sobol.")
         self.logger.info(
             "A {random_strategy} model for candidate parameter value generation"
             " is created.".format(random_strategy=random_strategy)
@@ -780,9 +742,7 @@ class RandomSearch(TimeSeriesParameterTuning):
         """
 
         model_run = self._random_strategy_model.gen(n=arm_count)
-        self.generator_run_for_search_method(
-            evaluation_function=evaluation_function, generator_run=model_run
-        )
+        self.generator_run_for_search_method(evaluation_function=evaluation_function, generator_run=model_run)
 
 
 class BayesianOptSearch(TimeSeriesParameterTuning):
@@ -842,9 +802,7 @@ class BayesianOptSearch(TimeSeriesParameterTuning):
         )
         if seed is None:
             seed = int(time.time())
-            self.logger.info(
-                "No seed is given by the user, it will be set by the current time"
-            )
+            self.logger.info("No seed is given by the user, it will be set by the current time")
         self.logger.info("Seed that is used in random search: {seed}".format(seed=seed))
         if random_strategy == SearchMethodEnum.RANDOM_SEARCH_UNIFORM:
             # pyre-fixme[4]: Attribute must be annotated.
@@ -856,10 +814,7 @@ class BayesianOptSearch(TimeSeriesParameterTuning):
                 search_space=self.get_search_space(), deduplicate=True, seed=seed
             )
         else:
-            raise NotImplementedError(
-                "Invalid random strategy selection. It should be either "
-                "uniform or sobol."
-            )
+            raise NotImplementedError("Invalid random strategy selection. It should be either " "uniform or sobol.")
         self.logger.info(
             "A {random_strategy} model for candidate parameter value generation"
             " is created.".format(random_strategy=random_strategy)
@@ -870,14 +825,11 @@ class BayesianOptSearch(TimeSeriesParameterTuning):
             model_run = self._random_strategy_model.gen(n=bootstrap_size)
         else:
             bootstrap_arms_list = [
-                Arm(name="0_" + str(i), parameters=params)
-                for i, params in enumerate(bootstrap_arms_for_bayes_opt)
+                Arm(name="0_" + str(i), parameters=params) for i, params in enumerate(bootstrap_arms_for_bayes_opt)
             ]
             model_run = GeneratorRun(bootstrap_arms_list)
 
-        self.generator_run_for_search_method(
-            evaluation_function=evaluation_function, generator_run=model_run
-        )
+        self.generator_run_for_search_method(evaluation_function=evaluation_function, generator_run=model_run)
         self.logger.info(f'fitted data columns: {self._trial_data.df["metric_name"]}')
         self.logger.info(f"Bootstrapping of size = {bootstrap_size} is done.")
 
@@ -998,8 +950,6 @@ class SearchForMultipleSpaces:
             # return a dict of data frames where each key points to the
             # parameter score values of the corresponding models.
             return {
-                selected_model_: self.search_agent_dict[
-                    selected_model_
-                ].list_parameter_value_scores()
+                selected_model_: self.search_agent_dict[selected_model_].list_parameter_value_scores()
                 for selected_model_ in self.search_agent_dict
             }

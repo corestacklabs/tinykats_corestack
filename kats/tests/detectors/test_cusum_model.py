@@ -9,9 +9,12 @@ from unittest import TestCase
 
 import numpy as np
 import pandas as pd
-from kats.consts import IRREGULAR_GRANULARITY_ERROR, TimeSeriesData
-from kats.detectors.cusum_model import CUSUMDetectorModel, CusumScoreFunction
 from parameterized.parameterized import parameterized
+
+from kats.consts import IRREGULAR_GRANULARITY_ERROR
+from kats.consts import TimeSeriesData
+from kats.detectors.cusum_model import CUSUMDetectorModel
+from kats.detectors.cusum_model import CusumScoreFunction
 
 
 class TestIncreaseCUSUMDetectorModel(TestCase):
@@ -23,9 +26,7 @@ class TestIncreaseCUSUMDetectorModel(TestCase):
         self.regression_sum_score = 12  #
         df_increase = pd.DataFrame(
             {
-                "ts_value": np.concatenate(
-                    [np.random.normal(1, 0.2, 156), np.random.normal(1.5, 0.2, 12)]
-                ),
+                "ts_value": np.concatenate([np.random.normal(1, 0.2, 156), np.random.normal(1.5, 0.2, 12)]),
                 "time": pd.date_range("2020-01-01", periods=168, freq="H"),
             }
         )
@@ -33,22 +34,16 @@ class TestIncreaseCUSUMDetectorModel(TestCase):
         self.tsd_value_name = self.tsd.value.name
         data = self.tsd[-self.test_data_window :]
 
-        self.model = CUSUMDetectorModel(
-            scan_window=self.scan_window, historical_window=self.historical_window
-        )
+        self.model = CUSUMDetectorModel(scan_window=self.scan_window, historical_window=self.historical_window)
 
-        self.score_tsd = self.model.fit_predict(
-            data=data, historical_data=self.tsd[: -self.test_data_window]
-        ).scores
+        self.score_tsd = self.model.fit_predict(data=data, historical_data=self.tsd[: -self.test_data_window]).scores
 
         self.score_tsd_percentage_change = self.model._predict(
             data=data,
             score_func=CusumScoreFunction.percentage_change.value,
         ).score
 
-        self.score_tsd_z_score = self.model._predict(
-            data=data, score_func=CusumScoreFunction.z_score.value
-        ).score
+        self.score_tsd_z_score = self.model._predict(data=data, score_func=CusumScoreFunction.z_score.value).score
 
         self.serialized_model = self.model.serialize()
 
@@ -118,9 +113,7 @@ class TestIncreaseCUSUMDetectorModel(TestCase):
     def test_model(self) -> None:
         self.assertNotEqual(
             self.model,
-            CUSUMDetectorModel(
-                scan_window=self.scan_window, historical_window=self.historical_window
-            ),
+            CUSUMDetectorModel(scan_window=self.scan_window, historical_window=self.historical_window),
         )
 
 
@@ -132,35 +125,25 @@ class TestDecreaseCUSUMDetectorModel(TestCase):
         self.test_data_window = 6  # in hours
         df_decrease = pd.DataFrame(
             {
-                "ts_value": np.concatenate(
-                    [np.random.normal(2, 0.2, 156), np.random.normal(1, 0.2, 12)]
-                ),
+                "ts_value": np.concatenate([np.random.normal(2, 0.2, 156), np.random.normal(1, 0.2, 12)]),
                 "time": pd.date_range("2020-01-01", periods=168, freq="H"),
             }
         )
         tsd = TimeSeriesData(df_decrease)
         data = tsd[-self.test_data_window :]
 
-        model = CUSUMDetectorModel(
-            scan_window=scan_window, historical_window=historical_window
-        )
+        model = CUSUMDetectorModel(scan_window=scan_window, historical_window=historical_window)
 
-        _ = model.fit_predict(
-            data=data, historical_data=tsd[: -self.test_data_window]
-        ).scores
+        _ = model.fit_predict(data=data, historical_data=tsd[: -self.test_data_window]).scores
 
-        self.score_tsd = model._predict(
-            data=data, score_func=CusumScoreFunction.change.value
-        ).score
+        self.score_tsd = model._predict(data=data, score_func=CusumScoreFunction.change.value).score
 
         self.score_tsd_percentage_change = model._predict(
             data=data,
             score_func=CusumScoreFunction.percentage_change.value,
         ).score
 
-        self.score_tsd_z_score = model._predict(
-            data=data, score_func=CusumScoreFunction.z_score.value
-        ).score
+        self.score_tsd_z_score = model._predict(data=data, score_func=CusumScoreFunction.z_score.value).score
 
     # pyre-fixme[56]: Pyre was not able to infer the type of the decorator `parameter...
     @parameterized.expand(
@@ -197,9 +180,7 @@ class TestDecreaseCUSUMDetectorModel(TestCase):
             ),
         ]
     )
-    def test_score_tsd(
-        self, name: str, func_: Callable[[TimeSeriesData], float], attr: str
-    ) -> None:
+    def test_score_tsd(self, name: str, func_: Callable[[TimeSeriesData], float], attr: str) -> None:
         self.assertEqual(func_(attrgetter(attr)(self)), self.test_data_window)
 
 
@@ -228,25 +209,15 @@ class TestAdhocCUSUMDetectorModel(TestCase):
         )
         self.tsd = TimeSeriesData(df_increase)
 
-        model = CUSUMDetectorModel(
-            scan_window=self.scan_window, historical_window=self.historical_window
-        )
+        model = CUSUMDetectorModel(scan_window=self.scan_window, historical_window=self.historical_window)
         self.score_tsd = model.fit_predict(data=self.tsd).scores
 
         # test not enough data
-        model = CUSUMDetectorModel(
-            scan_window=self.scan_window, historical_window=self.historical_window
-        )
-        self.score_tsd_not_enough_data = model.fit_predict(
-            data=self.tsd[-4:], historical_data=self.tsd[-8:-4]
-        ).scores
+        model = CUSUMDetectorModel(scan_window=self.scan_window, historical_window=self.historical_window)
+        self.score_tsd_not_enough_data = model.fit_predict(data=self.tsd[-4:], historical_data=self.tsd[-8:-4]).scores
 
-        model = CUSUMDetectorModel(
-            scan_window=self.scan_window, historical_window=2 * 3600
-        )
-        self.score_tsd_fixed_historical_window = model.fit_predict(
-            data=self.tsd[-8:]
-        ).scores
+        model = CUSUMDetectorModel(scan_window=self.scan_window, historical_window=2 * 3600)
+        self.score_tsd_fixed_historical_window = model.fit_predict(data=self.tsd[-8:]).scores
 
     # pyre-fixme[56]: Pyre was not able to infer the type of the decorator `parameter...
     @parameterized.expand(
@@ -317,9 +288,7 @@ class TestAdhocCUSUMDetectorModel(TestCase):
         func_2: Callable[[TimeSeriesData], float],
         attr2: str,
     ) -> None:
-        self.assertEqual(
-            func_1(attrgetter(attr1)(self)), func_2(attrgetter(attr2)(self))
-        )
+        self.assertEqual(func_1(attrgetter(attr1)(self)), func_2(attrgetter(attr2)(self)))
 
 
 class TestMissingDataCUSUMDetectorModel(TestCase):
@@ -364,23 +333,17 @@ class TestStreamingCUSUMDetectorModel(TestCase):
         self.n = 72
         df_increase = pd.DataFrame(
             {
-                "ts_value": np.concatenate(
-                    [np.random.normal(1, 0.2, 60), np.random.normal(1.5, 0.2, 12)]
-                ),
+                "ts_value": np.concatenate([np.random.normal(1, 0.2, 60), np.random.normal(1.5, 0.2, 12)]),
                 "time": pd.date_range("2020-01-01", periods=self.n, freq="H"),
             }
         )
         tsd = TimeSeriesData(df_increase)
         # Priming the model
-        model = CUSUMDetectorModel(
-            historical_window=historical_window, scan_window=scan_window
-        )
+        model = CUSUMDetectorModel(historical_window=historical_window, scan_window=scan_window)
         model.fit(data=tsd[:48])
         pre_serialized_model = model.serialize()
 
-        self.anomaly_score = TimeSeriesData(
-            time=pd.Series(), value=pd.Series([], name="ts_value")
-        )
+        self.anomaly_score = TimeSeriesData(time=pd.Series(), value=pd.Series([], name="ts_value"))
         # feeding 1 new data point a time
         for i in range(48, self.n):
             model = CUSUMDetectorModel(
@@ -389,15 +352,11 @@ class TestStreamingCUSUMDetectorModel(TestCase):
                 scan_window=scan_window,
             )
             self.anomaly_score.extend(
-                model.fit_predict(
-                    data=tsd[i : i + 1], historical_data=tsd[i - 48 : i]
-                ).scores,
+                model.fit_predict(data=tsd[i : i + 1], historical_data=tsd[i - 48 : i]).scores,
                 validate=False,
             )
             pre_serialized_model = model.serialize()
-        self.anomaly_score.validate_data(
-            validate_frequency=True, validate_dimension=False
-        )
+        self.anomaly_score.validate_data(validate_frequency=True, validate_dimension=False)
 
     def test_streaming_length_match(self) -> None:
         self.assertEqual(len(self.anomaly_score), self.n - 48)
@@ -497,30 +456,20 @@ class TestDecomposingSeasonalityCUSUMDetectorModel(TestCase):
         attr2: str,
         func_sup: Callable[[float, float], bool],
     ) -> None:
-        self.assertTrue(
-            func_sup(func_1(attrgetter(attr1)(self)), func_2(attrgetter(attr2)(self)))
-        )
+        self.assertTrue(func_sup(func_1(attrgetter(attr1)(self)), func_2(attrgetter(attr2)(self))))
 
 
 class TestMissingDataRemoveSeasonalityCUSUMDetectorModel(TestCase):
     def setUp(self) -> None:
         np.random.seed(0)
         x = np.random.normal(0.5, 3, 998)
-        time_val0 = list(
-            pd.date_range(start="2018-02-03 14:59:59", freq="1800s", periods=1000)
-        )
+        time_val0 = list(pd.date_range(start="2018-02-03 14:59:59", freq="1800s", periods=1000))
         time_val = time_val0[:300] + time_val0[301:605] + time_val0[606:]
-        self.tsd = TimeSeriesData(
-            pd.DataFrame({"time": time_val, "value": pd.Series(x)})
-        )
+        self.tsd = TimeSeriesData(pd.DataFrame({"time": time_val, "value": pd.Series(x)}))
 
-        time_val01 = list(
-            pd.date_range(start="2018-02-03 14:00:04", freq="1800s", periods=1000)
-        )
+        time_val01 = list(pd.date_range(start="2018-02-03 14:00:04", freq="1800s", periods=1000))
         time_val1 = time_val01[:300] + time_val01[301:605] + time_val01[606:]
-        self.tsd1 = TimeSeriesData(
-            pd.DataFrame({"time": time_val1, "value": pd.Series(x)})
-        )
+        self.tsd1 = TimeSeriesData(pd.DataFrame({"time": time_val1, "value": pd.Series(x)}))
 
     def test_interpolation(self) -> None:
         # base = 59 * 60 + 59 or = -1
@@ -551,9 +500,7 @@ class TestRaiseCUSUMDetectorModel(TestCase):
         self.scan_window = 24 * 60 * 60  # in seconds
         df_increase = pd.DataFrame(
             {
-                "ts_value": np.concatenate(
-                    [np.random.normal(1, 0.2, 156), np.random.normal(1.5, 0.2, 12)]
-                ),
+                "ts_value": np.concatenate([np.random.normal(1, 0.2, 156), np.random.normal(1.5, 0.2, 12)]),
                 "time": pd.date_range("2020-01-01", periods=168, freq="H"),
             }
         )
@@ -562,9 +509,7 @@ class TestRaiseCUSUMDetectorModel(TestCase):
 
     def test_raise_direction(self) -> None:
         with self.assertRaisesRegex(ValueError, "direction can only be right or left"):
-            model = CUSUMDetectorModel(
-                scan_window=self.scan_window, historical_window=self.historical_window
-            )
+            model = CUSUMDetectorModel(scan_window=self.scan_window, historical_window=self.historical_window)
             model._time2idx(self.tsd, self.tsd.time.iloc[0], "")
 
     def test_raise_model_instantiation(self) -> None:
@@ -576,9 +521,7 @@ class TestRaiseCUSUMDetectorModel(TestCase):
 
     def test_raise_time_series_freq(self) -> None:
         with self.assertRaisesRegex(ValueError, IRREGULAR_GRANULARITY_ERROR):
-            model = CUSUMDetectorModel(
-                scan_window=self.scan_window, historical_window=self.historical_window
-            )
+            model = CUSUMDetectorModel(scan_window=self.scan_window, historical_window=self.historical_window)
             model.fit_predict(
                 data=TimeSeriesData(
                     df=pd.DataFrame(
@@ -600,12 +543,8 @@ class TestRaiseCUSUMDetectorModel(TestCase):
             )
 
     def test_raise_predict_not_implemented(self) -> None:
-        with self.assertRaisesRegex(
-            ValueError, r"predict is not implemented, call fit_predict\(\) instead"
-        ):
-            model = CUSUMDetectorModel(
-                scan_window=self.scan_window, historical_window=self.historical_window
-            )
+        with self.assertRaisesRegex(ValueError, r"predict is not implemented, call fit_predict\(\) instead"):
+            model = CUSUMDetectorModel(scan_window=self.scan_window, historical_window=self.historical_window)
             model.predict(data=self.tsd)
 
 
@@ -618,9 +557,7 @@ class TestDeltaReturnCUSUMDetectorModel(TestCase):
         self.regression_sum_score = 12  #
         df_increase = pd.DataFrame(
             {
-                "ts_value": np.concatenate(
-                    [np.random.normal(1, 0.2, 156), np.random.normal(1.5, 0.2, 12)]
-                ),
+                "ts_value": np.concatenate([np.random.normal(1, 0.2, 156), np.random.normal(1.5, 0.2, 12)]),
                 "time": pd.date_range("2020-01-01", periods=168, freq="H"),
             }
         )
@@ -628,9 +565,7 @@ class TestDeltaReturnCUSUMDetectorModel(TestCase):
         self.tsd_value_name = self.tsd.value.name
         data = self.tsd[-self.test_data_window :]
 
-        self.model = CUSUMDetectorModel(
-            scan_window=self.scan_window, historical_window=self.historical_window
-        )
+        self.model = CUSUMDetectorModel(scan_window=self.scan_window, historical_window=self.historical_window)
 
         self.delta = self.model.fit_predict(
             data=data, historical_data=self.tsd[: -self.test_data_window]
@@ -661,16 +596,12 @@ class TestCUSUMDetectorModelWindowsErrors(TestCase):
 
     def test_errors(self) -> None:
         # case 1: scan_window < 2 * frequency_sec
-        model = CUSUMDetectorModel(
-            scan_window=1 * 24 * 60 * 60, historical_window=2 * 24 * 60 * 60
-        )
+        model = CUSUMDetectorModel(scan_window=1 * 24 * 60 * 60, historical_window=2 * 24 * 60 * 60)
         with self.assertRaises(ValueError):
             _ = model.fit_predict(data=self.data_ts)
 
         # case 2: historical_window < 2 * frequency_sec
-        model = CUSUMDetectorModel(
-            scan_window=2 * 24 * 60 * 60, historical_window=1 * 24 * 60 * 60
-        )
+        model = CUSUMDetectorModel(scan_window=2 * 24 * 60 * 60, historical_window=1 * 24 * 60 * 60)
         with self.assertRaises(ValueError):
             _ = model.fit_predict(data=self.data_ts)
 
@@ -732,9 +663,7 @@ class TestCUSUMDetectorModelChangeDirection(TestCase):
 class TestCUSUMDetectorModelIrregularGranularityError(TestCase):
     def setUp(self) -> None:
         np.random.seed(100)
-        ts_time = list(
-            pd.date_range(start="2018-01-06 00:00:00", freq="60s", periods=(100))
-        )
+        ts_time = list(pd.date_range(start="2018-01-06 00:00:00", freq="60s", periods=(100)))
         ts_time = ts_time[:60] + ts_time[61:80] + ts_time[81:]
         ts_time[82] = pd.to_datetime("2018-01-06 01:24:02")
         ts_time[85] = pd.to_datetime("2018-01-06 01:27:22")

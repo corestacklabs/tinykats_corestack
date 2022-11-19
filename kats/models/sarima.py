@@ -4,15 +4,22 @@
 # LICENSE file in the root directory of this source tree.
 
 import logging
-from typing import Any, Callable, Dict, List, Optional, Tuple
+from typing import Any
+from typing import Callable
+from typing import Dict
+from typing import List
+from typing import Optional
+from typing import Tuple
 
 import numpy as np
 import pandas as pd
-from kats.consts import Params, TimeSeriesData
-from kats.models.model import Model
-from kats.utils.parameter_tuning_utils import get_default_sarima_parameter_search_space
 from statsmodels.tsa.statespace.mlemodel import MLEResults
 from statsmodels.tsa.statespace.sarimax import SARIMAX
+
+from kats.consts import Params
+from kats.consts import TimeSeriesData
+from kats.models.model import Model
+from kats.utils.parameter_tuning_utils import get_default_sarima_parameter_search_space
 
 ArrayLike = np.ndarray
 
@@ -105,8 +112,7 @@ class SARIMAParams(Params):
         self.trend_offset = trend_offset
         self.use_exact_diffuse = use_exact_diffuse
         logging.debug(
-            "Initialized SARIMAParams with parameters. "
-            f"p:{p}, d:{d}, q:{q},seasonal_order:{seasonal_order}"
+            "Initialized SARIMAParams with parameters. " f"p:{p}, d:{d}, q:{q},seasonal_order:{seasonal_order}"
         )
 
     def validate_params(self) -> None:
@@ -336,10 +342,7 @@ class SARIMAModel(Model[SARIMAParams]):
         logging.debug(f"Forecast data: {fcst}")
 
         if fcst.predicted_mean.isna().sum() == steps:
-            msg = (
-                "SARIMA model fails to generate forecasts, i.e., all forecasts are "
-                "NaNs."
-            )
+            msg = "SARIMA model fails to generate forecasts, i.e., all forecasts are " "NaNs."
             logging.error(msg)
             raise ValueError(msg)
 
@@ -363,31 +366,21 @@ class SARIMAModel(Model[SARIMAParams]):
             # generate historical fit
             history_fcst = model.get_prediction(0)
             history_ci = history_fcst.conf_int()
-            if ("lower" in history_ci.columns[0]) and (
-                "upper" in history_ci.columns[1]
-            ):
+            if ("lower" in history_ci.columns[0]) and ("upper" in history_ci.columns[1]):
                 ci_lower_name, ci_upper_name = (
                     history_ci.columns[0],
                     history_ci.columns[1],
                 )
             else:
-                msg = (
-                    "Error when getting prediction interval from statsmodels SARIMA API"
-                )
+                msg = "Error when getting prediction interval from statsmodels SARIMA API"
                 logging.error(msg)
                 raise ValueError(msg)
             self.fcst_df = fcst_df = pd.DataFrame(
                 {
-                    "time": np.concatenate(
-                        (pd.to_datetime(self.data.time), self.dates)
-                    ),
+                    "time": np.concatenate((pd.to_datetime(self.data.time), self.dates)),
                     "fcst": np.concatenate((history_fcst.predicted_mean, self.y_fcst)),
-                    "fcst_lower": np.concatenate(
-                        (history_ci[ci_lower_name], self.y_fcst_lower)
-                    ),
-                    "fcst_upper": np.concatenate(
-                        (history_ci[ci_upper_name], self.y_fcst_upper)
-                    ),
+                    "fcst_lower": np.concatenate((history_ci[ci_lower_name], self.y_fcst_lower)),
+                    "fcst_upper": np.concatenate((history_ci[ci_upper_name], self.y_fcst_upper)),
                 },
                 copy=False,
             )

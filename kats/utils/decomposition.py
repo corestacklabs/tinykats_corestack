@@ -4,13 +4,21 @@
 # LICENSE file in the root directory of this source tree.
 
 import logging
-from typing import Any, Callable, Dict, Optional, Sequence, Tuple, Union
+from typing import Any
+from typing import Callable
+from typing import Dict
+from typing import Optional
+from typing import Sequence
+from typing import Tuple
+from typing import Union
 
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+from statsmodels.tsa.seasonal import STL
+from statsmodels.tsa.seasonal import seasonal_decompose
+
 from kats.consts import TimeSeriesData
-from statsmodels.tsa.seasonal import seasonal_decompose, STL
 
 # from numpy.typing import ArrayLike
 ArrayLike = Union[np.ndarray, Sequence[float]]
@@ -65,10 +73,7 @@ class TimeSeriesDecomposition:
         if decomposition in ("additive", "multiplicative"):
             self.decomposition = decomposition
         else:
-            logging.info(
-                "Invalid decomposition setting specified; "
-                "defaulting to Additive Decomposition."
-            )
+            logging.info("Invalid decomposition setting specified; " "defaulting to Additive Decomposition.")
             self.decomposition = "additive"
         if method == "seasonal_decompose":
             self.method = self.__decompose_seasonal
@@ -115,9 +120,7 @@ class TimeSeriesDecomposition:
         else:
             self.freq = self.data.infer_freq_robust()
 
-        original.interpolate(
-            method="polynomial", limit_direction="both", order=3, inplace=True
-        )
+        original.interpolate(method="polynomial", limit_direction="both", order=3, inplace=True)
 
         ## This is a hack since polynomial interpolation is not working here
         if any(original["y"].isna()):
@@ -170,10 +173,7 @@ class TimeSeriesDecomposition:
             post_transform = _identity
         else:
             if np.any(original <= 0):
-                logging.error(
-                    "Multiplicative seasonality is not appropriate "
-                    "for zero and negative values."
-                )
+                logging.error("Multiplicative seasonality is not appropriate " "for zero and negative values.")
             data = np.log(original)
             post_transform = np.exp
 
@@ -201,9 +201,7 @@ class TimeSeriesDecomposition:
     def __decompose(self, original: pd.DataFrame) -> Dict[str, TimeSeriesData]:
         output = self.method(original)
         return {
-            name: TimeSeriesData(
-                ts.reset_index(), time_col_name=self.data.time_col_name
-            )
+            name: TimeSeriesData(ts.reset_index(), time_col_name=self.data.time_col_name)
             for name, ts in output.items()
         }
 
@@ -243,9 +241,7 @@ class TimeSeriesDecomposition:
             subplot_kwargs = {"hspace": 0.2}
 
         sharex = kwargs.pop("sharex", True)
-        fig, axs = plt.subplots(
-            nrows=4, ncols=1, figsize=figsize, sharex=sharex, **kwargs
-        )
+        fig, axs = plt.subplots(nrows=4, ncols=1, figsize=figsize, sharex=sharex, **kwargs)
 
         axs[0].plot(
             self.data.time.values,

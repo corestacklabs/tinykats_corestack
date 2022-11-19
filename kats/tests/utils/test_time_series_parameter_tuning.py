@@ -7,18 +7,19 @@ import unittest
 from typing import Tuple
 from unittest import TestCase
 
-import kats.utils.time_series_parameter_tuning as tpt
 import pandas as pd
-
-from ax.core.parameter import ChoiceParameter, FixedParameter, ParameterType
+from ax.core.parameter import ChoiceParameter
+from ax.core.parameter import FixedParameter
+from ax.core.parameter import ParameterType
 from ax.models.random.sobol import SobolGenerator
 from ax.models.random.uniform import UniformGenerator
+from numpy.random import RandomState
+
+import kats.utils.time_series_parameter_tuning as tpt
 from kats.consts import SearchMethodEnum
 from kats.models.arima import ARIMAModel
 from kats.models.prophet import ProphetModel
 from kats.utils.time_series_parameter_tuning import compute_search_cardinality
-
-from numpy.random import RandomState
 
 
 class GridSearchTest(TestCase):
@@ -38,9 +39,7 @@ class GridSearchTest(TestCase):
         time_series_parameter_tuner.generate_evaluate_new_parameter_values(
             evaluation_function=arima_evaluation_function
         )
-        parameter_values_with_scores = (
-            time_series_parameter_tuner.list_parameter_value_scores()
-        )
+        parameter_values_with_scores = time_series_parameter_tuner.list_parameter_value_scores()
 
         self.assertIsInstance(parameter_values_with_scores, pd.DataFrame)
         self.assertEqual(len(parameter_values_with_scores.index), 50)
@@ -61,9 +60,7 @@ class GridSearchTest(TestCase):
         time_series_parameter_tuner.generate_evaluate_new_parameter_values(
             evaluation_function=prophet_evaluation_function
         )
-        parameter_values_with_scores = (
-            time_series_parameter_tuner.list_parameter_value_scores()
-        )
+        parameter_values_with_scores = time_series_parameter_tuner.list_parameter_value_scores()
 
         self.assertIsInstance(parameter_values_with_scores, pd.DataFrame)
         self.assertEqual(len(parameter_values_with_scores.index), 25600)
@@ -107,12 +104,8 @@ class GridSearchTest(TestCase):
             parameters=params_in_json,
             selected_search_method=SearchMethodEnum.GRID_SEARCH,
         )
-        time_series_parameter_tuner.generate_evaluate_new_parameter_values(
-            evaluation_function=evaluation_function
-        )
-        parameter_values_with_scores = (
-            time_series_parameter_tuner.list_parameter_value_scores()
-        )
+        time_series_parameter_tuner.generate_evaluate_new_parameter_values(evaluation_function=evaluation_function)
+        parameter_values_with_scores = time_series_parameter_tuner.list_parameter_value_scores()
 
         self.assertIsInstance(parameter_values_with_scores, pd.DataFrame)
         self.assertEqual(len(parameter_values_with_scores.index), 10000)
@@ -123,18 +116,10 @@ class GridSearchTest(TestCase):
             {"name": "test_param2", "type": "choice", "values": [1, 2, 3]},
         ]
         tpt.TimeSeriesParameterTuning.validate_parameters_format(parameters)
-        self.assertRaises(
-            TypeError, tpt.TimeSeriesParameterTuning.validate_parameters_format, None
-        )
-        self.assertRaises(
-            TypeError, tpt.TimeSeriesParameterTuning.validate_parameters_format, set()
-        )
-        self.assertRaises(
-            ValueError, tpt.TimeSeriesParameterTuning.validate_parameters_format, []
-        )
-        self.assertRaises(
-            ValueError, tpt.TimeSeriesParameterTuning.validate_parameters_format, [{}]
-        )
+        self.assertRaises(TypeError, tpt.TimeSeriesParameterTuning.validate_parameters_format, None)
+        self.assertRaises(TypeError, tpt.TimeSeriesParameterTuning.validate_parameters_format, set())
+        self.assertRaises(ValueError, tpt.TimeSeriesParameterTuning.validate_parameters_format, [])
+        self.assertRaises(ValueError, tpt.TimeSeriesParameterTuning.validate_parameters_format, [{}])
         self.assertRaises(
             ValueError,
             tpt.TimeSeriesParameterTuning.validate_parameters_format,
@@ -157,32 +142,20 @@ class GridSearchTest(TestCase):
             {"name": "test_param3", "type": "fixed", "value": 4},
         ]
         time_series_parameter_tuning = tpt.GridSearch(parameters=parameters)
-        self.assertIsInstance(
-            time_series_parameter_tuning.parameters[0], ChoiceParameter
-        )
+        self.assertIsInstance(time_series_parameter_tuning.parameters[0], ChoiceParameter)
         self.assertEqual(time_series_parameter_tuning.parameters[0].name, "test_param1")
-        self.assertEqual(
-            time_series_parameter_tuning.parameters[0].parameter_type, ParameterType.INT
-        )
+        self.assertEqual(time_series_parameter_tuning.parameters[0].parameter_type, ParameterType.INT)
         self.assertEqual(time_series_parameter_tuning.parameters[0].values, [1, 2, 3])
-        self.assertIsInstance(
-            time_series_parameter_tuning.parameters[1], ChoiceParameter
-        )
+        self.assertIsInstance(time_series_parameter_tuning.parameters[1], ChoiceParameter)
         self.assertEqual(time_series_parameter_tuning.parameters[1].name, "test_param2")
         self.assertEqual(
             time_series_parameter_tuning.parameters[1].parameter_type,
             ParameterType.STRING,
         )
-        self.assertEqual(
-            time_series_parameter_tuning.parameters[1].values, ["red", "green", "blue"]
-        )
-        self.assertIsInstance(
-            time_series_parameter_tuning.parameters[2], FixedParameter
-        )
+        self.assertEqual(time_series_parameter_tuning.parameters[1].values, ["red", "green", "blue"])
+        self.assertIsInstance(time_series_parameter_tuning.parameters[2], FixedParameter)
         self.assertEqual(time_series_parameter_tuning.parameters[2].name, "test_param3")
-        self.assertEqual(
-            time_series_parameter_tuning.parameters[2].parameter_type, ParameterType.INT
-        )
+        self.assertEqual(time_series_parameter_tuning.parameters[2].parameter_type, ParameterType.INT)
         self.assertEqual(time_series_parameter_tuning.parameters[2].value, 4)
 
     def test_time_series_parameter_tuning_arima_uniform_random_search(self) -> None:
@@ -208,9 +181,7 @@ class GridSearchTest(TestCase):
             time_series_parameter_tuner.generate_evaluate_new_parameter_values(
                 evaluation_function=arima_evaluation_function, arm_count=4
             )
-        parameter_values_with_scores = (
-            time_series_parameter_tuner.list_parameter_value_scores()
-        )
+        parameter_values_with_scores = time_series_parameter_tuner.list_parameter_value_scores()
 
         self.assertIsInstance(parameter_values_with_scores, pd.DataFrame)
         self.assertEqual(len(parameter_values_with_scores.index), 12)
@@ -238,9 +209,7 @@ class GridSearchTest(TestCase):
             time_series_parameter_tuner.generate_evaluate_new_parameter_values(
                 evaluation_function=prophet_evaluation_function, arm_count=5
             )
-        parameter_values_with_scores = (
-            time_series_parameter_tuner.list_parameter_value_scores()
-        )
+        parameter_values_with_scores = time_series_parameter_tuner.list_parameter_value_scores()
 
         self.assertIsInstance(parameter_values_with_scores, pd.DataFrame)
         self.assertEqual(len(parameter_values_with_scores.index), 20)
@@ -495,12 +464,8 @@ class TestSearchForMultipleSpaces(TestCase):
         )
         self.assertIsInstance(search_for_multiple_spaces.search_agent_dict, dict)
         self.assertEqual(len(search_for_multiple_spaces.search_agent_dict), 2)
-        self.assertIsInstance(
-            search_for_multiple_spaces.search_agent_dict["space1"], tpt.RandomSearch
-        )
-        self.assertIsInstance(
-            search_for_multiple_spaces.search_agent_dict["space2"], tpt.RandomSearch
-        )
+        self.assertIsInstance(search_for_multiple_spaces.search_agent_dict["space1"], tpt.RandomSearch)
+        self.assertIsInstance(search_for_multiple_spaces.search_agent_dict["space2"], tpt.RandomSearch)
 
     def test_generate_evaluate_new_parameter_values(self) -> None:
         search_for_multiple_spaces = tpt.SearchForMultipleSpaces(
@@ -522,21 +487,11 @@ class TestSearchForMultipleSpaces(TestCase):
                 "space1", evaluation_function=arima_evaluation_function, arm_count=5
             )
 
-        parameter_values_with_scores = (
-            search_for_multiple_spaces.list_parameter_value_scores()
-        )
+        parameter_values_with_scores = search_for_multiple_spaces.list_parameter_value_scores()
         self.assertIsInstance(parameter_values_with_scores, dict)
-        parameter_values_with_scores = (
-            search_for_multiple_spaces.list_parameter_value_scores(
-                selected_model="space1"
-            )
-        )
+        parameter_values_with_scores = search_for_multiple_spaces.list_parameter_value_scores(selected_model="space1")
         self.assertIsInstance(parameter_values_with_scores, pd.DataFrame)
-        parameter_values_with_scores = (
-            search_for_multiple_spaces.list_parameter_value_scores(
-                selected_model="space2"
-            )
-        )
+        parameter_values_with_scores = search_for_multiple_spaces.list_parameter_value_scores(selected_model="space2")
         self.assertIsInstance(parameter_values_with_scores, pd.DataFrame)
 
 

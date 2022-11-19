@@ -8,16 +8,16 @@ from unittest import TestCase
 
 import numpy as np
 import pandas as pd
+from parameterized import parameterized
+
 from kats.consts import TimeSeriesData
-from kats.data.utils import load_air_passengers, load_data
-from kats.detectors.outlier import (
-    MultivariateAnomalyDetector,
-    MultivariateAnomalyDetectorType,
-    OutlierDetector,
-)
+from kats.data.utils import load_air_passengers
+from kats.data.utils import load_data
+from kats.detectors.outlier import MultivariateAnomalyDetector
+from kats.detectors.outlier import MultivariateAnomalyDetectorType
+from kats.detectors.outlier import OutlierDetector
 from kats.models.bayesian_var import BayesianVARParams
 from kats.models.var import VARParams
-from parameterized import parameterized
 
 
 # Anomaly detection tests
@@ -33,9 +33,7 @@ class OutlierDetectionTest(TestCase):
         daily_data.columns = ["time", "y"]
         self.ts_data_daily = TimeSeriesData(daily_data)
 
-        daily_data_missing = daily_data.drop(
-            [2, 11, 18, 19, 20, 21, 22, 40, 77, 101]
-        ).copy()
+        daily_data_missing = daily_data.drop([2, 11, 18, 19, 20, 21, 22, 40, 77, 101]).copy()
         # Detecting missing data is coupled to pd.infer_freq() implementation. Make sure the
         # rows dropped above prevent us from inferring a frequency (so it returns None)
         self.assertIsNone(pd.infer_freq(daily_data_missing["time"]))
@@ -140,15 +138,11 @@ class MultivariateVARDetectorTest(TestCase):
         self.TSData_multi = TimeSeriesData(DATA_multi)
         DATA_multi2 = pd.concat([DATA_multi, DATA_multi])
         self.TSData_multi2 = TimeSeriesData(DATA_multi2)
-        DATA_multi3 = pd.merge(
-            DATA_multi, DATA_multi, how="inner", on="time", suffixes=("_1", "_2")
-        )
+        DATA_multi3 = pd.merge(DATA_multi, DATA_multi, how="inner", on="time", suffixes=("_1", "_2"))
         self.TSData_multi3 = TimeSeriesData(DATA_multi3)
 
         self.params_var = VARParams(maxlags=2)
-        self.d_var = MultivariateAnomalyDetector(
-            self.TSData_multi, self.params_var, training_days=60
-        )
+        self.d_var = MultivariateAnomalyDetector(self.TSData_multi, self.params_var, training_days=60)
 
         self.params_bayes = BayesianVARParams(p=2)
         self.d_bayes = MultivariateAnomalyDetector(
@@ -172,8 +166,7 @@ class MultivariateVARDetectorTest(TestCase):
         anomaly_score_df = d.detector()
         self.assertCountEqual(
             list(anomaly_score_df.columns),
-            list(self.TSData_multi.value.columns)
-            + ["overall_anomaly_score", "p_value"],
+            list(self.TSData_multi.value.columns) + ["overall_anomaly_score", "p_value"],
         )
 
     # pyre-ignore Undefined attribute [16]: Module parameterized.parameterized has no attribute expand.
@@ -215,7 +208,5 @@ class MultivariateVARDetectorTest(TestCase):
     )
     def test_runtime_errors(self, attribute: str) -> None:
         with self.assertRaises(RuntimeError):
-            d = MultivariateAnomalyDetector(
-                attrgetter(attribute)(self), self.params_var, training_days=60
-            )
+            d = MultivariateAnomalyDetector(attrgetter(attribute)(self), self.params_var, training_days=60)
             d.detector()

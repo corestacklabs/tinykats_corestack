@@ -5,15 +5,22 @@
 
 
 import logging
-from typing import Any, List, Optional, Sequence, Tuple, Union
+from typing import Any
+from typing import List
+from typing import Optional
+from typing import Sequence
+from typing import Tuple
+from typing import Union
 
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from kats.consts import TimeSeriesChangePoint, TimeSeriesData
-from kats.detectors.detector import Detector
 from scipy.stats import chi2
 from sklearn.covariance import MinCovDet
+
+from kats.consts import TimeSeriesChangePoint
+from kats.consts import TimeSeriesData
+from kats.detectors.detector import Detector
 
 """A module for detecting abnormal in hourly ratio.
 
@@ -53,9 +60,7 @@ class HourlyRatioDetector(Detector):
             raise ValueError(msg)
 
         if not self.data.is_univariate():
-            msg = "Only support univariate time series, but get {}.".format(
-                type(self.data.value)
-            )
+            msg = "Only support univariate time series, but get {}.".format(type(self.data.value))
             logging.error(msg)
             raise ValueError(msg)
         self._ratiodf: Optional[pd.DataFrame] = None
@@ -76,9 +81,7 @@ class HourlyRatioDetector(Detector):
         lower_granularity = ["T", "S", "L", "U", "N"]
         if self.freq is None:
             self.freq = self.data.infer_freq_robust()
-        if self.freq == "H" or (
-            isinstance(self.freq, pd.Timedelta) and self.freq.value == 3600000000000
-        ):
+        if self.freq == "H" or (isinstance(self.freq, pd.Timedelta) and self.freq.value == 3600000000000):
             msg = "Input data is hourly data."
             logging.info(msg)
             return
@@ -124,21 +127,13 @@ class HourlyRatioDetector(Detector):
             df["weekday"] = df["time"].dt.weekday
             # aggregate the data to hourly level.
             if self.freq != "H" and self.aggregate is not None:
-                df = (
-                    df.groupby(["date", "hour", "weekday"])["value"]
-                    .agg(self.aggregate)
-                    .reset_index()
-                )
-                msg = "Successfully aggregate data to hourly level using {}".format(
-                    self.aggregate
-                )
+                df = df.groupby(["date", "hour", "weekday"])["value"].agg(self.aggregate).reset_index()
+                msg = "Successfully aggregate data to hourly level using {}".format(self.aggregate)
                 logging.info(msg)
             df["counts"] = df.groupby("date")["hour"].transform("count")
             # filter out dates with less than 24 observations
             incomplete_dates = df["date"][df["counts"] < 24].unique()
-            self.incomplete_dates = [
-                TimeSeriesChangePoint(t, t, 1.0) for t in incomplete_dates
-            ]
+            self.incomplete_dates = [TimeSeriesChangePoint(t, t, 1.0) for t in incomplete_dates]
             df = df[df["counts"] == 24]
             if len(df) == 0:
                 msg = "Data should have hour-level granularity."
@@ -176,9 +171,7 @@ class HourlyRatioDetector(Detector):
         return (lab, pvalue)
 
     # pyre-fixme[14]: `detector` overrides method defined in `Detector` inconsistently.
-    def detector(
-        self, support_fraction: float = 0.9
-    ) -> Sequence[TimeSeriesChangePoint]:
+    def detector(self, support_fraction: float = 0.9) -> Sequence[TimeSeriesChangePoint]:
         """Run detection algorithm.
 
         Args:
@@ -198,29 +191,20 @@ class HourlyRatioDetector(Detector):
                 msg = "self._ratiodf should not be none after running _preprocess"
                 logging.error(msg)
                 raise ValueError(msg)
-            obs = self._ratiodf[self._ratiodf["weekday"] == w][
-                "hourly_ratio"
-            ].values.reshape(-1, 24)
+            obs = self._ratiodf[self._ratiodf["weekday"] == w]["hourly_ratio"].values.reshape(-1, 24)
             if self._ratiodf is None:
                 msg = "self._ratiodf should not be none after running _preprocess"
                 logging.error(msg)
                 raise ValueError(msg)
-            dates = np.unique(
-                self._ratiodf[self._ratiodf["weekday"] == w]["date"].values
-            )
+            dates = np.unique(self._ratiodf[self._ratiodf["weekday"] == w]["date"].values)
             # we omit the last dimension due to linearity constrant
             median = np.median(obs, axis=0)
             median = (median / np.sum(median) * 24)[:-1]
-            cov = MinCovDet(
-                assume_centered=True, support_fraction=support_fraction
-            ).fit(obs[:, :-1] - median)
+            cov = MinCovDet(assume_centered=True, support_fraction=support_fraction).fit(obs[:, :-1] - median)
             lab, p = self._mahalanobis_test(obs[:, :-1], median, cov.covariance_)
             anomaly.extend(list(dates[lab]))
             pvalues.extend(p[lab])
-        anomaly = [
-            TimeSeriesChangePoint(anomaly[i], anomaly[i], 1.0 - pvalues[i])
-            for i in range(len(anomaly))
-        ]
+        anomaly = [TimeSeriesChangePoint(anomaly[i], anomaly[i], 1.0 - pvalues[i]) for i in range(len(anomaly))]
         self.anomaly_dates = anomaly
         return anomaly
 
@@ -243,16 +227,12 @@ class HourlyRatioDetector(Detector):
             msg = "Please run detector method first."
             logging.error(msg)
             raise ValueError(msg)
-        obs = self._ratiodf[self._ratiodf["weekday"] == weekday][
-            "hourly_ratio"
-        ].values.reshape(-1, 24)
+        obs = self._ratiodf[self._ratiodf["weekday"] == weekday]["hourly_ratio"].values.reshape(-1, 24)
         if self._ratiodf is None:
             msg = "Please run detector method first."
             logging.error(msg)
             raise ValueError(msg)
-        dates = np.unique(
-            self._ratiodf[self._ratiodf["weekday"] == weekday]["date"].values
-        )
+        dates = np.unique(self._ratiodf[self._ratiodf["weekday"] == weekday]["date"].values)
         labs = [(t in anomaly_dates) for t in dates]
         logging.info("# of anomaly dates: {}".format(np.sum(labs)))
         _, ax = plt.subplots()

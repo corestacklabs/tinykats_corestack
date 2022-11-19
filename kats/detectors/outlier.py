@@ -16,18 +16,27 @@ import traceback
 from datetime import datetime
 from enum import Enum
 from importlib import import_module
-from typing import Any, cast, Dict, List, Optional, Tuple, Union
+from typing import Any
+from typing import Dict
+from typing import List
+from typing import Optional
+from typing import Tuple
+from typing import Union
+from typing import cast
 
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from kats.consts import Params, TimeSeriesData, TimeSeriesIterator
-from kats.detectors.detector import Detector
-from kats.models.bayesian_var import BayesianVAR
-from kats.models.var import VARModel
 from scipy import stats
 from scipy.spatial import distance
 from statsmodels.tsa.seasonal import seasonal_decompose
+
+from kats.consts import Params
+from kats.consts import TimeSeriesData
+from kats.consts import TimeSeriesIterator
+from kats.detectors.detector import Detector
+from kats.models.bayesian_var import BayesianVAR
+from kats.models.var import VARModel
 
 
 class OutlierDetector(Detector):
@@ -46,9 +55,7 @@ class OutlierDetector(Detector):
     output_scores: Optional[pd.DataFrame] = None
     decomp: str
 
-    def __init__(
-        self, data: TimeSeriesData, decomp: str = "additive", iqr_mult: float = 3.0
-    ) -> None:
+    def __init__(self, data: TimeSeriesData, decomp: str = "additive", iqr_mult: float = 3.0) -> None:
         super().__init__(data)
         if decomp in ["additive", "multiplicative"]:
             self.decomp = decomp
@@ -92,9 +99,7 @@ class OutlierDetector(Detector):
         output_time = original.index
 
         # Once our own decomposition is ready, we can directly use it here
-        result = seasonal_decompose(
-            original, model=self.decomp, extrapolate_trend="freq"
-        )
+        result = seasonal_decompose(original, model=self.decomp, extrapolate_trend="freq")
         rem = result.resid
         detrend = original["y"] - result.trend
         strength = float(1 - np.nanvar(rem) / np.nanvar(detrend))
@@ -119,11 +124,7 @@ class OutlierDetector(Detector):
         """
 
         self.iter = ts_iter = TimeSeriesIterator(self.data)
-        column_names = [
-            col
-            for col in self.data.to_dataframe().columns
-            if col != self.data.time_col_name
-        ]
+        column_names = [col for col in self.data.to_dataframe().columns if col != self.data.time_col_name]
         self.outliers = outliers = []
         output_scores_dict = {}
         time_index = None
@@ -142,9 +143,7 @@ class OutlierDetector(Detector):
                 outliers.append([])
 
         if output_scores_dict:
-            self.output_scores = pd.DataFrame(
-                output_scores_dict, index=time_index, copy=False
-            )
+            self.output_scores = pd.DataFrame(output_scores_dict, index=time_index, copy=False)
 
 
 class MultivariateAnomalyDetectorType(Enum):
@@ -190,10 +189,7 @@ class MultivariateAnomalyDetector(Detector):
             freq = time_diff.unique()[0].astype("int")
             self.granularity_days: float = freq / (24 * 3600 * (10**9))
         else:
-            raise RuntimeError(
-                "Frequency of metrics is not constant."
-                "Please check for missing or duplicate values"
-            )
+            raise RuntimeError("Frequency of metrics is not constant." "Please check for missing or duplicate values")
 
         self.training_days = training_days
         self.detector_model = model_type
@@ -213,9 +209,7 @@ class MultivariateAnomalyDetector(Detector):
         zscore_df = stats.zscore(df)
         non_outlier_flag = zscore_df < z_score_threshold
         df_clean = df.where(non_outlier_flag, np.nan)
-        df_clean = df_clean.interpolate(
-            method="linear", order=2, limit_direction="both"
-        )
+        df_clean = df_clean.interpolate(method="linear", order=2, limit_direction="both")
         return df_clean
 
     def _is_pos_def(self, mat: np.ndarray) -> bool:
@@ -230,9 +224,7 @@ class MultivariateAnomalyDetector(Detector):
         """
         return np.all(np.linalg.eigvals(mat) > 0)
 
-    def _create_model(
-        self, data: TimeSeriesData, params: Params
-    ) -> Union[VARModel, BayesianVAR]:
+    def _create_model(self, data: TimeSeriesData, params: Params) -> Union[VARModel, BayesianVAR]:
         model_name = f"kats.models.{self.detector_model.value}"
         module_name, model_name = model_name.rsplit(".", 1)
         return getattr(import_module(module_name), model_name)(data, params)
@@ -253,9 +245,7 @@ class MultivariateAnomalyDetector(Detector):
         train_clean = self._clean_data(train)
 
         # fit VAR
-        model = self._create_model(
-            TimeSeriesData(train_clean.reset_index()), self.params
-        )
+        model = self._create_model(TimeSeriesData(train_clean.reset_index()), self.params)
         model.fit()
         lag_order = model.k_ar
         logging.info(f"Fitted VAR model of order {lag_order}")
@@ -270,9 +260,7 @@ class MultivariateAnomalyDetector(Detector):
         # predict
         pred = model.predict(steps=1)
         forecast = [[k, float(pred[k].value["fcst"])] for k, v in pred.items()]
-        pred_df = pd.DataFrame(
-            columns=["index", "est"], data=forecast, copy=False
-        ).set_index("index")
+        pred_df = pd.DataFrame(columns=["index", "est"], data=forecast, copy=False).set_index("index")
         test = self.df.loc[t + dt.timedelta(days=self.granularity_days), :]
         pred_df["actual"] = test
 
@@ -299,15 +287,11 @@ class MultivariateAnomalyDetector(Detector):
         for col in cov.columns:
             residual_mean = resid[col].mean()
             residual_var = resid[col].var()
-            residual_score[col] = np.abs((rt[col] - residual_mean)) / np.sqrt(
-                residual_var
-            )
+            residual_score[col] = np.abs((rt[col] - residual_mean)) / np.sqrt(residual_var)
 
         # overall anomaly score
         cov_inv = np.linalg.inv(cov.values)
-        overall_anomaly_score = distance.mahalanobis(
-            rt.values, resid.mean().values, cov_inv
-        )
+        overall_anomaly_score = distance.mahalanobis(rt.values, resid.mean().values, cov_inv)
         residual_score["overall_anomaly_score"] = overall_anomaly_score
         # calculate p-values
         dof = len(self.df.columns)
@@ -335,9 +319,7 @@ class MultivariateAnomalyDetector(Detector):
             anomaly_scores_t = self._calc_anomaly_scores(pred_df)
             # process next observation
             fcstTime += dt.timedelta(days=self.granularity_days)
-            anomaly_scores_t = pd.DataFrame(
-                anomaly_scores_t, index=[fcstTime], copy=False
-            )
+            anomaly_scores_t = pd.DataFrame(anomaly_scores_t, index=[fcstTime], copy=False)
             anomaly_score_df = anomaly_score_df.append(anomaly_scores_t)
 
         self.anomaly_score_df = anomaly_score_df
@@ -356,18 +338,14 @@ class MultivariateAnomalyDetector(Detector):
         """
         anomaly_score_df = self.anomaly_score_df
         if anomaly_score_df is None:
-            raise ValueError(
-                "detector() must be called before get_anomaly_timepoints()"
-            )
+            raise ValueError("detector() must be called before get_anomaly_timepoints()")
 
         flag = anomaly_score_df.p_value < alpha
         anomaly_ts = anomaly_score_df[flag].index
 
         return list(anomaly_ts)
 
-    def get_anomalous_metrics(
-        self, t: datetime, top_k: Optional[int] = None
-    ) -> pd.DataFrame:
+    def get_anomalous_metrics(self, t: datetime, top_k: Optional[int] = None) -> pd.DataFrame:
         """
         Find top k metrics with most anomalous behavior at time t
 
@@ -383,16 +361,12 @@ class MultivariateAnomalyDetector(Detector):
             raise ValueError("detector() must be called before get_anomalous_metrics()")
 
         residual_scores = anomaly_score_df.drop(columns="overall_anomaly_score")
-        residual_scores_t = (
-            residual_scores.loc[t, :].sort_values(ascending=False).reset_index()
-        )
+        residual_scores_t = residual_scores.loc[t, :].sort_values(ascending=False).reset_index()
         residual_scores_t.columns = ["metric", "anomaly_score"]
 
         return residual_scores_t[:top_k]
 
-    def plot(
-        self, figsize: Optional[Tuple[int, int]] = None, **kwargs: Any
-    ) -> Tuple[plt.Axes, plt.Axes]:
+    def plot(self, figsize: Optional[Tuple[int, int]] = None, **kwargs: Any) -> Tuple[plt.Axes, plt.Axes]:
         """
         Plot overall anomaly score of system of metrics at each instant.
         Useful for threshold selection

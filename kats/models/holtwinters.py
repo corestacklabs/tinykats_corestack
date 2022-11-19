@@ -14,18 +14,21 @@ We rewrite the corresponding API to accommodate the Kats development style
 """
 
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Any
+from typing import Dict
+from typing import List
+from typing import Optional
 
 import pandas as pd
-from kats.consts import Params, TimeSeriesData
+from statsmodels.tsa.holtwinters import ExponentialSmoothing as HoltWinters
+from statsmodels.tsa.holtwinters import HoltWintersResults
+
+from kats.consts import Params
+from kats.consts import TimeSeriesData
 from kats.models.model import Model
 from kats.utils.emp_confidence_int import EmpConfidenceInt
 from kats.utils.parameter_tuning_utils import (
     get_default_holtwinters_parameter_search_space,
-)
-from statsmodels.tsa.holtwinters import (
-    ExponentialSmoothing as HoltWinters,
-    HoltWintersResults,
 )
 
 
@@ -117,9 +120,7 @@ class HoltWintersModel(Model[HoltWintersParams]):
         super().__init__(data, params)
         # pyre-fixme[16]: `Optional` has no attribute `value`.
         if not isinstance(self.data.value, pd.Series):
-            msg = "Only support univariate time series, but get {type}.".format(
-                type=type(self.data.value)
-            )
+            msg = "Only support univariate time series, but get {type}.".format(type=type(self.data.value))
             logging.error(msg)
             raise ValueError(msg)
 
@@ -140,9 +141,7 @@ class HoltWintersModel(Model[HoltWintersParams]):
 
     # pyre-fixme[14]: `predict` overrides method defined in `Model` inconsistently.
     # pyre-fixme[15]: `predict` overrides method defined in `Model` inconsistently.
-    def predict(
-        self, steps: int, include_history: bool = False, **kwargs: Any
-    ) -> pd.DataFrame:
+    def predict(self, steps: int, include_history: bool = False, **kwargs: Any) -> pd.DataFrame:
         """Predict with fitted HoltWinters model
 
         If the alpha keyword argument is specified, an empirical confidence interval is computed through a K-fold cross validation and a linear regression model, the forecast outcome will include a confidence interval there; otherwise no confidence interval is included in the final forecast. Please refer to the 'emp_confidence_int' module for full detailed implementation of the empirical confidence interval computation
@@ -158,8 +157,7 @@ class HoltWintersModel(Model[HoltWintersParams]):
             raise ValueError("Call fit() before predict().")
 
         logging.debug(
-            "Call predict() with parameters. "
-            "steps:{steps}, kwargs:{kwargs}".format(steps=steps, kwargs=kwargs)
+            "Call predict() with parameters. " "steps:{steps}, kwargs:{kwargs}".format(steps=steps, kwargs=kwargs)
         )
         if "freq" not in kwargs:
             # pyre-fixme[16]: `Optional` has no attribute `time`.

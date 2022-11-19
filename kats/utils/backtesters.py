@@ -22,34 +22,35 @@ For more information, check out the Kats tutorial notebook on backtesting!
 
 import logging
 import multiprocessing as mp
-from abc import ABC, abstractmethod
+from abc import ABC
+from abc import abstractmethod
 from dataclasses import dataclass
 from functools import partial
 from multiprocessing import cpu_count
 from multiprocessing.dummy import Pool
-from typing import (
-    Any,
-    Callable,
-    Dict,
-    List,
-    Optional,
-    Tuple,
-    Type,
-    TYPE_CHECKING,
-    Union,
-)
+from typing import TYPE_CHECKING
+from typing import Any
+from typing import Callable
+from typing import Dict
+from typing import List
+from typing import Optional
+from typing import Tuple
+from typing import Type
+from typing import Union
 
 try:
     from typing import Protocol
 except ImportError:  # pragma: no cover
     from typing_extensions import Protocol  # pragma: no cover
 
-
 import numpy as np
 import pandas as pd
-from kats.consts import _log_error, Params, TimeSeriesData
-from kats.metrics.metrics import core_metric, CoreMetric
 
+from kats.consts import Params
+from kats.consts import TimeSeriesData
+from kats.consts import _log_error
+from kats.metrics.metrics import CoreMetric
+from kats.metrics.metrics import core_metric
 from kats.utils.datapartition import DataPartitionBase
 
 if TYPE_CHECKING:
@@ -99,15 +100,11 @@ def _check_max_core(max_core: Optional[int]) -> int:
         core_num = max_core
     else:
         core_num = max((total_cores - 1) // 2, 1)
-        logging.warning(
-            f"Input `max_core` = {max_core} is invalid, setting `max_core` = {core_num} instead."
-        )
+        logging.warning(f"Input `max_core` = {max_core} is invalid, setting `max_core` = {core_num} instead.")
     return core_num
 
 
-def _get_scorer(
-    scorer: Union[str, List[str], CoreMetric]
-) -> Optional[Callable[[pd.DataFrame], Dict[str, float]]]:
+def _get_scorer(scorer: Union[str, List[str], CoreMetric]) -> Optional[Callable[[pd.DataFrame], Dict[str, float]]]:
     """Helper function for validating `scorer`."""
 
     if isinstance(scorer, str):
@@ -240,9 +237,7 @@ class GenericBacktester(ABC):
             score = self.scorer(res)
             return res, score
         except Exception as e:
-            logging.info(
-                f"Failed to fit model and get evaluation with error message: {e}."
-            )
+            logging.info(f"Failed to fit model and get evaluation with error message: {e}.")
             return None, None
 
     def _get_fold_errors(
@@ -265,9 +260,7 @@ class GenericBacktester(ABC):
                 fold_errors.append(fd)
         return error_metrics, fold_errors
 
-    def _summarize(
-        self, results: List[Tuple[pd.DataFrame, Dict[str, float]]]
-    ) -> BacktesterResult:
+    def _summarize(self, results: List[Tuple[pd.DataFrame, Dict[str, float]]]) -> BacktesterResult:
 
         if not results:
             _log_error("Fail to get evaluation results!")
@@ -286,9 +279,7 @@ class GenericBacktester(ABC):
             weight = np.array([len(t) for t in raw_errors])
             weight = weight / np.sum(weight) * num_fold
         for em in error_metrics:
-            summary_errors[em] = np.nanmean(
-                np.array([t[em] for t in fold_errors]) * weight
-            )
+            summary_errors[em] = np.nanmean(np.array([t[em] for t in fold_errors]) * weight)
 
         backtest_res = BacktesterResult(
             raw_errors=raw_errors if self.raw_errors else None,
@@ -347,9 +338,7 @@ class KatsSimpleBacktester(GenericBacktester):
         max_core: Optional[int] = None,
         error_score: float = np.nan,
     ) -> None:
-        fcster = partial(
-            kats_units_forecaster, params=model_params, model_class=model_class
-        )
+        fcster = partial(kats_units_forecaster, params=model_params, model_class=model_class)
         super(KatsSimpleBacktester, self).__init__(
             datapartition=datapartition,
             scorer=scorer,
@@ -451,9 +440,7 @@ class BackTesterParent(ABC):
         logging.info("Instantiated BackTester")
         if kwargs:
             logging.info(
-                "Additional arguments: {0}".format(
-                    (", ".join(["{}={!r}".format(k, v) for k, v in kwargs.items()]))
-                )
+                "Additional arguments: {0}".format((", ".join(["{}={!r}".format(k, v) for k, v in kwargs.items()])))
             )
         logging.info("Model type: {0}".format(self.model_class))
         logging.info("Error metrics: {0}".format(error_methods))
@@ -520,12 +507,8 @@ class BackTesterParent(ABC):
         training_data_start, training_data_end = training_data_indices
         testing_data_start, testing_data_end = testing_data_indices
         logging.info("Creating TimeSeries train test objects for split")
-        logging.info(
-            "Train split of {0}, {1}".format(training_data_start, training_data_end)
-        )
-        logging.info(
-            "Test split of {0}, {1}".format(testing_data_start, testing_data_end)
-        )
+        logging.info("Train split of {0}, {1}".format(training_data_start, training_data_end))
+        logging.info("Test split of {0}, {1}".format(testing_data_start, testing_data_end))
 
         if (
             training_data_start < 0
@@ -533,11 +516,7 @@ class BackTesterParent(ABC):
             or training_data_end < 0
             or training_data_end > self.size
         ):
-            logging.error(
-                "Train Split of {0}, {1} was invalid".format(
-                    training_data_start, training_data_end
-                )
-            )
+            logging.error("Train Split of {0}, {1} was invalid".format(training_data_start, training_data_end))
             raise ValueError("Invalid training data indices in split")
 
         if (
@@ -546,11 +525,7 @@ class BackTesterParent(ABC):
             or testing_data_end < 0
             or testing_data_end > self.size
         ):
-            logging.error(
-                "Test Split of {0}, {1} was invalid".format(
-                    testing_data_start, testing_data_end
-                )
-            )
+            logging.error("Test Split of {0}, {1} was invalid".format(testing_data_start, testing_data_end))
             raise ValueError("Invalid testing data indices in split")
 
         training_data = TimeSeriesData(
@@ -583,9 +558,7 @@ class BackTesterParent(ABC):
         train_model.fit()
 
         logging.info("Making forecast prediction")
-        fcst = train_model.predict(
-            steps=testing_data.value.size + self.offset, freq=self.freq
-        )
+        fcst = train_model.predict(steps=testing_data.value.size + self.offset, freq=self.freq)
         train_data_only = np.array(training_data.value)
         truth = np.array(testing_data.value)
         predictions = np.array(fcst["fcst"])
@@ -597,9 +570,7 @@ class BackTesterParent(ABC):
         else:
             return (train_data_only, truth, train_model, predictions)
 
-    def _build_and_train_models(
-        self, splits: Tuple[List[Tuple[int, int]], List[Tuple[int, int]]]
-    ) -> None:
+    def _build_and_train_models(self, splits: Tuple[List[Tuple[int, int]], List[Tuple[int, int]]]) -> None:
         training_splits, testing_splits = splits
 
         num_splits = len(training_splits)
@@ -855,14 +826,11 @@ class BackTesterRollingOrigin(BackTesterParent):
         self.test_percentage = test_percentage
         if start_train_percentage + test_percentage > 100:
             logging.error("Too large combined train and test percentage")
-            raise ValueError(  # noqa
-                "Invalid training and testing percentage combination"
-            )
+            raise ValueError("Invalid training and testing percentage combination")  # noqa
         elif start_train_percentage + test_percentage == 100:
             if expanding_steps > 1:
                 logging.error(
-                    "Too large combined train and test percentage for "
-                    "%s expanding steps",
+                    "Too large combined train and test percentage for " "%s expanding steps",
                     expanding_steps,
                 )
                 raise ValueError(
@@ -888,12 +856,8 @@ class BackTesterRollingOrigin(BackTesterParent):
         test_size = _get_absolute_size(self.size, self.test_percentage)
 
         if start_train_size <= 0 or start_train_size >= self.size:
-            logging.error(
-                "Invalid starting training size: {0}".format(start_train_size)
-            )
-            logging.error(
-                "Start Training Percentage: {0}".format(self.start_train_percentage)
-            )
+            logging.error("Invalid starting training size: {0}".format(start_train_size))
+            logging.error("Start Training Percentage: {0}".format(self.start_train_percentage))
             raise ValueError("Incorrect starting training size")
 
         if test_size <= 0 or test_size >= self.size:
@@ -905,27 +869,19 @@ class BackTesterRollingOrigin(BackTesterParent):
             if start_train_size + test_size > self.size:
                 logging.error("Training and Testing sizes too big")
                 logging.error("Start Training size: {0}".format(start_train_size))
-                logging.error(
-                    "Start Training Percentage: {0}".format(self.start_train_percentage)
-                )
+                logging.error("Start Training Percentage: {0}".format(self.start_train_percentage))
             logging.error("Testing size: {0}".format(test_size))
             logging.error("Testing Percentage: {0}".format(self.test_percentage))
             raise ValueError("Incorrect training and testing sizes")
         elif start_train_size + test_size == self.size:
             if self.expanding_steps > 1:
-                logging.error(
-                    "Training and Testing sizes too big " "for multiple steps"
-                )
+                logging.error("Training and Testing sizes too big " "for multiple steps")
                 logging.error("Start Training size: {0}".format(start_train_size))
-                logging.error(
-                    "Start Training Percentage: {0}".format(self.start_train_percentage)
-                )
+                logging.error("Start Training Percentage: {0}".format(self.start_train_percentage))
                 logging.error("Testing size: {0}".format(test_size))
                 logging.error("Testing Percentage: {0}".format(self.test_percentage))
                 logging.error("Expanding steps: {}".format(self.expanding_steps))
-                raise ValueError(
-                    "Incorrect training and testing sizes " "for multiple steps"
-                )
+                raise ValueError("Incorrect training and testing sizes " "for multiple steps")
 
         # Handling edge case where only 1 fold is needed (same as BackTesterSimple)
         if self.expanding_steps == 1:
@@ -936,9 +892,7 @@ class BackTesterRollingOrigin(BackTesterParent):
 
         train_splits = []
         test_splits = []
-        offsets = _return_fold_offsets(
-            0, self.size - start_train_size - test_size, self.expanding_steps
-        )
+        offsets = _return_fold_offsets(0, self.size - start_train_size - test_size, self.expanding_steps)
         for offset in offsets:
             skip_size = 0
             if self.constant_train_size:
@@ -1119,9 +1073,7 @@ class BackTesterFixedWindow(BackTesterParent):
         offset = _get_absolute_size(len(data.time), self.window_percentage)
 
         logging.info("Calling parent class constructor")
-        super().__init__(
-            error_methods, data, params, model_class, False, offset, **kwargs
-        )
+        super().__init__(error_methods, data, params, model_class, False, offset, **kwargs)
 
     def _create_train_test_splits(
         self,
@@ -1154,9 +1106,7 @@ class BackTesterFixedWindow(BackTesterParent):
             raise ValueError("Incorrect training, testing, & window sizes")
 
         train_splits = [(0, int(train_size))]
-        test_splits = [
-            (int(train_size + window_size), int(train_size + window_size + test_size))
-        ]
+        test_splits = [(int(train_size + window_size), int(train_size + window_size + test_size))]
         return train_splits, test_splits
 
 

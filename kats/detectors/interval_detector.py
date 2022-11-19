@@ -34,17 +34,24 @@ Typical usage example:
 import json
 import logging
 from dataclasses import dataclass
-from enum import Enum, unique
-from typing import Any, List, Optional, Tuple
+from enum import Enum
+from enum import unique
+from typing import Any
+from typing import List
+from typing import Optional
+from typing import Tuple
 
 import numpy as np
 import pandas as pd
-from kats.consts import IntervalAnomaly, TimeSeriesData
-from kats.detectors.detector import DetectorModel
-from kats.detectors.detector_consts import AnomalyResponse, ConfidenceBand
 from matplotlib import pyplot as plt
 from numpy.linalg import matrix_power
 from scipy.stats import norm
+
+from kats.consts import IntervalAnomaly
+from kats.consts import TimeSeriesData
+from kats.detectors.detector import DetectorModel
+from kats.detectors.detector_consts import AnomalyResponse
+from kats.detectors.detector_consts import ConfidenceBand
 
 DEFAULT_FIGSIZE = (10, 12)
 
@@ -124,9 +131,7 @@ class ABInterval(IntervalAnomaly):
     before returning an AnomalyResponse to the user.
     """
 
-    def __init__(
-        self, interval_type: ABIntervalType, start: pd.Timestamp, end: pd.Timestamp
-    ) -> None:
+    def __init__(self, interval_type: ABIntervalType, start: pd.Timestamp, end: pd.Timestamp) -> None:
         super().__init__(start=start, end=end)
         self.interval_type: ABIntervalType = interval_type
         self.__start_idx: Optional[int] = None
@@ -140,9 +145,7 @@ class ABInterval(IntervalAnomaly):
     @start_idx.setter
     def start_idx(self, idx: int) -> None:
         if not isinstance(idx, int):
-            raise ValueError(
-                f"Expecting start_idx to be of type int. Found {type(idx)}"
-            )
+            raise ValueError(f"Expecting start_idx to be of type int. Found {type(idx)}")
         self.__start_idx = idx
 
     @property
@@ -274,9 +277,7 @@ class ABDetectorModel(DetectorModel):
             raise ValueError(f"alpha must be specified. Found {alpha}.")
         # alpha must be specified and between 0 and 1.
         elif alpha < 0 or alpha > 1:
-            raise ValueError(
-                f"alpha must be between 0 and 1 (inclusive). Found {alpha}"
-            )
+            raise ValueError(f"alpha must be between 0 and 1 (inclusive). Found {alpha}")
         self._alpha = alpha
 
     @property
@@ -291,9 +292,7 @@ class ABDetectorModel(DetectorModel):
             raise ValueError(f"corrected_alpha must be specified. Found {alpha}.")
         # alpha must be specified and between 0 and 1.
         elif alpha < 0 or alpha > 1:
-            raise ValueError(
-                f"corrected_alpha must be between 0 and 1 (inclusive). Found {alpha}"
-            )
+            raise ValueError(f"corrected_alpha must be between 0 and 1 (inclusive). Found {alpha}")
         self._corrected_alpha = alpha
 
     @property
@@ -305,13 +304,9 @@ class ABDetectorModel(DetectorModel):
     @test_direction.setter
     def test_direction(self, test_direction: Optional[TestDirection]) -> None:
         if test_direction is None:
-            raise ValueError(
-                f"test_direction must be specified. Found {test_direction}."
-            )
+            raise ValueError(f"test_direction must be specified. Found {test_direction}.")
         elif not isinstance(test_direction, TestDirection):
-            raise TypeError(
-                f"test_direction must be of type TestDirection. Found {type(test_direction)}."
-            )
+            raise TypeError(f"test_direction must be of type TestDirection. Found {type(test_direction)}.")
         self._test_direction = test_direction
 
     @property
@@ -325,9 +320,7 @@ class ABDetectorModel(DetectorModel):
         if distribution is None:
             raise ValueError(f"distribution must be specified. Found {distribution}.")
         elif not isinstance(distribution, Distribution):
-            raise TypeError(
-                f"distribution must be of type Distribution. Found {type(distribution)}."
-            )
+            raise TypeError(f"distribution must be of type Distribution. Found {type(distribution)}.")
         self._distribution = distribution
 
     @property
@@ -339,13 +332,9 @@ class ABDetectorModel(DetectorModel):
     @test_statistic.setter
     def test_statistic(self, test_statistic: Optional[TestStatistic]) -> None:
         if test_statistic is None:
-            raise ValueError(
-                f"test_statistic must be specified. Found {test_statistic}."
-            )
+            raise ValueError(f"test_statistic must be specified. Found {test_statistic}.")
         elif not isinstance(test_statistic, TestStatistic):
-            raise TypeError(
-                f"test_statistic must be of type TestStatistic. Found {type(test_statistic)}."
-            )
+            raise TypeError(f"test_statistic must be of type TestStatistic. Found {type(test_statistic)}.")
         self._test_statistic = test_statistic
 
     @property
@@ -363,20 +352,12 @@ class ABDetectorModel(DetectorModel):
     @property
     def anomaly_intervals(self) -> List[ABInterval]:
         _reject_intervals, _duration = self._get_rejection_intervals_and_duration()
-        return [
-            interval
-            for interval in _reject_intervals
-            if len(interval.indices) >= _duration
-        ]
+        return [interval for interval in _reject_intervals if len(interval.indices) >= _duration]
 
     @property
     def caution_intervals(self) -> List[ABInterval]:
         _reject_intervals, _duration = self._get_rejection_intervals_and_duration()
-        return [
-            interval
-            for interval in _reject_intervals
-            if len(interval.indices) < _duration
-        ]
+        return [interval for interval in _reject_intervals if len(interval.indices) < _duration]
 
     def _get_rejection_intervals_and_duration(self) -> Tuple[List[ABInterval], int]:
         """Retrieve rejection intervals and minimal duration for post-processing."""
@@ -498,9 +479,7 @@ class ABDetectorModel(DetectorModel):
         if self.reject_intervals is not None:
             # If we consolidate_into_intervals, then apply to predicted_ts
             _reject_intervals: List[ABInterval] = self.reject_intervals
-            _predicted_ts = self._convert_intervals_to_predictions(
-                time=_data.time, intervals=_reject_intervals
-            )
+            _predicted_ts = self._convert_intervals_to_predictions(time=_data.time, intervals=_reject_intervals)
         else:
             # Otherwise, return a placeholder
             _predicted_ts = TimeSeriesData(time=_data.time, value=len_data_zeros)
@@ -510,9 +489,7 @@ class ABDetectorModel(DetectorModel):
         _upper: pd.Series = self.test_result.upper
         _lower: pd.Series = self.test_result.lower
         return AnomalyResponse(
-            scores=TimeSeriesData(
-                time=_data.time, value=self.test_result.test_statistic
-            ),
+            scores=TimeSeriesData(time=_data.time, value=self.test_result.test_statistic),
             confidence_band=ConfidenceBand(
                 upper=TimeSeriesData(
                     time=_data.time,
@@ -528,9 +505,7 @@ class ABDetectorModel(DetectorModel):
             stat_sig_ts=TimeSeriesData(time=_data.time, value=_stat_sig),
         )
 
-    def _convert_intervals_to_predictions(
-        self, time: pd.Series, intervals: List[ABInterval]
-    ) -> TimeSeriesData:
+    def _convert_intervals_to_predictions(self, time: pd.Series, intervals: List[ABInterval]) -> TimeSeriesData:
         # Initialize with all non-predictions
         values = [False] * len(time)
         # At this point, we need to have a duration specified.
@@ -555,21 +530,15 @@ class ABDetectorModel(DetectorModel):
     def _validate_data(df: pd.core.frame.DataFrame) -> None:
         """Data integrity checks."""
         if df.isnull().values.any():
-            raise ValueError(
-                "All entries must be specified but na's were found in data.value."
-            )
+            raise ValueError("All entries must be specified but na's were found in data.value.")
 
         for column in POSITIVE_COLUMNS:
             if df[column.value].le(0.0).any():
-                raise ValueError(
-                    f"{column.value} must be > 0 for each index. Found: \n {df[column.value]}."
-                )
+                raise ValueError(f"{column.value} must be > 0 for each index. Found: \n {df[column.value]}.")
 
         for column in NON_NEGATIVE_COLUMNS:
             if df[column.value].lt(0.0).any():
-                raise ValueError(
-                    f"{column.value} must be >= 0 for each index. Found: \n {df[column.value]}."
-                )
+                raise ValueError(f"{column.value} must be >= 0 for each index. Found: \n {df[column.value]}.")
 
         for column in INTEGER_COLUMNS:
             if df[column.value].dtype != np.dtype("int64"):
@@ -616,9 +585,7 @@ class ABDetectorModel(DetectorModel):
             # With duration and length fixed, determine an adjusted Type-I error
             # such that the global Type-I error still remains within a
             # relative threshold of self.alpha.
-            lowest_p = self._get_lowest_p(
-                m=self.duration, n=length, p_goal=self.alpha, r_tol=r_tol
-            )
+            lowest_p = self._get_lowest_p(m=self.duration, n=length, p_goal=self.alpha, r_tol=r_tol)
             logging.warning(
                 f"Type-I Adjustment with {length} data points:"
                 + f"\nduration set to {self.duration}"
@@ -636,9 +603,7 @@ class ABDetectorModel(DetectorModel):
         m: int
         p: float
 
-    def _get_lowest_m(
-        self, p: float, n: int, r_tol: float, max_iter: int = 1000
-    ) -> LowestM:
+    def _get_lowest_m(self, p: float, n: int, r_tol: float, max_iter: int = 1000) -> LowestM:
         """Finds lowest m such that the corrected probability is still less than p in n trials.
 
         Notes:
@@ -665,9 +630,7 @@ class ABDetectorModel(DetectorModel):
                 return self.LowestM(m=m, p=p)
             # Otherwise, try the next m.
             m += 1
-        raise Exception(
-            "Automatic duration did not converge. Please explicitly pass duration or revise alpha."
-        )
+        raise Exception("Automatic duration did not converge. Please explicitly pass duration or revise alpha.")
 
     @dataclass
     class LowestP:
@@ -704,9 +667,7 @@ class ABDetectorModel(DetectorModel):
             return self.LowestP(p_corrected=p_goal ** (1 / m), p_global=p_goal)
 
         if r_tol < 1e-9:
-            raise ValueError(
-                f"r_tol=1e-9 is the smallest supported value, found: {r_tol}"
-            )
+            raise ValueError(f"r_tol=1e-9 is the smallest supported value, found: {r_tol}")
 
         i: int = 0
         # p_goal = U_{i=1}^{n-m} P(run size of m starting at position i)
@@ -719,9 +680,7 @@ class ABDetectorModel(DetectorModel):
         p_high: float = (1 - (1 - p_goal) ** (1 / (n // m))) ** (1 / m)
         while p_low <= p_high and i <= max_iter:
             p_corrected = (p_high + p_low) / 2.0
-            p_global = self._probability_of_at_least_one_m_run_in_n_trials(
-                p_corrected, n=n, m=m
-            )
+            p_global = self._probability_of_at_least_one_m_run_in_n_trials(p_corrected, n=n, m=m)
             # Return if the corrected Type-I error is within our relative tolerance.
             if p_global <= p_goal * (r_tol + 1) and p_global >= p_goal * (1 - r_tol):
                 return self.LowestP(p_corrected=p_corrected, p_global=p_global)
@@ -737,9 +696,7 @@ class ABDetectorModel(DetectorModel):
         )
 
     @staticmethod
-    def _probability_of_at_least_one_m_run_in_n_trials(
-        p: float, n: int, m: int
-    ) -> float:
+    def _probability_of_at_least_one_m_run_in_n_trials(p: float, n: int, m: int) -> float:
         """P(at least 1 run of m consecutive 1's in n bernoulli trials) in a vectorized formulation.
 
         Notes:
@@ -814,14 +771,8 @@ class ABDetectorModel(DetectorModel):
                 / df[ABTestColumnsName.SAMPLE_COUNT_B.value]
             )
         elif self.distribution == Distribution.NORMAL:
-            _variance_a = (
-                df[ABTestColumnsName.VARIANCE_A.value]
-                / df[ABTestColumnsName.SAMPLE_COUNT_A.value]
-            )
-            _variance_b = (
-                df[ABTestColumnsName.VARIANCE_B.value]
-                / df[ABTestColumnsName.SAMPLE_COUNT_B.value]
-            )
+            _variance_a = df[ABTestColumnsName.VARIANCE_A.value] / df[ABTestColumnsName.SAMPLE_COUNT_A.value]
+            _variance_b = df[ABTestColumnsName.VARIANCE_B.value] / df[ABTestColumnsName.SAMPLE_COUNT_B.value]
         else:
             raise ValueError("distribution was incorrectly specified.")
         # Set these internally computed attributes for plotting.
@@ -849,9 +800,7 @@ class ABDetectorModel(DetectorModel):
         elif self.test_direction == TestDirection.A_GREATER:
             _sign: int = -1
         else:
-            raise ValueError(
-                f"test_direction was incorrectly specified. Found {self.test_direction}"
-            )
+            raise ValueError(f"test_direction was incorrectly specified. Found {self.test_direction}")
 
         if self.test_statistic == TestStatistic.ABSOLUTE_DIFFERENCE:
             return self._absolute_difference_test_statistic(
@@ -872,9 +821,7 @@ class ABDetectorModel(DetectorModel):
                 sign=_sign,
             )
         else:
-            raise ValueError(
-                f"test_statistic was incorrectly specified. Found {self.test_statistic}"
-            )
+            raise ValueError(f"test_statistic was incorrectly specified. Found {self.test_statistic}")
 
     def _absolute_difference_test_statistic(
         self,
@@ -895,9 +842,7 @@ class ABDetectorModel(DetectorModel):
         critical_value: float = self.critical_value
         upper = difference_mean + critical_value * difference_std_error
         lower = difference_mean - critical_value * difference_std_error
-        return ABTestResult(
-            test_statistic=test_statistic, stat_sig=stat_sig, upper=upper, lower=lower
-        )
+        return ABTestResult(test_statistic=test_statistic, stat_sig=stat_sig, upper=upper, lower=lower)
 
     def _relative_difference_test_statistic(
         self,
@@ -919,8 +864,7 @@ class ABDetectorModel(DetectorModel):
         # by a g'(𝜽) ** 2 term. In the case of g = log, g'(𝜽) = 1 / 𝜽.
         # See https://www.stata.com/support/faqs/statistics/delta-method/ for more details.
         difference_std_error = np.sqrt(
-            variance_a / np.maximum(value_a**2, _EPS_2)
-            + variance_b / np.maximum(value_b**2, _EPS_2)
+            variance_a / np.maximum(value_a**2, _EPS_2) + variance_b / np.maximum(value_b**2, _EPS_2)
         )
         test_statistic = pd.Series(difference_mean / difference_std_error, copy=False)
         stat_sig = pd.Series(norm.sf(test_statistic), copy=False)
@@ -930,9 +874,7 @@ class ABDetectorModel(DetectorModel):
         critical_value: float = self.critical_value
         upper = np.exp(difference_mean + critical_value * difference_std_error)
         lower = np.exp(difference_mean - critical_value * difference_std_error)
-        return ABTestResult(
-            test_statistic=test_statistic, stat_sig=stat_sig, upper=upper, lower=lower
-        )
+        return ABTestResult(test_statistic=test_statistic, stat_sig=stat_sig, upper=upper, lower=lower)
 
     def _get_intervals(
         self,
@@ -958,17 +900,11 @@ class ABDetectorModel(DetectorModel):
 
         # TODO: Add a condition for a two tailed test
         if interval_type == interval_type.REJECT:
-            _mask: np.ndarray = (
-                test_result.test_statistic >= self.critical_value
-            ).to_numpy()
+            _mask: np.ndarray = (test_result.test_statistic >= self.critical_value).to_numpy()
         elif interval_type == interval_type.FAIL_TO_REJECT:
-            _mask: np.ndarray = (
-                test_result.test_statistic < self.critical_value
-            ).to_numpy()
+            _mask: np.ndarray = (test_result.test_statistic < self.critical_value).to_numpy()
         else:
-            raise ValueError(
-                f"Expecting test_name one of 'reject' or 'accept'. Found {interval_type.value}."
-            )
+            raise ValueError(f"Expecting test_name one of 'reject' or 'accept'. Found {interval_type.value}.")
 
         starts, ends = self._get_true_run_indices(_mask)
         intervals: List[ABInterval] = []
@@ -980,9 +916,7 @@ class ABDetectorModel(DetectorModel):
             # Pad the intervals so that single points will have a notion of length.
             start_time -= np.timedelta64(interval_padding, interval_units)
             end_time += np.timedelta64(interval_padding, interval_units)
-            interval = ABInterval(
-                interval_type=interval_type, start=start_time, end=end_time
-            )
+            interval = ABInterval(interval_type=interval_type, start=start_time, end=end_time)
             # Set attributes of the Interval object. These correspond to the indices
             # of the original TimeSeriesData passed in `fit_predict`.
             interval.start_idx = int(start)
@@ -1010,9 +944,7 @@ class ABDetectorModel(DetectorModel):
         elif x.shape[0] == 0:
             raise ValueError(f"Expecting an array with length > 0. Found {x.shape[0]}.")
         elif x.dtype != np.dtype("bool"):
-            raise ValueError(
-                f"x must have x.dtype == np.dtype('bool'). Found {x.dtype}."
-            )
+            raise ValueError(f"x must have x.dtype == np.dtype('bool'). Found {x.dtype}.")
         n = x.shape[0]
         loc_run_start = np.empty(n, dtype=bool)
         loc_run_start[0] = True
@@ -1071,9 +1003,7 @@ class ABDetectorModel(DetectorModel):
             raise ValueError("Error: data is None. Call fit_predict() before plot()")
         data: Optional[TimeSeriesData] = self.data
         if self.test_result is None:
-            raise ValueError(
-                "Error: test_result is None. Call fit_predict() before plot()"
-            )
+            raise ValueError("Error: test_result is None. Call fit_predict() before plot()")
         test_result: Optional[ABTestResult] = self.test_result
         assert self.fail_to_reject_intervals is not None
         fail_to_reject_intervals = self.fail_to_reject_intervals
@@ -1154,9 +1084,7 @@ class ABDetectorModel(DetectorModel):
             return pd.concat(
                 [
                     pd.Series(test_result.test_statistic[interval.start_idx]),
-                    pd.Series(
-                        test_result.test_statistic[interval.start_idx : end_idx + 1]
-                    ),
+                    pd.Series(test_result.test_statistic[interval.start_idx : end_idx + 1]),
                     pd.Series(test_result.test_statistic[interval.end_idx]),
                 ]
             )
@@ -1196,7 +1124,5 @@ class ABDetectorModel(DetectorModel):
         ax2.set_ylabel("Test Statistic")
         ax2.set_xlabel(f"Elapsed time ({interval_units}) from {data.time.min()}")
         ax2.legend()
-        ax2.title.set_text(
-            f"Test Statistic for direction: {self.test_direction} & duration: {self.duration}"
-        )
+        ax2.title.set_text(f"Test Statistic for direction: {self.test_direction} & duration: {self.duration}")
         return ax1, ax2

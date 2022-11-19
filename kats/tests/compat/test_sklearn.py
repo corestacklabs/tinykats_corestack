@@ -9,7 +9,8 @@ from unittest.mock import patch
 
 import numpy as np
 
-from kats.compat import compat, sklearn
+from kats.compat import compat
+from kats.compat import sklearn
 
 
 class TestSklearn(unittest.TestCase):

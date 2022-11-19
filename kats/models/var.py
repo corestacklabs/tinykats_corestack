@@ -20,16 +20,22 @@ We use the implementation in statsmodels and re-write the API to adapt Kats deve
 """
 
 import logging
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
+from typing import Dict
+from typing import List
+from typing import Optional
+from typing import Tuple
 
 import numpy as np
 import pandas as pd
-from kats.consts import Params, TimeSeriesData
-from kats.models.model import Model
-from kats.utils.parameter_tuning_utils import get_default_var_parameter_search_space
 from matplotlib import pyplot as plt
 from statsmodels.tsa.api import VAR
 from statsmodels.tsa.vector_ar.var_model import VARResults
+
+from kats.consts import Params
+from kats.consts import TimeSeriesData
+from kats.models.model import Model
+from kats.utils.parameter_tuning_utils import get_default_var_parameter_search_space
 
 
 class VARParams(Params):
@@ -90,9 +96,7 @@ class VARModel(Model[VARParams]):
         super().__init__(data, params)
         # pyre-fixme[16]: `Optional` has no attribute `value`.
         if not isinstance(self.data.value, pd.DataFrame):
-            msg = "Only support multivariate time series, but get {type}.".format(
-                type=type(self.data.value)
-            )
+            msg = "Only support multivariate time series, but get {type}.".format(type=type(self.data.value))
             logging.error(msg)
             raise ValueError(msg)
 
@@ -125,9 +129,7 @@ class VARModel(Model[VARParams]):
 
     # pyre-fixme[14]: `predict` overrides method defined in `Model` inconsistently.
     # pyre-fixme[15]: `predict` overrides method defined in `Model` inconsistently.
-    def predict(
-        self, steps: int, include_history: bool = False, **kwargs: Any
-    ) -> Dict[str, TimeSeriesData]:
+    def predict(self, steps: int, include_history: bool = False, **kwargs: Any) -> Dict[str, TimeSeriesData]:
         """Predict with the fitted VAR model
 
         Args:
@@ -148,8 +150,7 @@ class VARModel(Model[VARParams]):
             raise ValueError("Call fit() before predict().")
 
         logging.debug(
-            "Call predict() with parameters. "
-            "steps:{steps}, kwargs:{kwargs}".format(steps=steps, kwargs=kwargs)
+            "Call predict() with parameters. " "steps:{steps}, kwargs:{kwargs}".format(steps=steps, kwargs=kwargs)
         )
         self.include_history = include_history
         # pyre-fixme[16]: `Optional` has no attribute `time`.
@@ -186,11 +187,7 @@ class VARModel(Model[VARParams]):
                 hist_fcst = model.fittedvalues.values
                 hist_dates = self.data.time.iloc[-len(hist_fcst) :]
                 for i, name in enumerate(ts_names):
-                    print(
-                        pd.DataFrame(
-                            {"time": hist_dates, "fcst": hist_fcst[:, i]}, copy=False
-                        )
-                    )
+                    print(pd.DataFrame({"time": hist_dates, "fcst": hist_fcst[:, i]}, copy=False))
                     fcst_df = pd.concat(
                         [
                             pd.DataFrame(
@@ -204,16 +201,11 @@ class VARModel(Model[VARParams]):
                     fcst_dict[name] = fcst_df
 
             except Exception as e:
-                msg = (
-                    "Failed to generate in-sample forecasts for historical data "
-                    f"with error message {e}."
-                )
+                msg = "Failed to generate in-sample forecasts for historical data " f"with error message {e}."
                 logging.error(msg)
                 raise ValueError(msg)
 
-        logging.debug(
-            "Return forecast data: {fcst_dict}".format(fcst_dict=self.fcst_dict)
-        )
+        logging.debug("Return forecast data: {fcst_dict}".format(fcst_dict=self.fcst_dict))
         ret = {k: TimeSeriesData(v) for k, v in fcst_dict.items()}
         return ret
 

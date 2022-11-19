@@ -8,15 +8,23 @@ import logging
 import time
 from multiprocessing import cpu_count
 from multiprocessing.dummy import Pool
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any
+from typing import Dict
+from typing import List
+from typing import Optional
+from typing import Tuple
+from typing import Union
 
 import numpy as np
 import pandas as pd
 import torch
+
 from kats.consts import TimeSeriesData
 from kats.models.globalmodel.ensemble import GMEnsemble
 from kats.models.globalmodel.model import GMModel
-from kats.models.globalmodel.utils import fill_missing_value_na, GMParam, split
+from kats.models.globalmodel.utils import GMParam
+from kats.models.globalmodel.utils import fill_missing_value_na
+from kats.models.globalmodel.utils import split
 from kats.utils.backtesters import BackTesterExpandingWindow
 
 """
@@ -73,9 +81,7 @@ class GMBackTester:
             raise ValueError(msg)
         self.params = gmparam
         # pyre-fixme[4]: Attribute must be annotated.
-        self.max_back_test_timedelta = (
-            gmparam.freq * gmparam.validation_step_num * gmparam.fcst_window * 3
-        )
+        self.max_back_test_timedelta = gmparam.freq * gmparam.validation_step_num * gmparam.fcst_window * 3
         # pyre-fixme[4]: Attribute must be annotated.
         self.min_train_length = (
             gmparam.input_window
@@ -87,8 +93,7 @@ class GMBackTester:
 
         # pyre-fixme[4]: Attribute must be annotated.
         self.min_test_length = (
-            gmparam.min_warming_up_step_num * gmparam.min_training_step_length
-            + gmparam.input_window
+            gmparam.min_warming_up_step_num * gmparam.min_training_step_length + gmparam.input_window
         )
 
         if not isinstance(backtest_timestamp, list) or len(backtest_timestamp) < 1:
@@ -115,10 +120,11 @@ class GMBackTester:
         self.multi = multi
 
         if (earliest_timestamp is not None) and (
-            not isinstance(earliest_timestamp, str)
-            and not isinstance(earliest_timestamp, pd.Timestamp)
+            not isinstance(earliest_timestamp, str) and not isinstance(earliest_timestamp, pd.Timestamp)
         ):
-            msg = f"earliest_timestamp should either be a str or a pd.Timestamp but receives {type(earliest_timestamp)}."
+            msg = (
+                f"earliest_timestamp should either be a str or a pd.Timestamp but receives {type(earliest_timestamp)}."
+            )
             logging.error(msg)
             raise ValueError(msg)
         self.earliest_timestamp = earliest_timestamp
@@ -151,8 +157,7 @@ class GMBackTester:
 
         # pyre-fixme[4]: Attribute must be annotated.
         self.gm_collects = {
-            bt: [GMModel(gmparam) for _ in range(int(replicate * splits))]
-            for bt in backtest_timestamp
+            bt: [GMModel(gmparam) for _ in range(int(replicate * splits))] for bt in backtest_timestamp
         }
         # pyre-fixme[4]: Attribute must be annotated.
         self.gm_info_collects = collections.defaultdict(list)
@@ -241,9 +246,7 @@ class GMBackTester:
                 raise ValueError(msg)
         last_timestamp = backtest_ts + self.max_back_test_timedelta
 
-        train_length = (
-            self.min_train_length if mode == "train" else self.min_test_length
-        )
+        train_length = self.min_train_length if mode == "train" else self.min_test_length
         valid_length = self.min_valid_length if mode == "train" else 0
         min_length = train_length + valid_length
 
@@ -305,9 +308,7 @@ class GMBackTester:
             torch.manual_seed(random_seed)
             # to ensure performance
             torch.set_num_threads(1)
-        training_info = gmmodel.train(
-            train_TSs, valid_TSs, fcst_monitor=False, debug=False
-        )
+        training_info = gmmodel.train(train_TSs, valid_TSs, fcst_monitor=False, debug=False)
         return training_info
 
     def run_backtest(self) -> pd.DataFrame:
@@ -332,9 +333,7 @@ class GMBackTester:
 
         for bt in self.backtest_timestamp:
             bt_train_TSs, bt_valid_TSs = self._filter(all_train_TSs, bt, "train")
-            bt_test_train_TSs, bt_test_valid_TSs = self._filter(
-                all_test_TSs, bt, "test"
-            )
+            bt_test_train_TSs, bt_test_valid_TSs = self._filter(all_test_TSs, bt, "test")
             bt_info[bt] = {
                 "num_train_TSs": len(bt_train_TSs),
                 "num_test_TSs": len(bt_test_train_TSs),
@@ -347,14 +346,10 @@ class GMBackTester:
                 i = 0
                 for _ in range(self.replicate):
                     for train, valid in split_data:
-                        info = self._fit_single_gm(
-                            self.gm_collects[bt][i], train, valid
-                        )
+                        info = self._fit_single_gm(self.gm_collects[bt][i], train, valid)
                         self.gm_info_collects[bt].append(info)
                         i += 1
-                logging.info(
-                    f"fit {self.replicate*self.splits} gm time {time.time()-t0}"
-                )
+                logging.info(f"fit {self.replicate*self.splits} gm time {time.time()-t0}")
             else:
                 t0 = time.time()
                 rds = np.random.randint(1, 10000, m)
@@ -376,9 +371,7 @@ class GMBackTester:
 
                 logging.info(f"fit {m} gm time {time.time()-t0}")
 
-            bt_eval = self._evaluate(
-                self.gm_collects[bt], bt_test_train_TSs, bt_test_valid_TSs
-            )
+            bt_eval = self._evaluate(self.gm_collects[bt], bt_test_train_TSs, bt_test_valid_TSs)
             bt_eval["backtest_ts"] = bt
             evaluation_collects.append(bt_eval)
             logging.info(f"Successfully finish backtest for {bt}.")
@@ -414,9 +407,7 @@ class GMBackTester:
         steps = np.max([len(bt_test_valid_TSs[t]) for t in bt_test_valid_TSs])
 
         fcst_window = self.params.fcst_window
-        fcst_all = [
-            gm.predict(bt_test_train_TSs, steps=steps, raw=True) for gm in gm_collects
-        ]
+        fcst_all = [gm.predict(bt_test_train_TSs, steps=steps, raw=True) for gm in gm_collects]
         n = len(gm_collects)
         ans = []
         for k in bt_test_valid_TSs:
@@ -428,14 +419,9 @@ class GMBackTester:
             for j in range(tmp_step):
                 tmp_actuals = actuals[j * fcst_window : (j + 1) * fcst_window]
                 tmp_ans = [eval_func(fcst_all[i][k][j], tmp_actuals) for i in range(n)]
-                [
-                    t.update({"model_num": i, "step": j, "idx": k, "type": "single"})
-                    for i, t in enumerate(tmp_ans)
-                ]
+                [t.update({"model_num": i, "step": j, "idx": k, "type": "single"}) for i, t in enumerate(tmp_ans)]
                 ans.extend(tmp_ans)
-                ensemble_fcst = np.median(
-                    np.column_stack(fcst_all[i][k][j] for i in range(n)), axis=1
-                )
+                ensemble_fcst = np.median(np.column_stack(fcst_all[i][k][j] for i in range(n)), axis=1)
                 evl = eval_func(ensemble_fcst, tmp_actuals)
                 evl["step"] = j
                 evl["type"] = "ensemble"
@@ -487,9 +473,7 @@ class GMBackTesterExpandingWindow(BackTesterExpandingWindow):
             logging.error(msg)
             raise ValueError(msg)
         self.gmobject = gmobject
-        data = fill_missing_value_na(
-            data, seasonality=gmobject.params.seasonality, freq=gmobject.params.freq
-        )
+        data = fill_missing_value_na(data, seasonality=gmobject.params.seasonality, freq=gmobject.params.freq)
 
         super(GMBackTesterExpandingWindow, self).__init__(
             error_methods=error_methods,
@@ -516,12 +500,8 @@ class GMBackTesterExpandingWindow(BackTesterExpandingWindow):
         training_data_start, training_data_end = training_data_indices
         testing_data_start, testing_data_end = testing_data_indices
         logging.info("Creating TimeSeries train test objects for split")
-        logging.info(
-            "Train split of {0}, {1}".format(training_data_start, training_data_end)
-        )
-        logging.info(
-            "Test split of {0}, {1}".format(testing_data_start, testing_data_end)
-        )
+        logging.info("Train split of {0}, {1}".format(training_data_start, training_data_end))
+        logging.info("Test split of {0}, {1}".format(testing_data_start, testing_data_end))
 
         if (
             training_data_start < 0
@@ -530,11 +510,7 @@ class GMBackTesterExpandingWindow(BackTesterExpandingWindow):
             or training_data_end > self.size
             or training_data_start >= training_data_end
         ):
-            logging.error(
-                "Train Split of {0}, {1} was invalid".format(
-                    training_data_start, training_data_end
-                )
-            )
+            logging.error("Train Split of {0}, {1} was invalid".format(training_data_start, training_data_end))
             raise ValueError("Invalid training data indices in split")
 
         if (
@@ -544,11 +520,7 @@ class GMBackTesterExpandingWindow(BackTesterExpandingWindow):
             or testing_data_end > self.size
             or testing_data_end <= testing_data_start
         ):
-            logging.error(
-                "Test Split of {0}, {1} was invalid".format(
-                    testing_data_start, testing_data_end
-                )
-            )
+            logging.error("Test Split of {0}, {1} was invalid".format(testing_data_start, testing_data_end))
             raise ValueError("Invalid testing data indices in split")
 
         training_data = TimeSeriesData(
@@ -571,9 +543,7 @@ class GMBackTesterExpandingWindow(BackTesterExpandingWindow):
 
         return training_data, testing_data
 
-    def _build_ts_and_get_prediction(
-        self, splits: Tuple[List[Tuple[int, int]], List[Tuple[int, int]]]
-    ) -> None:
+    def _build_ts_and_get_prediction(self, splits: Tuple[List[Tuple[int, int]], List[Tuple[int, int]]]) -> None:
         """Build training time series and get forecasts."""
 
         training_splits, testing_splits = splits
@@ -581,17 +551,12 @@ class GMBackTesterExpandingWindow(BackTesterExpandingWindow):
 
         if self.multi:
             pool = Pool(max(1, min(cpu_count() - 1, num_splits)))
-            TSs = pool.starmap(
-                self._create_ts, list(zip(training_splits, testing_splits))
-            )
+            TSs = pool.starmap(self._create_ts, list(zip(training_splits, testing_splits)))
             pool.close()
             pool.join()
 
         else:
-            TSs = [
-                self._create_ts(training_splits[i], testing_splits[i])
-                for i in range(num_splits)
-            ]
+            TSs = [self._create_ts(training_splits[i], testing_splits[i]) for i in range(num_splits)]
 
         training_TSs = [t[0] for t in TSs]
         test_TSs = [t[1] for t in TSs]

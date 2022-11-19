@@ -3,19 +3,19 @@
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
 
-from typing import Any, Dict
+from typing import Any
+from typing import Dict
 from unittest import TestCase
 
 import numpy as np
 import pandas as pd
+
 from kats.compat.pandas import assert_frame_equal
 from kats.utils import feature_engineering as fe
 
 
 class FeatureEngineeringTest(TestCase):
-    def assertDictAlmostEqual(
-        self, expected: Dict[str, Any], features: Dict[str, Any], places: int = 4
-    ) -> None:
+    def assertDictAlmostEqual(self, expected: Dict[str, Any], features: Dict[str, Any], places: int = 4) -> None:
         """Compares that two dictionaries are floating-point almost equal.
 
         Note: the dictionaries may or may not contain floating-point values.
@@ -53,10 +53,7 @@ class FeatureEngineeringTest(TestCase):
                 "season": [0] * 12 + [1] * 4,
                 "weekofyear": [3] * 3 + [4] * 8 + [5] * 5,
                 "weekofmonth": [4] * 3 + [5] * 8 + [6, 1, 1, 1, 1],
-                "is_weekend": [False, True, True]
-                + [False] * 5
-                + [True] * 3
-                + [False] * 5,
+                "is_weekend": [False, True, True] + [False] * 5 + [True] * 3 + [False] * 5,
                 "is_leap_year": [False] * 16,
                 "is_leap_day": [False] * 16,
                 "is_month_end": [False] * 9 + [True, False, True] + [False] * 4,
@@ -66,9 +63,7 @@ class FeatureEngineeringTest(TestCase):
                 "second": [0] * 16,
                 "milliseconds": [0.0] * 16,
                 "quarterhour": [1] * 16,
-                "hourofweek": [96, 120, 144]
-                + list(range(0, 168, 24))
-                + [144, 0, 24, 48, 72, 96],
+                "hourofweek": [96, 120, 144] + list(range(0, 168, 24)) + [144, 0, 24, 48, 72, 96],
                 "daytime": [0] * 16,
                 "dst": [0.0] * 16,
                 "utcoffset": [-28800.0] * 16,
@@ -95,10 +90,7 @@ class FeatureEngineeringTest(TestCase):
                 "season": [0] * 12 + [1] * 4,
                 "weekofyear": [3] * 3 + [4] * 8 + [5] * 5,
                 "weekofmonth": [4] * 3 + [5] * 8 + [6, 1, 1, 1, 1],
-                "is_weekend": [False, True, True]
-                + [False] * 5
-                + [True] * 3
-                + [False] * 5,
+                "is_weekend": [False, True, True] + [False] * 5 + [True] * 3 + [False] * 5,
                 "is_leap_year": [False] * 16,
                 "is_leap_day": [False] * 16,
                 "is_month_end": [False] * 9 + [True, False, True] + [False] * 4,
@@ -122,9 +114,7 @@ class FeatureEngineeringTest(TestCase):
                 "second": [0] * 16,
                 "milliseconds": [0.0] * 16,
                 "quarterhour": [1] * 16,
-                "hourofweek": [96, 120, 144]
-                + list(range(0, 168, 24))
-                + [144, 0, 24, 48, 72, 96],
+                "hourofweek": [96, 120, 144] + list(range(0, 168, 24)) + [144, 0, 24, 48, 72, 96],
                 "daytime": [0] * 16,
                 "dst": [0.0] * 16,
                 "utcoffset": [-28800.0] * 16,
@@ -213,7 +203,5 @@ class FeatureEngineeringTest(TestCase):
                 "x_sin": [-s32, -0.5, 0.0, 0.5],
             }
         )
-        result = fe.circle_encode(
-            pd.DataFrame({"x": [10, 11, 12, 13]}), {"x": 12}, modulo=True
-        )
+        result = fe.circle_encode(pd.DataFrame({"x": [10, 11, 12, 13]}), {"x": 12}, modulo=True)
         assert_frame_equal(expected, result)

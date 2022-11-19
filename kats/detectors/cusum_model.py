@@ -30,16 +30,25 @@ import json
 import logging
 from datetime import datetime
 from enum import Enum
-from typing import Any, cast, Dict, List, NamedTuple, Optional, Union
+from typing import Any
+from typing import Dict
+from typing import List
+from typing import NamedTuple
+from typing import Optional
+from typing import Union
+from typing import cast
 
 import numpy as np
 import pandas as pd
-from kats.consts import DEFAULT_VALUE_NAME, IRREGULAR_GRANULARITY_ERROR, TimeSeriesData
-from kats.detectors.cusum_detection import CUSUMDefaultArgs, CUSUMDetector
+
+from kats.consts import DEFAULT_VALUE_NAME
+from kats.consts import IRREGULAR_GRANULARITY_ERROR
+from kats.consts import TimeSeriesData
+from kats.detectors.cusum_detection import CUSUMDefaultArgs
+from kats.detectors.cusum_detection import CUSUMDetector
 from kats.detectors.detector import DetectorModel
 from kats.detectors.detector_consts import AnomalyResponse
 from kats.utils.decomposition import TimeSeriesDecomposition
-
 
 NORMAL_TOLERENCE = 1  # number of window
 CHANGEPOINT_RETENTION: int = 7 * 24 * 60 * 60  # in seconds
@@ -54,9 +63,7 @@ SEASON_PERIOD_FREQ_MAP: Dict[str, int] = {
 _log: logging.Logger = logging.getLogger("cusum_model")
 
 
-def percentage_change(
-    data: TimeSeriesData, pre_mean: float, **kwargs: Any
-) -> TimeSeriesData:
+def percentage_change(data: TimeSeriesData, pre_mean: float, **kwargs: Any) -> TimeSeriesData:
     """
     Calculate percentage change absolute change / baseline change
 
@@ -157,9 +164,7 @@ class CUSUMDetectorModel(DetectorModel):
         delta_std_ratio: float = CUSUMDefaultArgs.delta_std_ratio,
         magnitude_quantile: Optional[float] = CUSUMDefaultArgs.magnitude_quantile,
         magnitude_ratio: float = CUSUMDefaultArgs.magnitude_ratio,
-        change_directions: Optional[
-            Union[List[str], str]
-        ] = CUSUMDefaultArgs.change_directions,
+        change_directions: Optional[Union[List[str], str]] = CUSUMDefaultArgs.change_directions,
         score_func: Union[str, CusumScoreFunction] = DEFAULT_SCORE_FUNCTION,
         remove_seasonality: bool = CUSUMDefaultArgs.remove_seasonality,
         season_period_freq: str = "daily",
@@ -179,22 +184,16 @@ class CUSUMDetectorModel(DetectorModel):
             step_window = previous_model["step_window"]
             self.threshold: float = previous_model["threshold"]
             self.delta_std_ratio: float = previous_model["delta_std_ratio"]
-            self.magnitude_quantile: Optional[float] = previous_model[
-                "magnitude_quantile"
-            ]
+            self.magnitude_quantile: Optional[float] = previous_model["magnitude_quantile"]
             self.magnitude_ratio: float = previous_model["magnitude_ratio"]
-            self.change_directions: Optional[List[str]] = previous_model[
-                "change_directions"
-            ]
+            self.change_directions: Optional[List[str]] = previous_model["change_directions"]
             self.score_func: CusumScoreFunction = previous_model["score_func"]
             if "remove_seasonality" in previous_model:
                 self.remove_seasonality: bool = previous_model["remove_seasonality"]
             else:
                 self.remove_seasonality: bool = remove_seasonality
 
-            self.season_period_freq: str = previous_model.get(
-                "season_period_freq", "daily"
-            )
+            self.season_period_freq: str = previous_model.get("season_period_freq", "daily")
 
         elif scan_window is not None and historical_window is not None:
             self.cps = []
@@ -230,8 +229,7 @@ class CUSUMDetectorModel(DetectorModel):
 
         else:
             raise ValueError(
-                "You must provide either serialized model or values for "
-                "scan_window and historical_window."
+                "You must provide either serialized model or values for " "scan_window and historical_window."
             )
 
     def __eq__(self, other: object) -> bool:
@@ -266,17 +264,13 @@ class CUSUMDetectorModel(DetectorModel):
         self.alert_fired = False
         self.number_of_normal_scan = 0
 
-    def _set_alert_on(
-        self, baseline_mean: float, baseline_std: float, alert_change_direction: str
-    ) -> None:
+    def _set_alert_on(self, baseline_mean: float, baseline_std: float, alert_change_direction: str) -> None:
         self.alert_fired = True
         self.alert_change_direction = alert_change_direction
         self.pre_mean = baseline_mean
         self.pre_std = baseline_std
 
-    def _if_normal(
-        self, cur_mean: float, change_directions: Optional[List[str]]
-    ) -> bool:
+    def _if_normal(self, cur_mean: float, change_directions: Optional[List[str]]) -> bool:
         if change_directions is not None:
             increase, decrease = (
                 "increase" in change_directions,
@@ -293,9 +287,7 @@ class CUSUMDetectorModel(DetectorModel):
             check_decrease = 0 if decrease else np.inf
 
         return (
-            self.pre_mean - check_decrease * self.pre_std
-            <= cur_mean
-            <= self.pre_mean + check_increase * self.pre_std
+            self.pre_mean - check_decrease * self.pre_std <= cur_mean <= self.pre_mean + check_increase * self.pre_std
         )
 
     def _fit(
@@ -330,12 +322,8 @@ class CUSUMDetectorModel(DetectorModel):
         """
         historical_data.extend(data, validate=False)
         n = len(historical_data)
-        scan_start_time = historical_data.time.iloc[-1] - pd.Timedelta(
-            scan_window, unit="s"
-        )
-        scan_start_index = max(
-            0, np.argwhere((historical_data.time >= scan_start_time).values).min()
-        )
+        scan_start_time = historical_data.time.iloc[-1] - pd.Timedelta(scan_window, unit="s")
+        scan_start_index = max(0, np.argwhere((historical_data.time >= scan_start_time).values).min())
         if not self.alert_fired:
             # if scan window is less than 2 data poins and there is no alert fired
             # skip this scan
@@ -412,9 +400,7 @@ class CUSUMDetectorModel(DetectorModel):
                 change_pre.extend(change_post, validate=False)
                 return PredictFunctionValues(score_pre, change_pre)
             return PredictFunctionValues(
-                SCORE_FUNC_DICT[score_func](
-                    data=data, pre_mean=self.pre_mean, pre_std=self.pre_std
-                ),
+                SCORE_FUNC_DICT[score_func](data=data, pre_mean=self.pre_mean, pre_std=self.pre_std),
                 SCORE_FUNC_DICT[CusumScoreFunction.change.value](
                     data=data, pre_mean=self.pre_mean, pre_std=self.pre_std
                 ),
@@ -456,10 +442,7 @@ class CUSUMDetectorModel(DetectorModel):
         # in order to make sure step_window >= frequency_sec, we need to make sure
         # self.scan_window >= 2 * frequency_sec
 
-        if (
-            self.scan_window < 2 * frequency_sec
-            or self.historical_window < 2 * frequency_sec
-        ):
+        if self.scan_window < 2 * frequency_sec or self.historical_window < 2 * frequency_sec:
             raise ValueError(
                 "Scan window and historical window are supposed to be >= 2 * TS granularity. "
                 f"TS granularity is: {frequency_sec} seconds. "
@@ -522,9 +505,7 @@ class CUSUMDetectorModel(DetectorModel):
         frequency = historical_data.freq_to_timedelta()
         if frequency is None or frequency is pd.NaT:
             # Use the top frequency if any, when not able to infer from data.
-            freq_counts = (
-                historical_data.time.diff().value_counts().sort_values(ascending=False)
-            )
+            freq_counts = historical_data.time.diff().value_counts().sort_values(ascending=False)
             if freq_counts.iloc[0] >= int(len(historical_data)) * 0.8 - 1:
                 frequency = freq_counts.index[0]
             else:
@@ -558,9 +539,7 @@ class CUSUMDetectorModel(DetectorModel):
 
             # fixing the period to 24 hours as indicated in T81530775
             season_period_freq_multiplier = SEASON_PERIOD_FREQ_MAP[season_period_freq]
-            period = int(
-                24 * 60 * 60 * season_period_freq_multiplier / frequency.total_seconds()
-            )
+            period = int(24 * 60 * 60 * season_period_freq_multiplier / frequency.total_seconds())
 
             if period < 2:
                 period = 7
@@ -584,8 +563,7 @@ class CUSUMDetectorModel(DetectorModel):
             historical_data_time_idx = decomp["rem"].time.isin(historical_data.time)
 
             historical_data.value = pd.Series(
-                decomp["rem"][historical_data_time_idx].value
-                + decomp["trend"][historical_data_time_idx].value,
+                decomp["rem"][historical_data_time_idx].value + decomp["trend"][historical_data_time_idx].value,
                 name=historical_data.value.name,
                 copy=False,
             )
@@ -593,28 +571,20 @@ class CUSUMDetectorModel(DetectorModel):
         smooth_window = int(scan_window.total_seconds() / frequency.total_seconds())
         if smooth_window > 1:
             smooth_historical_value = pd.Series(
-                np.convolve(
-                    historical_data.value.values, np.ones(smooth_window), mode="full"
-                )[: 1 - smooth_window]
+                np.convolve(historical_data.value.values, np.ones(smooth_window), mode="full")[: 1 - smooth_window]
                 / smooth_window,
                 name=historical_data.value.name,
                 copy=False,
             )
-            smooth_historical_data = TimeSeriesData(
-                time=historical_data.time, value=smooth_historical_value
-            )
+            smooth_historical_data = TimeSeriesData(time=historical_data.time, value=smooth_historical_value)
         else:
             smooth_historical_data = historical_data
 
-        anomaly_start_time = max(
-            historical_data.time.iloc[0] + historical_window, data.time.iloc[0]
-        )
+        anomaly_start_time = max(historical_data.time.iloc[0] + historical_window, data.time.iloc[0])
         if anomaly_start_time > historical_data.time.iloc[-1]:
             # if len(all data) is smaller than historical window return zero score
             # Calling first _predict to poulate self.change_point_delta
-            predict_results = self._predict(
-                smooth_historical_data[-len(data) :], score_func
-            )
+            predict_results = self._predict(smooth_historical_data[-len(data) :], score_func)
             return AnomalyResponse(
                 scores=predict_results.score,
                 confidence_band=None,
@@ -627,15 +597,10 @@ class CUSUMDetectorModel(DetectorModel):
         score_tsd = self._zeros_ts(data[:anomaly_start_idx])
         change_tsd = self._zeros_ts(data[:anomaly_start_idx])
 
-        if (
-            historical_data.time.iloc[-1] - historical_data.time.iloc[0] + frequency
-            <= scan_window
-        ):
+        if historical_data.time.iloc[-1] - historical_data.time.iloc[0] + frequency <= scan_window:
             # if len(all data) is smaller than scan data return zero score
             # Calling first _predict to poulate self.change_point_delta
-            predict_results = self._predict(
-                smooth_historical_data[-len(data) :], score_func
-            )
+            predict_results = self._predict(smooth_historical_data[-len(data) :], score_func)
             return AnomalyResponse(
                 scores=predict_results.score,
                 confidence_band=None,
@@ -649,8 +614,7 @@ class CUSUMDetectorModel(DetectorModel):
             # half of the scan_window.
             step_window = min(
                 scan_window / 2,
-                (data.time.iloc[-1] - data.time.iloc[0])
-                + frequency,  # to include the last data point
+                (data.time.iloc[-1] - data.time.iloc[0]) + frequency,  # to include the last data point
             )
         else:
             step_window = pd.Timedelta(step_window, unit="s")
@@ -658,17 +622,13 @@ class CUSUMDetectorModel(DetectorModel):
         for start_time in pd.date_range(
             anomaly_start_time,
             min(
-                data.time.iloc[-1]
-                + frequency
-                - step_window,  # to include last data point
+                data.time.iloc[-1] + frequency - step_window,  # to include last data point
                 data.time.iloc[-1],  # make sure start_time won't beyond last data time
             ),
             freq=step_window,
         ):
             _log.debug(f"start_time {start_time}")
-            historical_start = self._time2idx(
-                historical_data, start_time - historical_window, "right"
-            )
+            historical_start = self._time2idx(historical_data, start_time - historical_window, "right")
             _log.debug(f"historical_start {historical_start}")
             historical_end = self._time2idx(historical_data, start_time, "right")
             _log.debug(f"historical_end {historical_end}")

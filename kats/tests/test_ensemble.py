@@ -6,28 +6,31 @@
 import sys
 import unittest
 import unittest.mock as mock
-from typing import Any, Dict
+from typing import Any
+from typing import Dict
 from unittest import TestCase
 
 import numpy as np
 import pandas as pd
+from parameterized.parameterized import parameterized
+
 from kats.consts import TimeSeriesData
-from kats.data.utils import load_air_passengers, load_data
-from kats.models import (
-    arima,
-    holtwinters,
-    linear_model,
-    prophet,
-    quadratic_model,
-    sarima,
-    theta,
-)
-from kats.models.ensemble.ensemble import BaseEnsemble, BaseModelParams, EnsembleParams
+from kats.data.utils import load_air_passengers
+from kats.data.utils import load_data
+from kats.models import arima
+from kats.models import holtwinters
+from kats.models import linear_model
+from kats.models import prophet
+from kats.models import quadratic_model
+from kats.models import sarima
+from kats.models import theta
+from kats.models.ensemble.ensemble import BaseEnsemble
+from kats.models.ensemble.ensemble import BaseModelParams
+from kats.models.ensemble.ensemble import EnsembleParams
 from kats.models.ensemble.kats_ensemble import KatsEnsemble
 from kats.models.ensemble.median_ensemble import MedianEnsembleModel
 from kats.models.ensemble.weighted_avg_ensemble import WeightedAvgEnsemble
 from kats.models.model import Model
-from parameterized.parameterized import parameterized
 
 np.random.seed(123321)
 DATA_dummy = pd.DataFrame(
@@ -40,12 +43,8 @@ DATA_dummy = pd.DataFrame(
 ALL_ERRORS = ["mape", "smape", "mae", "mase", "mse", "rmse"]
 
 
-def get_fake_preds(
-    ts_data: TimeSeriesData, fcst_periods: int, fcst_freq: str
-) -> pd.DataFrame:
-    time = pd.date_range(
-        start=ts_data.time.iloc[-1], periods=fcst_periods + 1, freq=fcst_freq
-    )[1:]
+def get_fake_preds(ts_data: TimeSeriesData, fcst_periods: int, fcst_freq: str) -> pd.DataFrame:
+    time = pd.date_range(start=ts_data.time.iloc[-1], periods=fcst_periods + 1, freq=fcst_freq)[1:]
     fcst = np.random.uniform(0, 100, len(time))
     return pd.DataFrame(
         {
@@ -71,12 +70,8 @@ def get_predict_model(m: Model, model_name: str, steps: int, freq: str) -> np.nd
 def get_ensemble_param(ts_param: Dict[str, bool]) -> EnsembleParams:
     """Returns EnsembleParams based on which base_models are included."""
     base_model_list = [
-        BaseModelParams("arima", arima.ARIMAParams(p=1, d=1, q=1))
-        if ts_param["arima"]
-        else "",
-        BaseModelParams("holtwinters", holtwinters.HoltWintersParams())
-        if ts_param["holtwinters"]
-        else "",
+        BaseModelParams("arima", arima.ARIMAParams(p=1, d=1, q=1)) if ts_param["arima"] else "",
+        BaseModelParams("holtwinters", holtwinters.HoltWintersParams()) if ts_param["holtwinters"] else "",
         BaseModelParams(
             "sarima",
             sarima.SARIMAParams(
@@ -91,15 +86,9 @@ def get_ensemble_param(ts_param: Dict[str, bool]) -> EnsembleParams:
         )
         if ts_param["sarima"]
         else "",
-        BaseModelParams("prophet", prophet.ProphetParams())
-        if ts_param["prophet"]
-        else "",
-        BaseModelParams("linear", linear_model.LinearModelParams())
-        if ts_param["linear"]
-        else "",
-        BaseModelParams("quadratic", quadratic_model.QuadraticModelParams())
-        if ts_param["quadratic"]
-        else "",
+        BaseModelParams("prophet", prophet.ProphetParams()) if ts_param["prophet"] else "",
+        BaseModelParams("linear", linear_model.LinearModelParams()) if ts_param["linear"] else "",
+        BaseModelParams("quadratic", quadratic_model.QuadraticModelParams()) if ts_param["quadratic"] else "",
         BaseModelParams("theta", theta.ThetaParams(m=12)) if ts_param["theta"] else "",
     ]
     return EnsembleParams(
@@ -151,9 +140,7 @@ TEST_DATA: Dict[str, Dict[str, Any]] = {
         },
     },
     "daily": {
-        "ts": TimeSeriesData(
-            load_data("peyton_manning.csv").set_axis(["time", "y"], axis=1)
-        ),
+        "ts": TimeSeriesData(load_data("peyton_manning.csv").set_axis(["time", "y"], axis=1)),
         "params": {
             "base": get_ensemble_param(TEST_PARAM["params_base"]),
             "kats": get_ensemble_param(TEST_PARAM["params_kats"]),
@@ -299,9 +286,7 @@ class testEnsembleModels(TestCase):
         backtester: bool,
     ) -> None:
         """Test forecast."""
-        preds = get_fake_preds(ts_data, fcst_periods=steps, fcst_freq=freq)[
-            ["time", "fcst"]
-        ]
+        preds = get_fake_preds(ts_data, fcst_periods=steps, fcst_freq=freq)[["time", "fcst"]]
 
         m = model(data=ts_data, params=params)
 
@@ -314,12 +299,8 @@ class testEnsembleModels(TestCase):
             mock_pooled.assert_called()
 
             if backtester:
-                with mock.patch(
-                    "kats.models.ensemble.weighted_avg_ensemble.Pool"
-                ) as mock_weighted_pooled:
-                    mock_backtest = (
-                        mock_weighted_pooled.return_value.apply_async.return_value.get
-                    )
+                with mock.patch("kats.models.ensemble.weighted_avg_ensemble.Pool") as mock_weighted_pooled:
+                    mock_backtest = mock_weighted_pooled.return_value.apply_async.return_value.get
                     # the backtester should just return a random number here
                     mock_backtest.return_value = np.random.rand()
                     m.predict(steps=steps, freq=freq)
@@ -379,9 +360,7 @@ class testEnsembleModels(TestCase):
         plot: bool,
     ) -> None:
         m = model(data=ts_data, params=params)
-        preds = get_fake_preds(ts_data, fcst_periods=steps, fcst_freq=freq)[
-            ["time", "fcst"]
-        ]
+        preds = get_fake_preds(ts_data, fcst_periods=steps, fcst_freq=freq)[["time", "fcst"]]
         with mock.patch("kats.models.ensemble.ensemble.Pool") as mock_pooled:
             mock_fit_model = mock_pooled.return_value.apply_async.return_value.get
             mock_fit_model.return_value.predict = mock.MagicMock(return_value=preds)
@@ -390,12 +369,8 @@ class testEnsembleModels(TestCase):
             m.fit()
             mock_pooled.assert_called()
             if backtester:
-                with mock.patch(
-                    "kats.models.ensemble.weighted_avg_ensemble.Pool"
-                ) as mock_weighted_pooled:
-                    mock_backtest = (
-                        mock_weighted_pooled.return_value.apply_async.return_value.get
-                    )
+                with mock.patch("kats.models.ensemble.weighted_avg_ensemble.Pool") as mock_weighted_pooled:
+                    mock_backtest = mock_weighted_pooled.return_value.apply_async.return_value.get
                     # the backtester should just return a random number here
                     mock_backtest.return_value = np.random.rand()
                     m.predict(steps=steps, freq=freq)
@@ -408,9 +383,7 @@ class testEnsembleModels(TestCase):
                 mock_fit_model.return_value.predict.assert_not_called()
                 # now run predict on the ensemble model
                 get_predict_model(m, ts_model_name, steps=steps, freq=freq)
-                mock_fit_model.return_value.predict.assert_called_with(
-                    steps, freq=f"{freq}"
-                )
+                mock_fit_model.return_value.predict.assert_called_with(steps, freq=f"{freq}")
                 if plot:
                     m.plot()
 
@@ -591,9 +564,7 @@ class testKatsEnsemble(TestCase):
             with mock.patch("multiprocessing.managers.SyncManager.Pool") as mock_pooled:
                 mock_fit_model = mock_pooled.return_value.apply_async.return_value.get
                 mock_fit_model.return_value.predict = mock.MagicMock(return_value=preds)
-                mock_fit_model.return_value.__add__ = mock.MagicMock(
-                    return_value=np.random.rand()
-                )
+                mock_fit_model.return_value.__add__ = mock.MagicMock(return_value=np.random.rand())
                 # fit the model
                 m.fit()
                 mock_pooled.assert_called()
@@ -601,9 +572,7 @@ class testKatsEnsemble(TestCase):
                 # no predictions should be made yet
                 mock_fit_model.return_value.predict.assert_not_called()
                 # backtesting should be done after calling fit
-                mock_fit_model.return_value.__add__.assert_called_with(
-                    sys.float_info.epsilon
-                )
+                mock_fit_model.return_value.__add__.assert_called_with(sys.float_info.epsilon)
 
                 # now run predict on the ensemble model
                 m.predict(steps=steps)
@@ -622,9 +591,7 @@ class testKatsEnsemble(TestCase):
                 mock_pooled.assert_called()
 
                 # backtesting should be done after calling fit
-                mock_fit_model.return_value.__add__.assert_called_with(
-                    sys.float_info.epsilon
-                )
+                mock_fit_model.return_value.__add__.assert_called_with(sys.float_info.epsilon)
 
                 # now run predict on the ensemble model
                 m.predict(steps=steps)

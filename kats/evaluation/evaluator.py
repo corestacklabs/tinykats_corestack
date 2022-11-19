@@ -3,13 +3,22 @@
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
 
-from abc import ABC, abstractmethod
+from abc import ABC
+from abc import abstractmethod
 from dataclasses import dataclass
-from typing import Callable, Dict, Optional, Sequence, Type, Union
+from typing import Callable
+from typing import Dict
+from typing import Optional
+from typing import Sequence
+from typing import Type
+from typing import Union
 
 import numpy as np
 import pandas as pd
-from kats.consts import _log_error, Params, TimeSeriesData
+
+from kats.consts import Params
+from kats.consts import TimeSeriesData
+from kats.consts import _log_error
 from kats.detectors.detector import DetectorModel
 from kats.models.model import Model
 
@@ -38,9 +47,7 @@ class Evaluator(ABC):
         self._check_if_valid_run_name(run_name=run_name)
         del self.runs[run_name]
 
-    def _check_if_valid_run_name(
-        self, run_name: str, should_exist: bool = True
-    ) -> None:
+    def _check_if_valid_run_name(self, run_name: str, should_exist: bool = True) -> None:
         if not isinstance(run_name, str):  # Check if name is a string
             msg = f"Name of evaluation run must be a string, but is of type {type(run_name)}."
             raise _log_error(msg)
@@ -79,9 +86,7 @@ class Evaluator(ABC):
             msg = f"Invalid type: {type(labels)} for predictions. Must be an iterable object."
             raise _log_error(msg)
         if np.ndim(labels) < 1:  # Check if labels are a valid type
-            msg = (
-                f"Invalid type: {type(labels)} for labels. Must be an iterable object."
-            )
+            msg = f"Invalid type: {type(labels)} for labels. Must be an iterable object."
             raise _log_error(msg)
         evaluator.labels = labels
         # pyre-fixme[6]: Incompatible parameter type...
@@ -95,9 +100,7 @@ class Evaluator(ABC):
             try:
                 metric_vals = func(evaluator.preds, evaluator.labels)
             except ValueError as e:
-                msg = (
-                    f"Error running evaluation for metric {metric}. Full message:\n {e}"
-                )
+                msg = f"Error running evaluation for metric {metric}. Full message:\n {e}"
                 raise _log_error(msg)
             metric_to_result[metric] = [metric_vals]
 
