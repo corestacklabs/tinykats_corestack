@@ -1,1 +1,1 @@
-# Tiny Kats
+# Kats for CoreStack
