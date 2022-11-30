@@ -1,8 +1,15 @@
 [tool.poetry]
-name = "tiny_kats"
+name = "tinykats_corestack"
 version = "0.2.0"
 description = "Stripped down version of Kats (facebookresearch/Kats)"
-authors = ["neelabalan.n@corestack.io", "sankara.nps@corestack.io"]
+authors = [
+    "Hem Chandra Padhalni <hem.chandra@corestack.io>",
+    "Neelabalan <neelabalan.n@corestack.io>",
+    "Sankara Narayana Prasath Sivakumar <sankara.nps@corestack.io>"
+]
+packages = [
+    {include = "kats"}
+]
 
 [tool.poetry.dependencies]
 python = ">=3.8,<3.10"
