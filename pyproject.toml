@@ -7,9 +7,20 @@ authors = [
     "Neelabalan <neelabalan.n@corestack.io>",
     "Sankara Narayana Prasath Sivakumar <sankara.nps@corestack.io>"
 ]
+maintainers = [
+    "Hem Chandra Padhalni <hem.chandra@corestack.io>",
+    "Neelabalan <neelabalan.n@corestack.io>",
+    "Sankara Narayana Prasath Sivakumar <sankara.nps@corestack.io>",
+    "Pradeep Boopathy <pradeep.boopathy@corestack.io>",
+    "Imaran Asalam Hashami <imaran.asalam@corestack.io>",
+]
 packages = [
     {include = "kats"}
 ]
+homepage = "https://github.com/corestacklabs/tinykats_corestack"
+repository = "https://github.com/corestacklabs/tinykats_corestack"
+keywords = ["timeseries", "forecast"]
+
 
 [tool.poetry.dependencies]
 python = ">=3.8,<3.10"
